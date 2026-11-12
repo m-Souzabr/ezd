@@ -23,11 +23,16 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Each check runs even if an earlier one failed, so one run reports every failure.
       - run: pnpm format:check
       - run: pnpm lint
+        if: ${{ !cancelled() }}
       - run: pnpm typecheck
+        if: ${{ !cancelled() }}
       - run: pnpm test
+        if: ${{ !cancelled() }}
       - run: pnpm build
+        if: ${{ !cancelled() }}
 
   py:
     runs-on: ubuntu-latest
@@ -82,4 +87,5 @@ jobs:
       - name: JS licenses
         run: pnpm run licenses
       - name: Python licenses
+        if: ${{ !cancelled() }}
         run: pnpm run licenses:py
