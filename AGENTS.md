@@ -159,6 +159,10 @@ There is no Python typecheck or build step yet. pytest needs PostgreSQL running.
   free-placed items. `EPS` is the only float tolerance, and touching is never overlap.
 - **Snapping.** `snap` and `snapResize` are pure and return integer `Len` values. The
   pointer is the middle of the dragged item.
+- **Scene.** `buildScene(doc, catalog)` (`scene/`) is the only source of 3D geometry: a
+  floor polygon and boxes in world inches, with plan x as world x, plan y as world z and
+  elevation as world y. `rotationY` is in degrees, counterclockwise seen from above, as
+  Three.js turns a mesh. A box's `sourceId` is the wall, item or countertop to select.
 - **Relative imports in `packages/core` and `packages/core-cli`** carry a `.js` extension
   (`./units.js`), so the emitted ESM runs in Node unchanged.
 - **Django settings** are `config.settings.dev` (default for `manage.py`),
