@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { DesignDocument, Item, Opening, Wall } from '../document/index.js';
+import { defaultItemFor, getEntry, SEED_CATALOG } from '../catalog/index.js';
+import type { Countertop, DesignDocument, Item, Opening, Wall } from '../document/index.js';
 import { deepFreeze, sampleDocument } from '../test/fixtures.js';
 import { inches } from '../units/index.js';
 import {
@@ -60,10 +61,19 @@ const newItem: Item = {
   placement: { type: 'wall', wallId: 'wall-north', offset: inches(30) },
   options: {},
 };
+const newCountertop: Countertop = {
+  id: 'countertop-new-01',
+  wallId: 'wall-west',
+  startOffset: inches(12),
+  endOffset: inches(60),
+  depth: inches(25.5),
+  thickness: inches(1.5),
+  elevation: inches(34.5),
+};
 const ids = (list: readonly { id: string }[]) => list.map((entity) => entity.id);
 
-it('has 14 command types', () => {
-  expect(COMMAND_TYPES).toHaveLength(14);
+it('has 18 command types', () => {
+  expect(COMMAND_TYPES).toHaveLength(18);
 });
 
 describe('schema validation', () => {
@@ -221,9 +231,31 @@ describe('wall.remove', () => {
     expect(ids(next.room.openings)).toEqual(['window-b-01', 'door-south', 'window-north']);
   });
 
-  it('keeps sharing the openings when the wall had none', () => {
+  it('keeps sharing the openings and countertops when the wall had none', () => {
     const { doc: next } = apply(doc, { type: 'wall.remove', id: 'wall-west' });
     expect(next.room.openings).toBe(doc.room.openings);
+    expect(next.countertops).toBe(doc.countertops);
+  });
+
+  it('removes the countertops on the wall, and restores them to their places', () => {
+    const countertops = [
+      newCountertop,
+      { ...newCountertop, id: 'countertop-b-01', wallId: 'wall-south' },
+      { ...newCountertop, id: 'countertop-c-01', startOffset: inches(60), endOffset: inches(90) },
+    ];
+    const topped = apply(doc, {
+      type: 'batch',
+      commands: countertops.map((countertop) => ({ type: 'countertop.add', countertop })),
+    }).doc;
+    const { doc: next, inverse } = apply(topped, { type: 'wall.remove', id: 'wall-west' });
+    expect(ids(next.countertops)).toEqual(['countertop-b-01']);
+    expect(inverse).toMatchObject({
+      commands: [
+        { type: 'wall.add' },
+        { type: 'countertop.add', index: 0 },
+        { type: 'countertop.add', index: 2 },
+      ],
+    });
   });
 
   it('fails with NOT_FOUND for an unknown wall', () => {
@@ -645,5 +677,227 @@ describe('batch', () => {
   it('fails with SCHEMA, and no index, when the batch itself is malformed', () => {
     const error = expectError(doc, { type: 'batch' } as unknown as Command, 'SCHEMA');
     expect(error.commandIndex).toBeUndefined();
+  });
+});
+
+describe('countertop.add', () => {
+  it('appends a countertop, or inserts at an index', () => {
+    const { doc: next, inverse } = apply(doc, {
+      type: 'countertop.add',
+      countertop: newCountertop,
+    });
+    expect(next.countertops).toEqual([newCountertop]);
+    expect(next.items).toBe(doc.items);
+    expect(inverse).toEqual({ type: 'countertop.remove', id: 'countertop-new-01' });
+
+    const second = { ...newCountertop, id: 'countertop-new-02' };
+    const { doc: both } = apply(next, { type: 'countertop.add', countertop: second, index: 0 });
+    expect(ids(both.countertops)).toEqual(['countertop-new-02', 'countertop-new-01']);
+  });
+
+  it('fails for a used id, a missing wall, a bad index or no length', () => {
+    const add = (countertop: Countertop, index?: number): Command => ({
+      type: 'countertop.add',
+      countertop,
+      ...(index !== undefined && { index }),
+    });
+    expectError(doc, add({ ...newCountertop, id: 'item-base-01' }), 'DUPLICATE_ID');
+    const { doc: next } = apply(doc, add(newCountertop));
+    expectError(next, add(newCountertop), 'DUPLICATE_ID');
+    expectError(
+      next,
+      { type: 'wall.add', wall: { ...newWall, id: newCountertop.id } },
+      'DUPLICATE_ID',
+    );
+    expectError(doc, add({ ...newCountertop, wallId: 'wall-missing' }), 'NOT_FOUND');
+    expectError(doc, add(newCountertop, 1), 'INVALID_ARGUMENT');
+    const error = expectError(
+      doc,
+      add({ ...newCountertop, endOffset: newCountertop.startOffset }),
+      'INVALID_ARGUMENT',
+    );
+    expect(error.message).toBe('A countertop ends after it starts.');
+  });
+});
+
+describe('countertop.update', () => {
+  const topped = apply(doc, {
+    type: 'countertop.add',
+    countertop: { ...newCountertop, finishId: 'countertop.white' },
+  }).doc;
+  const update = (patch: Extract<Command, { type: 'countertop.update' }>['patch']): Command => ({
+    type: 'countertop.update',
+    id: newCountertop.id,
+    patch,
+  });
+
+  it('changes only the patched fields', () => {
+    const { doc: next, inverse } = apply(
+      topped,
+      update({ endOffset: inches(72), depth: inches(26) }),
+    );
+    expect(next.countertops[0]).toEqual({
+      ...newCountertop,
+      finishId: 'countertop.white',
+      endOffset: inches(72),
+      depth: inches(26),
+    });
+    expect(inverse).toEqual(update({ endOffset: inches(60), depth: inches(25.5) }));
+  });
+
+  it('removes the finish with null, and the inverse puts it back', () => {
+    const { doc: next, inverse } = apply(topped, update({ finishId: null }));
+    expect(next.countertops[0]).not.toHaveProperty('finishId');
+    expect(inverse).toEqual(update({ finishId: 'countertop.white' }));
+    expect(apply(next, update({ finishId: 'countertop.charcoal' })).inverse).toEqual(
+      update({ finishId: null }),
+    );
+  });
+
+  it('fails for an unknown countertop, a missing wall or no length', () => {
+    expectError(doc, update({ depth: inches(26) }), 'NOT_FOUND');
+    expectError(topped, update({ wallId: 'wall-missing' }), 'NOT_FOUND');
+    expectError(topped, update({ startOffset: inches(60) }), 'INVALID_ARGUMENT');
+  });
+});
+
+describe('countertop.remove', () => {
+  it('removes the countertop, and the inverse restores it in place', () => {
+    const topped = apply(doc, { type: 'countertop.add', countertop: newCountertop }).doc;
+    const { doc: next, inverse } = apply(topped, {
+      type: 'countertop.remove',
+      id: newCountertop.id,
+    });
+    expect(next.countertops).toEqual([]);
+    expect(inverse).toEqual({ type: 'countertop.add', countertop: newCountertop, index: 0 });
+  });
+
+  it('fails with NOT_FOUND for an unknown countertop', () => {
+    expectError(doc, { type: 'countertop.remove', id: 'countertop-missing' }, 'NOT_FOUND');
+  });
+});
+
+describe('finish.set', () => {
+  it('sets, replaces and clears the finish for a target', () => {
+    const set = apply(doc, { type: 'finish.set', target: 'cabinet', finishId: 'cabinet.navy' });
+    expect(set.doc.finishes).toEqual({ cabinet: 'cabinet.navy' });
+    expect(set.doc.items).toBe(doc.items);
+    expect(set.inverse).toEqual({ type: 'finish.set', target: 'cabinet', finishId: null });
+
+    const replaced = apply(set.doc, {
+      type: 'finish.set',
+      target: 'cabinet',
+      finishId: 'cabinet.oak',
+    });
+    expect(replaced.inverse).toEqual({
+      type: 'finish.set',
+      target: 'cabinet',
+      finishId: 'cabinet.navy',
+    });
+
+    const cleared = apply(replaced.doc, { type: 'finish.set', target: 'cabinet', finishId: null });
+    expect(cleared.doc.finishes).toEqual({});
+  });
+
+  it('rejects an unknown target with SCHEMA', () => {
+    expectError(doc, { type: 'finish.set', target: 'ceiling', finishId: 'x' } as never, 'SCHEMA');
+  });
+});
+
+describe('catalog context', () => {
+  const context = { catalog: SEED_CATALOG };
+  const base = defaultItemFor(getEntry(SEED_CATALOG, 'base.standard')!, 'item-catalog-01', {
+    type: 'wall',
+    wallId: 'wall-west',
+    offset: 0,
+  });
+  const add: Command = { type: 'item.add', item: base };
+  const withBase = (() => {
+    const applied = applyCommand(doc, add, context);
+    if (!applied.ok) throw new Error(applied.error.message);
+    return applied.value.doc;
+  })();
+
+  /** Fails with the catalog and applies without it. */
+  function expectConstraint(from: DesignDocument, cmd: Command, code: string) {
+    const result = applyCommand(from, cmd, context);
+    if (result.ok) throw new Error('expected the command to fail');
+    expect(result.error.code).toBe('INVALID_ARGUMENT');
+    expect(result.error.constraintErrors?.map((error) => error.code)).toEqual([code]);
+    expect(result.error.message).toBe(result.error.constraintErrors?.[0]?.message);
+    expect(applyCommand(from, cmd).ok).toBe(true);
+    return result.error;
+  }
+
+  it('item.add accepts an item that fits its entry', () => {
+    expect(ids(withBase.items)).toContain('item-catalog-01');
+  });
+
+  it('item.add rejects a width off the 3 in step, listing the allowed widths', () => {
+    const error = expectConstraint(
+      doc,
+      { type: 'item.add', item: { ...base, width: inches(31) } },
+      'WIDTH_OFF_STEP',
+    );
+    expect(error.message).toBe(
+      'Width 31" is not allowed for base.standard. Use a multiple of 3" from 9" to 48".',
+    );
+    expect(error.constraintErrors?.[0]?.allowed).toContain(inches(30));
+  });
+
+  it('item.add rejects an item the sample document already has, as its ids are not in the catalog', () => {
+    expectConstraint(doc, { type: 'item.add', item: newItem }, 'UNKNOWN_CATALOG_ID');
+  });
+
+  it('item.resize rejects a non-standard height or depth, and accepts an allowed width', () => {
+    const resize = { type: 'item.resize', id: base.id } as const;
+    expectConstraint(withBase, { ...resize, height: inches(36) }, 'HEIGHT_NOT_STANDARD');
+    expectConstraint(withBase, { ...resize, depth: inches(21) }, 'DEPTH_NOT_STANDARD');
+    expectConstraint(withBase, { ...resize, width: inches(51) }, 'WIDTH_OUT_OF_RANGE');
+    const resized = applyCommand(withBase, { ...resize, width: inches(36) }, context);
+    expect(resized).toMatchObject({ ok: true });
+  });
+
+  it('item.setOptions rejects a value the entry does not offer, and accepts one it does', () => {
+    const setOptions = { type: 'item.setOptions', id: base.id } as const;
+    const error = expectConstraint(
+      withBase,
+      { ...setOptions, options: { doors: 3 } },
+      'OPTION_INVALID',
+    );
+    expect(error.constraintErrors?.[0]).toMatchObject({ option: 'doors', allowed: [1, 2] });
+    const changed = applyCommand(withBase, { ...setOptions, options: { doors: 1 } }, context);
+    expect(changed).toMatchObject({ ok: true });
+  });
+
+  it('checks the commands inside a batch, and reports which one failed', () => {
+    const result = applyCommand(
+      doc,
+      {
+        type: 'batch',
+        commands: [add, { type: 'item.resize', id: base.id, width: inches(10) }],
+      },
+      context,
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: 'INVALID_ARGUMENT', commandIndex: 1, constraintErrors: [{}] },
+    });
+  });
+
+  it('leaves the other commands alone', () => {
+    // The sample document's items are not in the catalog; moving and removing them still works.
+    expect(
+      applyCommand(
+        doc,
+        {
+          type: 'item.move',
+          id: 'item-base-01',
+          placement: { type: 'free', x: 0, y: 0, rotation: 0 },
+        },
+        context,
+      ).ok,
+    ).toBe(true);
+    expect(applyCommand(doc, { type: 'item.remove', id: 'item-base-01' }, context).ok).toBe(true);
   });
 });

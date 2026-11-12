@@ -25,7 +25,12 @@ describe('JSON Schema export', () => {
       required: ['schemaVersion', 'id', 'name', 'room', 'items'],
       additionalProperties: false,
     });
+    // Present, and optional because each has a default.
+    expect(Object.keys(schema.properties as Node)).toEqual(
+      expect.arrayContaining(['countertops', 'finishes']),
+    );
     expect(Object.keys(schema.$defs as Node).sort()).toEqual([
+      'Countertop',
       'Item',
       'Opening',
       'Placement',

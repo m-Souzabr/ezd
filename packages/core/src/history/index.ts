@@ -1,4 +1,9 @@
-import { applyCommand, type Command, type CommandError } from '../commands/index.js';
+import {
+  applyCommand,
+  type Command,
+  type CommandContext,
+  type CommandError,
+} from '../commands/index.js';
 import type { DesignDocument } from '../document/index.js';
 import { ok, type Result } from '../result.js';
 
@@ -13,9 +18,16 @@ export const HISTORY_LIMIT = 200;
 
 export const emptyHistory = (): History => ({ past: [], future: [] });
 
-/** Applies a command and records it as one undo step. Clears the redo stack. */
-export function execute(state: HistoryState, cmd: Command): Result<HistoryState, CommandError> {
-  const applied = applyCommand(state.doc, cmd);
+/**
+ * Applies a command and records it as one undo step. Clears the redo stack. `context` is
+ * passed to `applyCommand`; undo and redo replay recorded commands without it.
+ */
+export function execute(
+  state: HistoryState,
+  cmd: Command,
+  context?: CommandContext,
+): Result<HistoryState, CommandError> {
+  const applied = applyCommand(state.doc, cmd, context);
   if (!applied.ok) return applied;
   const entry: Entry = { command: cmd, inverse: applied.value.inverse };
   return ok({

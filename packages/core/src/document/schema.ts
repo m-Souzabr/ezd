@@ -98,6 +98,37 @@ export const ItemSchema = z
 
 export const DocumentNameSchema = z.string().min(1).max(200);
 
+/** What a finish applies to. */
+export const FinishTargetSchema = z.enum(['cabinet', 'countertop', 'wall', 'floor']);
+/** The id of a catalog finish. */
+export const FinishIdSchema = z.string().min(1);
+
+/** One rectangular slab along a wall, back edge against the wall. */
+export const CountertopSchema = z
+  .strictObject({
+    id: IdSchema,
+    wallId: IdSchema,
+    /** Both offsets are from the wall start, along the wall. */
+    startOffset: NonNegativeLenSchema,
+    endOffset: PositiveLenSchema,
+    /** From the wall into the room. */
+    depth: PositiveLenSchema,
+    thickness: PositiveLenSchema,
+    /** Underside of the slab above the floor. */
+    elevation: NonNegativeLenSchema,
+    /** Defaults to `finishes.countertop`. */
+    finishId: FinishIdSchema.optional(),
+  })
+  .meta({ id: 'Countertop' });
+
+/** The design-wide finish for each target. An item's own `finishId` overrides it. */
+export const DocumentFinishesSchema = z.strictObject({
+  cabinet: FinishIdSchema.optional(),
+  countertop: FinishIdSchema.optional(),
+  wall: FinishIdSchema.optional(),
+  floor: FinishIdSchema.optional(),
+});
+
 export const DesignDocumentSchema = z
   .strictObject({
     schemaVersion: z.literal(SCHEMA_VERSION),
@@ -110,6 +141,8 @@ export const DesignDocumentSchema = z
       openings: z.array(OpeningSchema),
     }),
     items: z.array(ItemSchema),
+    countertops: z.array(CountertopSchema).default([]),
+    finishes: DocumentFinishesSchema.default({}),
   })
   .superRefine((doc, ctx) => {
     for (const issue of findIntegrityIssues(doc)) {
@@ -127,6 +160,9 @@ export type Placement = z.infer<typeof PlacementSchema>;
 export type ItemKind = z.infer<typeof ItemKindSchema>;
 export type OptionValue = z.infer<typeof OptionValueSchema>;
 export type Item = z.infer<typeof ItemSchema>;
+export type FinishTarget = z.infer<typeof FinishTargetSchema>;
+export type Countertop = z.infer<typeof CountertopSchema>;
+export type DocumentFinishes = z.infer<typeof DocumentFinishesSchema>;
 export type DesignDocument = z.infer<typeof DesignDocumentSchema>;
 
 export const isZeroLength = (wall: Pick<Wall, 'start' | 'end'>): boolean =>
@@ -145,11 +181,21 @@ export function openingProblem(
   return null;
 }
 
+/** What is wrong with a countertop's own fields, or null. Shared with the command layer. */
+export function countertopProblem(
+  countertop: Pick<Countertop, 'startOffset' | 'endOffset'>,
+): { field: 'endOffset'; message: string } | null {
+  if (countertop.endOffset <= countertop.startOffset) {
+    return { field: 'endOffset', message: 'A countertop ends after it starts' };
+  }
+  return null;
+}
+
 type PathIssue = { path: (string | number)[]; message: string };
 
 /**
- * Checks what a schema alone cannot: ids are unique across walls, openings and items,
- * every `wallId` exists, and every wall has a length.
+ * Checks what a schema alone cannot: ids are unique across walls, openings, items and
+ * countertops, every `wallId` exists, and every wall has a length.
  */
 function findIntegrityIssues(doc: z.infer<typeof DesignDocumentSchema>): PathIssue[] {
   const issues: PathIssue[] = [];
@@ -181,6 +227,14 @@ function findIntegrityIssues(doc: z.infer<typeof DesignDocumentSchema>): PathIss
     claim(item.id, ['items', i]);
     if (item.placement.type === 'wall') {
       requireWall(item.placement.wallId, ['items', i, 'placement', 'wallId']);
+    }
+  });
+  doc.countertops.forEach((countertop, i) => {
+    claim(countertop.id, ['countertops', i]);
+    requireWall(countertop.wallId, ['countertops', i, 'wallId']);
+    const problem = countertopProblem(countertop);
+    if (problem) {
+      issues.push({ path: ['countertops', i, problem.field], message: problem.message });
     }
   });
   return issues;

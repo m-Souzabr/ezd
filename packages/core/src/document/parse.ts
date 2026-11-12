@@ -16,6 +16,8 @@ export function createEmptyDocument({ id, name }: { id: Id; name: string }): Des
     name,
     room: { ceilingHeight: DEFAULT_CEILING_HEIGHT, walls: [], openings: [] },
     items: [],
+    countertops: [],
+    finishes: {},
   };
 }
 

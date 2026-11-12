@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
 import {
+  CountertopSchema,
   DocumentNameSchema,
+  FinishIdSchema,
+  FinishTargetSchema,
   IdSchema,
   ItemSchema,
   NonNegativeLenSchema,
@@ -45,7 +48,7 @@ const WallUpdateSchema = z.strictObject({
   }),
 });
 
-/** Removes the wall's openings too. Fails if any item is placed on the wall. */
+/** Removes the wall's openings and countertops too. Fails if any item is placed on the wall. */
 const WallRemoveSchema = z.strictObject({ type: z.literal('wall.remove'), id: IdSchema });
 
 const OpeningAddSchema = z.strictObject({
@@ -101,6 +104,38 @@ const ItemSetOptionsSchema = z.strictObject({
 
 const ItemRemoveSchema = z.strictObject({ type: z.literal('item.remove'), id: IdSchema });
 
+const CountertopAddSchema = z.strictObject({
+  type: z.literal('countertop.add'),
+  countertop: CountertopSchema,
+  index: IndexSchema.optional(),
+});
+
+const CountertopUpdateSchema = z.strictObject({
+  type: z.literal('countertop.update'),
+  id: IdSchema,
+  patch: z.strictObject({
+    wallId: IdSchema.optional(),
+    startOffset: NonNegativeLenSchema.optional(),
+    endOffset: PositiveLenSchema.optional(),
+    depth: PositiveLenSchema.optional(),
+    thickness: PositiveLenSchema.optional(),
+    elevation: NonNegativeLenSchema.optional(),
+    finishId: FinishIdSchema.nullable().optional(),
+  }),
+});
+
+const CountertopRemoveSchema = z.strictObject({
+  type: z.literal('countertop.remove'),
+  id: IdSchema,
+});
+
+/** Sets the design-wide finish for a target. A null `finishId` clears it. */
+const FinishSetSchema = z.strictObject({
+  type: z.literal('finish.set'),
+  target: FinishTargetSchema,
+  finishId: FinishIdSchema.nullable(),
+});
+
 const DocumentRenameSchema = z.strictObject({
   type: z.literal('document.rename'),
   name: DocumentNameSchema,
@@ -129,6 +164,10 @@ export const CommandSchema = z
     ItemResizeSchema,
     ItemSetOptionsSchema,
     ItemRemoveSchema,
+    CountertopAddSchema,
+    CountertopUpdateSchema,
+    CountertopRemoveSchema,
+    FinishSetSchema,
     DocumentRenameSchema,
     BatchSchema,
   ])

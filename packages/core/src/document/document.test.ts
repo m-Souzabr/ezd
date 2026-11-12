@@ -2,11 +2,29 @@ import { describe, expect, it } from 'vitest';
 
 import { inches } from '../units/index.js';
 import { clone, fixtures, sampleDocument } from '../test/fixtures.js';
-import { createEmptyDocument, type DesignDocument, parseDocument } from './index.js';
+import {
+  type Countertop,
+  createEmptyDocument,
+  type DesignDocument,
+  parseDocument,
+} from './index.js';
 import { migrate, migrateWith } from './migrate.js';
+
+/** The valid fixture as `parseDocument` returns it, with the defaults filled in. */
+const validParsed = { ...fixtures.valid, countertops: [], finishes: {} };
 
 /** A plain, editable copy of the sample document. */
 const editable = (): DesignDocument => clone(sampleDocument());
+
+const countertop: Countertop = {
+  id: 'countertop-01',
+  wallId: 'wall-north',
+  startOffset: 0,
+  endOffset: inches(48),
+  depth: inches(25.5),
+  thickness: inches(1.5),
+  elevation: inches(34.5),
+};
 
 function issuesOf(input: unknown) {
   const result = parseDocument(input);
@@ -21,13 +39,42 @@ describe('createEmptyDocument', () => {
     expect(doc.room.ceilingHeight).toBe(inches(96));
     expect(doc.room.walls).toEqual([]);
     expect(doc.items).toEqual([]);
+    expect(doc.countertops).toEqual([]);
+    expect(doc.finishes).toEqual({});
     expect(parseDocument(doc)).toEqual({ ok: true, value: doc });
   });
 });
 
 describe('parseDocument', () => {
-  it('accepts the valid fixture unchanged', () => {
-    expect(parseDocument(fixtures.valid)).toEqual({ ok: true, value: fixtures.valid });
+  it('accepts the valid fixture, defaulting countertops and finishes', () => {
+    expect(fixtures.valid).not.toHaveProperty('countertops');
+    expect(parseDocument(fixtures.valid)).toEqual({ ok: true, value: validParsed });
+  });
+
+  it('accepts countertops and finishes', () => {
+    const doc = editable();
+    doc.countertops.push(countertop);
+    doc.finishes = { cabinet: 'cabinet.white', floor: 'floor.oak' };
+    expect(parseDocument(doc)).toEqual({ ok: true, value: doc });
+  });
+
+  it('rejects a countertop with a duplicate id, a missing wall or no length', () => {
+    const doc = editable();
+    doc.countertops.push(
+      { ...countertop, id: 'wall-north' },
+      { ...countertop, wallId: 'wall-missing' },
+      { ...countertop, id: 'countertop-02', startOffset: inches(48) },
+    );
+    expect(issuesOf(doc).issues).toEqual([
+      { path: 'countertops[0].id', message: 'Duplicate id "wall-north"' },
+      { path: 'countertops[1].wallId', message: 'No wall has id "wall-missing"' },
+      { path: 'countertops[2].endOffset', message: 'A countertop ends after it starts' },
+    ]);
+  });
+
+  it('rejects an unknown finish target', () => {
+    const doc = { ...editable(), finishes: { ceiling: 'wall.white' } };
+    expect(issuesOf(doc).issues.map((issue) => issue.path)).toEqual(['finishes']);
   });
 
   it('rejects a duplicate id, naming the second use', () => {
@@ -141,8 +188,8 @@ describe('parseDocument', () => {
 });
 
 describe('migrate', () => {
-  it('returns a version 1 document unchanged', () => {
-    expect(migrate(fixtures.valid)).toEqual({ ok: true, value: fixtures.valid });
+  it('returns a version 1 document, with its defaults filled in', () => {
+    expect(migrate(fixtures.valid)).toEqual({ ok: true, value: validParsed });
   });
 
   it.each([
@@ -187,7 +234,7 @@ describe('migrate', () => {
     };
     const { name, ...rest } = fixtures.valid;
     const old = { ...rest, title: name, schemaVersion: 0 };
-    expect(migrateWith(registry, 1, old)).toEqual({ ok: true, value: fixtures.valid });
+    expect(migrateWith(registry, 1, old)).toEqual({ ok: true, value: validParsed });
   });
 
   it('stops when a step does not advance the version', () => {
