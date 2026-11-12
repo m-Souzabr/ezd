@@ -18,12 +18,19 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "build": "tsc -p tsconfig.build.json"
+    "test": "vitest run --coverage",
+    "build": "tsc -p tsconfig.build.json",
+    "schema": "tsc -p tsconfig.build.json && node scripts/export-schema.mjs"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
+    "fast-check": "catalog:",
+    "globals": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "dependencies": {
+    "zod": "catalog:"
   }
 }

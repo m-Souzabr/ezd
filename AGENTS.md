@@ -100,9 +100,14 @@ Run from the root with a filter, or `cd` into the package and drop the filter.
 | `@ezd/core-cli` | `pnpm --filter @ezd/core-cli lint` | `pnpm --filter @ezd/core-cli typecheck` | `pnpm --filter @ezd/core-cli test` | `pnpm --filter @ezd/core-cli build` |
 | `@ezd/web`      | `pnpm --filter @ezd/web lint`      | `pnpm --filter @ezd/web typecheck`      | `pnpm --filter @ezd/web test`      | `pnpm --filter @ezd/web build`      |
 
+- JSON Schema: `pnpm --filter @ezd/core schema` rewrites `packages/core/schema/*.json` from
+  the Zod schemas. Run it and commit the result whenever a document or command schema
+  changes; CI fails if the committed files are stale.
+- Core tests run with coverage and fail below 95 percent of lines or branches.
 - Web dev server: `pnpm --filter @ezd/web dev` (http://localhost:5173, proxies `/api` to
   http://localhost:8000).
-- CLI after a build: `node packages/core-cli/bin/ezd-core.js --version`.
+- CLI after a build: `node packages/core-cli/bin/ezd-core.js --version`, or
+  `node packages/core-cli/bin/ezd-core.js validate-document < design.json`.
 
 ### `apps/api` (Django), from `apps/api`
 
@@ -129,6 +134,10 @@ There is no Python typecheck or build step yet. pytest needs PostgreSQL running.
 - **Importing core.** `@ezd/core` exports its TypeScript source under the `@ezd/source`
   condition, which the shared tsconfig, Vite, Vitest and the core-cli esbuild build all
   use. Web and core-cli therefore never need core to be built first.
+- **Core API.** `applyCommand` (and `execute`, `undo`, `redo` on top of it) is the only way
+  to change a document. Functions return a `Result` and do not throw for bad input. Types
+  are inferred from the Zod schemas in `document/schema.ts` and `commands/schema.ts`; do not
+  write them a second time.
 - **Relative imports in `packages/core` and `packages/core-cli`** carry a `.js` extension
   (`./units.js`), so the emitted ESM runs in Node unchanged.
 - **Django settings** are `config.settings.dev` (default for `manage.py`),

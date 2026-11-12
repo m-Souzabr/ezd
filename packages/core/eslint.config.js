@@ -1,3 +1,5 @@
+import globals from 'globals';
+
 import { base } from '../../eslint.config.js';
 
 const message =
@@ -32,5 +34,11 @@ export default [
         },
       ],
     },
+  },
+  // The schema export script runs in Node, outside the domain code in src.
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: globals.node },
+    rules: { 'no-restricted-imports': 'off' },
   },
 ];

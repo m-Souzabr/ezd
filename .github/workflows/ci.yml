@@ -33,6 +33,12 @@ jobs:
         if: ${{ !cancelled() }}
       - run: pnpm build
         if: ${{ !cancelled() }}
+      - name: JSON Schema files match the Zod schemas
+        if: ${{ !cancelled() }}
+        run: |
+          pnpm --filter @ezd/core schema
+          git add --intent-to-add packages/core/schema
+          git diff --exit-code -- packages/core/schema
 
   py:
     runs-on: ubuntu-latest
