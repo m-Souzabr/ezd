@@ -8,4 +8,6 @@ export * from './geometry/index.js';
 export * from './catalog/index.js';
 export * from './commands/index.js';
 export * from './history/index.js';
+export * from './rules/index.js';
+export * from './snapping/index.js';
 export * from './schema/index.js';

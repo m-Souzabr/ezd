@@ -14,7 +14,8 @@ import { type Catalog, getEntry } from './types.js';
  * A stretch of a wall to cover. `start` and `end` are where the cabinets are; `from` and
  * `to` are where the slab goes once it is trimmed to butt against its neighbour.
  */
-type Run = { start: Len; end: Len; from: Len; to: Len; depth: Len };
+export type CountertopRun = { start: Len; end: Len; from: Len; to: Len; depth: Len };
+type Run = CountertopRun;
 type Span = Pick<Run, 'start' | 'end' | 'depth'>;
 
 /**
@@ -23,7 +24,7 @@ type Span = Pick<Run, 'start' | 'end' | 'depth'>;
  * fillers and end panels between them, and leaves out ranges, refrigerators and tall
  * cabinets.
  */
-const bearsCountertop = (item: Item): boolean =>
+export const bearsCountertop = (item: Item): boolean =>
   item.placement.type === 'wall' &&
   item.kind !== 'wall' &&
   item.kind !== 'tall' &&
@@ -79,14 +80,14 @@ function mergeRuns(spans: Span[]): Run[] {
 }
 
 /**
- * Proposes one rectangular countertop for each contiguous run of counter-height items on
- * a wall. A run breaks at a range, a tall cabinet, a refrigerator or any gap.
+ * The contiguous runs of counter-height items on each wall, by wall id, in order along the
+ * wall. A run breaks at a range, a tall cabinet, a refrigerator or any gap.
  *
  * Where two walls meet, the tops are butt-joined: the one whose run reaches the corner
- * keeps its full length, and the other stops at its front edge. Runs that already have a
- * countertop over exactly the same stretch are skipped.
+ * keeps its full length, and the other stops at its front edge. A run trimmed to nothing
+ * has `to <= from`.
  */
-export function proposeCountertops(doc: DesignDocument, catalog: Catalog): Command[] {
+export function countertopRuns(doc: DesignDocument, catalog: Catalog): Map<Id, CountertopRun[]> {
   const spans = spansByWall(doc, catalog);
   const runs = new Map<Id, Run[]>();
   for (const [wallId, wallSpans] of spans) runs.set(wallId, mergeRuns(wallSpans));
@@ -103,6 +104,15 @@ export function proposeCountertops(doc: DesignDocument, catalog: Catalog): Comma
       first.from = Math.max(first.from, last.depth + COUNTERTOP_OVERHANG);
     }
   }
+  return runs;
+}
+
+/**
+ * Proposes one rectangular countertop for each run of `countertopRuns`. Runs that already
+ * have a countertop over exactly the same stretch are skipped.
+ */
+export function proposeCountertops(doc: DesignDocument, catalog: Catalog): Command[] {
+  const runs = countertopRuns(doc, catalog);
 
   const used = new Set<Id>(
     [doc.room.walls, doc.room.openings, doc.items, doc.countertops].flatMap((list) =>

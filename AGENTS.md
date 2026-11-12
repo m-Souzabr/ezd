@@ -104,10 +104,15 @@ Run from the root with a filter, or `cd` into the package and drop the filter.
   the Zod schemas. Run it and commit the result whenever a document or command schema
   changes; CI fails if the committed files are stale.
 - Core tests run with coverage and fail below 95 percent of lines or branches.
+- Core performance tests are the `*.perf.test.ts` files. `pnpm --filter @ezd/core test` runs
+  them in a second pass (`vitest.perf.config.ts`) without coverage, which would distort the
+  timings.
 - Web dev server: `pnpm --filter @ezd/web dev` (http://localhost:5173, proxies `/api` to
   http://localhost:8000).
 - CLI after a build: `node packages/core-cli/bin/ezd-core.js --version`, or
   `node packages/core-cli/bin/ezd-core.js validate-document < design.json`.
+  `ezd-core validate` reads `{ document, commands? }` on stdin and prints the rule
+  violations; `ezd-core --help` lists every command.
 
 ### `apps/api` (Django), from `apps/api`
 
@@ -143,6 +148,17 @@ There is no Python typecheck or build step yet. pytest needs PostgreSQL running.
   Corner cabinets go on the wall that starts at the corner, at offset 0, so the corner is
   at the item's left end. `generateParts` returns boxes local to the item: x along the
   width, y up, z from the back.
+- **Rules.** `validate(doc, catalog)` returns every `Violation`, sorted;
+  `validateCommand` applies a command and also returns the violations it `introduced`.
+  Each rule is one file in `rules/rules/`, built with `defineRule` and registered in
+  `rules/rules/index.ts`; its thresholds are named constants in `rules/constants.ts`. A
+  rule never blocks a command: callers decide what to do with errors. Messages name items
+  as `Base cabinet 30" at 12" on wall A`, walls being A, B, C in document order.
+- **Geometry.** Checks along one wall use integer intervals (`geometry/intervals.ts`).
+  Oriented-rectangle tests (`geometry/rects.ts`) are for items on different walls and
+  free-placed items. `EPS` is the only float tolerance, and touching is never overlap.
+- **Snapping.** `snap` and `snapResize` are pure and return integer `Len` values. The
+  pointer is the middle of the dragged item.
 - **Relative imports in `packages/core` and `packages/core-cli`** carry a `.js` extension
   (`./units.js`), so the emitted ESM runs in Node unchanged.
 - **Django settings** are `config.settings.dev` (default for `manage.py`),
