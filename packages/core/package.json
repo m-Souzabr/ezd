@@ -18,7 +18,7 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --coverage",
+    "test": "vitest run --coverage && vitest run --config vitest.perf.config.ts",
     "build": "tsc -p tsconfig.build.json",
     "schema": "tsc -p tsconfig.build.json && node scripts/export-schema.mjs"
   },
