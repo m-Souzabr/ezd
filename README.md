@@ -56,6 +56,9 @@ pnpm dev
 The web dev server proxies `/api` to the API, so
 <http://localhost:5173/api/health/> answers `{"status": "ok"}`.
 
+The editor does not need the API yet: it keeps the design in the browser's `localStorage`,
+so `pnpm dev` alone is enough to use it.
+
 The API works with no configuration. To change anything (for example when port 5432 is
 already in use), copy `apps/api/.env.example` to `apps/api/.env` and edit it; set
 `POSTGRES_PORT` and `DATABASE_URL` together.
@@ -70,6 +73,14 @@ pnpm lint            # ESLint
 pnpm typecheck       # tsc
 pnpm build           # core, core-cli and web builds
 pnpm format          # Prettier (pnpm format:check to verify only)
+```
+
+End-to-end tests of the editor, in a real browser (Playwright starts the web dev server
+itself):
+
+```sh
+pnpm --filter @ezd/web exec playwright install chromium   # once
+pnpm --filter @ezd/web e2e
 ```
 
 Python, from `apps/api` (pytest needs the database from `docker compose up`):

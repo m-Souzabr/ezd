@@ -109,6 +109,22 @@ export const the = (label: string): string =>
 export const openingLabel = (opening: Opening, wall?: WallInfo): string =>
   `the ${opening.kind} at ${formatLength(opening.offset)}${wall ? ` on wall ${wall.label}` : ''}`;
 
+/**
+ * An item's name in messages: `Base cabinet 30" at 12" on wall A`, or
+ * `Base cabinet 30" (free-standing)` for an item that is not on a wall.
+ */
+export function itemLabel(doc: DesignDocument, catalog: Catalog, item: Item): string {
+  const entry = catalog.entries.find((candidate) => candidate.id === item.catalogId);
+  // The seed names say how a corner cabinet is measured, in brackets. Leave that out.
+  const name = entry ? entry.name.replace(/\s*\(.*\)$/, '') : KIND_NAMES[item.kind];
+  const { placement } = item;
+  const where =
+    placement.type === 'wall'
+      ? `at ${formatLength(placement.offset)} on wall ${wallLabel(doc, placement.wallId)}`
+      : '(free-standing)';
+  return `${name} ${formatLength(item.width)} ${where}`;
+}
+
 export const verticalOverlap = (a: PlacedItem, b: PlacedItem): boolean =>
   a.bottom < b.top && b.bottom < a.top;
 
@@ -159,16 +175,13 @@ export function createContext(doc: DesignDocument, catalog: Catalog): RuleContex
     const wall = placement.type === 'wall' ? wallById.get(placement.wallId) : undefined;
     const start = placement.type === 'wall' ? placement.offset : 0;
     const entry = entries.get(item.catalogId);
-    // The seed names say how a corner cabinet is measured, in brackets. Leave that out.
-    const name = entry ? entry.name.replace(/\s*\(.*\)$/, '') : KIND_NAMES[item.kind];
-    const where = wall ? `at ${formatLength(start)} on wall ${wall.label}` : '(free-standing)';
     const xs = footprint.map((p) => p.x);
     const ys = footprint.map((p) => p.y);
     const placed: PlacedItem = {
       item,
       entry,
       index,
-      label: `${name} ${formatLength(item.width)} ${where}`,
+      label: itemLabel(doc, catalog, item),
       errors: checkItemAgainstCatalog(item, catalog),
       footprint,
       minX: Math.min(...xs),

@@ -50,7 +50,7 @@ Rules for code agents and contributors working on EZDesign. The plan is
 ezd/
   packages/core/      @ezd/core      pure TS domain: schemas, units, commands, catalog, rules, scene, bom
   packages/core-cli/  @ezd/core-cli  Node CLI wrapping core (validate, apply) for Python callers
-  apps/web/           @ezd/web       React + Vite app
+  apps/web/           @ezd/web       React + Vite app: the 2D editor, and its Playwright tests in e2e/
   apps/api/           Django project (Python)
   evals/              LLM eval cases and recorded fixtures (added in a later phase)
   scripts/            repository tooling (license check)
@@ -108,7 +108,14 @@ Run from the root with a filter, or `cd` into the package and drop the filter.
   them in a second pass (`vitest.perf.config.ts`) without coverage, which would distort the
   timings.
 - Web dev server: `pnpm --filter @ezd/web dev` (http://localhost:5173, proxies `/api` to
-  http://localhost:8000).
+  http://localhost:8000). The editor works without the API: designs are kept in
+  `localStorage` until #8.
+- Web end-to-end tests: `pnpm --filter @ezd/web e2e` runs the Playwright tests in
+  `apps/web/e2e` against the dev server, which it starts itself. Install the browser once
+  with `pnpm --filter @ezd/web exec playwright install chromium`. They are not part of
+  `pnpm test`; CI runs them in the `e2e` job. They read the document through
+  `window.__ezd` (`getDoc`, `getHistoryLength`, `getViewport`), which only development and
+  test builds expose, and drive the canvas by mouse coordinates.
 - CLI after a build: `node packages/core-cli/bin/ezd-core.js --version`, or
   `node packages/core-cli/bin/ezd-core.js validate-document < design.json`.
   `ezd-core validate` reads `{ document, commands? }` on stdin and prints the rule
@@ -163,6 +170,28 @@ There is no Python typecheck or build step yet. pytest needs PostgreSQL running.
   floor polygon and boxes in world inches, with plan x as world x, plan y as world z and
   elevation as world y. `rotationY` is in degrees, counterclockwise seen from above, as
   Three.js turns a mesh. A box's `sourceId` is the wall, item or countertop to select.
+- **Web store.** `createDesignStore(doc)` (`apps/web/src/store/`) holds one design: the
+  document, its history and violations, and the UI state (selection, tool, view, viewport,
+  drag ghost). Its `execute`, `undo` and `redo` are the only places that replace `doc`,
+  each with the document core returned; ESLint rejects an assignment to `doc` or a
+  `setState` call anywhere else. Immer is for the UI state only. A loaded or imported
+  design gets a new store. Components read it with `useDesign(selector)`.
+- **Editor.** Each edit is one command, built by a pure function in `editor/edits.ts` or
+  `editor/tools/` and passed to `execute`; several changes go in one `batch`. A drag keeps
+  a ghost in the store's `drag`, updated on each pointer move with core's `snap` or
+  `snapResize`, and `commitDrag` executes one command on the drop, or none.
+- **Views.** The plan and the elevations draw from the document through pure model
+  functions (`editor/plan/model.ts`, `editor/elevation/model.ts`), which the tests compare.
+  The Konva layers do not listen for events: `CanvasHost` takes pointer and key input and
+  the views hit-test in drawing units (sixteenths of an inch). `editor/viewport.ts` converts
+  between those and screen pixels; an elevation's drawing x is the offset along the wall and
+  its y is the elevation negated.
+- **Lengths in the UI.** Show a length with `formatLength` and read one with `parseLength`
+  (the `LengthField` control does both). Widths, heights and depths come from the catalog
+  entry; core's own message is shown when it refuses a value.
+- **Persistence.** The app talks to a `DesignRepository` (`apps/web/src/lib/repository.ts`).
+  The `localStorage` implementation reads through `migrate`, guards every storage access,
+  and autosaves 500 ms after the last change to the document.
 - **Relative imports in `packages/core` and `packages/core-cli`** carry a `.js` extension
   (`./units.js`), so the emitted ESM runs in Node unchanged.
 - **Django settings** are `config.settings.dev` (default for `manage.py`),
