@@ -1,0 +1,30 @@
+{
+  "name": "ezd",
+  "version": "0.0.0",
+  "private": true,
+  "description": "EZDesign: web-based kitchen design tool",
+  "type": "module",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "lint": "pnpm -r run lint && eslint eslint.config.js scripts",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "build": "pnpm -r run build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "licenses": "node scripts/check-licenses.mjs js",
+    "licenses:py": "node scripts/check-licenses.mjs py"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "eslint": "catalog:",
+    "globals": "catalog:",
+    "license-checker-rseidelsohn": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
+  }
+}
