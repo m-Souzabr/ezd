@@ -57,7 +57,7 @@ jobs:
       DATABASE_URL: postgres://ezd:ezd@localhost:5432/ezd
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
           cache-dependency-glob: apps/api/uv.lock
@@ -76,7 +76,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
           cache-dependency-glob: apps/api/uv.lock
