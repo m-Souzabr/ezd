@@ -2,14 +2,15 @@
 
 Rules for code agents and contributors working on EZDesign. The plan is
 [issue #1](https://github.com/m-Souzabr/ezd/issues/1); each phase has its own issue
-(#2 to #12). Read the phase issue in full before starting it.
+(#2 to #12). Read the phase issue in full before starting it. Phase 5, the 3D view (#7),
+was removed from v1; the other phases keep their numbers.
 
 ## Ground rules
 
 ### Architecture
 
-- The Design Document (typed, versioned JSON) is the single source of truth. 2D, 3D, chat,
-  photo import and drag and drop are clients of it.
+- The Design Document (typed, versioned JSON) is the single source of truth. 2D, chat, photo
+  import and drag and drop are clients of it.
 - Every mutation goes through the command layer in `packages/core`. No code path edits the
   document directly.
 - `packages/core` is pure TypeScript: no React, no Three.js, no DOM, no Node-only APIs.
@@ -166,10 +167,12 @@ There is no Python typecheck or build step yet. pytest needs PostgreSQL running.
   free-placed items. `EPS` is the only float tolerance, and touching is never overlap.
 - **Snapping.** `snap` and `snapResize` are pure and return integer `Len` values. The
   pointer is the middle of the dragged item.
-- **Scene.** `buildScene(doc, catalog)` (`scene/`) is the only source of 3D geometry: a
-  floor polygon and boxes in world inches, with plan x as world x, plan y as world z and
-  elevation as world y. `rotationY` is in degrees, counterclockwise seen from above, as
-  Three.js turns a mesh. A box's `sourceId` is the wall, item or countertop to select.
+- **Scene.** There is no 3D view in v1, and nothing in the app calls `scene/`. It is kept,
+  with its tests, so a renderer can be added later. `buildScene(doc, catalog)` is the only
+  source of 3D geometry: a floor polygon and boxes in world inches, with plan x as world x,
+  plan y as world z and elevation as world y. `rotationY` is in degrees, counterclockwise
+  seen from above, as Three.js turns a mesh. A box's `sourceId` is the wall, item or
+  countertop to select.
 - **Web store.** `createDesignStore(doc)` (`apps/web/src/store/`) holds one design: the
   document, its history and violations, and the UI state (selection, tool, view, viewport,
   drag ghost). Its `execute`, `undo` and `redo` are the only places that replace `doc`,
