@@ -268,6 +268,9 @@ importers:
       '@ezd/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@wordpress/is-shallow-equal':
+        specifier: ^6.1.0
+        version: 6.1.0
       radix-ui:
         specifier: 'catalog:'
         version: 1.8.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1833,6 +1836,10 @@ packages:
 
   '@vitest/spy@5.1.0':
     resolution: {integrity: sha512-2DPO5OMHWKrBngC+fCmTQqemNF0gidRhp3lxbBmRhW+M1XJrfgPpqNqWVevXtn2f2ufD5ZaR1B6B641aAlcX5A==}
+
+  '@wordpress/is-shallow-equal@6.1.0':
+    resolution: {integrity: sha512-3zZw6SnVLPCfxHxHo7nlg6lRzKn7te/h4al2kdZ3GMWUAdtRsiJZKgiJcVCqNlJN7tbOyNXUepbVXyGJhrTE3Q==}
+    engines: {node: '>=22.13.0'}
 
   abbrev@2.0.0:
     resolution: {integrity: sha512-6/mh1E2u2YgEsCHdY0Yx5oW+61gZU+1vXaoiHHrpKeuRNNgFvS+/jrwHiQhB5apAf5oB7UB7E19ol2R2LKH8hQ==}
@@ -4555,6 +4562,8 @@ snapshots:
       vite: 8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)
 
   '@vitest/spy@5.1.0': {}
+
+  '@wordpress/is-shallow-equal@6.1.0': {}
 
   abbrev@2.0.0: {}
 
