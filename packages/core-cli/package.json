@@ -1,0 +1,30 @@
+{
+  "name": "@ezd/core-cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Node CLI wrapping @ezd/core for Python callers",
+  "type": "module",
+  "bin": {
+    "ezd-core": "./bin/ezd-core.js"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node24 --conditions=@ezd/source --outfile=dist/cli.js"
+  },
+  "dependencies": {
+    "@ezd/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "esbuild": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

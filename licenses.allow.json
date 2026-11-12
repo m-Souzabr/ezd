@@ -1,0 +1,36 @@
+{
+  "//": "Dependency license allowlist for JS and Python. Read by scripts/check-licenses.mjs (`pnpm run licenses`, `pnpm run licenses:py`) and enforced by the CI `licenses` job.",
+  "allow": [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "0BSD",
+    "CC0-1.0",
+    "Unlicense",
+    "PSF-2.0",
+    "HPND",
+    "BlueOak-1.0.0",
+    "Python-2.0"
+  ],
+  "pythonAliases": {
+    "//": "Older Python packages report a trove classifier name instead of an SPDX id. Each name maps to the allowlisted id it stands for.",
+    "MIT License": "MIT",
+    "BSD License": "BSD-3-Clause",
+    "Apache Software License": "Apache-2.0"
+  },
+  "exceptions": {
+    "//": "Packages exempt from the allowlist, by name, each with the reason. Keep this list short.",
+    "js": {
+      "caniuse-lite": "CC-BY-4.0. Browser-support data read by build tooling (browserslist) at build time; not shipped in any bundle.",
+      "lightningcss": "MPL-2.0 (file-level copyleft). CSS transformer required by Vite and Tailwind at build time; used unmodified and not shipped in any bundle.",
+      "spdx-exceptions": "CC-BY-3.0. SPDX data file used only by the license checker itself.",
+      "spdx-ranges": "MIT AND CC-BY-3.0. SPDX data file used only by the license checker itself."
+    },
+    "python": {
+      "psycopg": "LGPL-3.0-only. The PostgreSQL driver required by #2; used unmodified as a dynamically imported library, which LGPL permits.",
+      "psycopg-binary": "LGPL-3.0-only. Prebuilt wheels for psycopg; same reasoning."
+    }
+  }
+}

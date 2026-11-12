@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Core is pure TypeScript: no DOM lib and no ambient type packages (so no Node globals).
+    "lib": ["ES2023"],
+    "types": [],
+    "rootDir": "src"
+  },
+  "include": ["src"]
+}
