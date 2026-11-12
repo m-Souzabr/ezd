@@ -29,6 +29,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "config.logging.RequestLogMiddleware",
+    "config.api.BodyLimitMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -83,6 +84,10 @@ CSRF_COOKIE_SAMESITE = "Lax"
 # The web app reads the CSRF cookie to send it back in the X-CSRFToken header.
 CSRF_COOKIE_HTTPONLY = False
 CSRF_FAILURE_VIEW = "config.views.csrf_failure"
+
+# The most Django reads of any request body. Each view accepts less: 2 MB unless it sets
+# `max_body_bytes` (see config.api).
+DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],

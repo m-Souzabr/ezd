@@ -1,8 +1,11 @@
+import io
+
 import pytest
+from django.core.exceptions import RequestDataTooBig
 from django.test import override_settings
 from rest_framework.test import APIClient
 
-from config.api import MAX_BODY_BYTES
+from config.api import MAX_BODY_BYTES, BodyTooLarge, LimitedJSONParser, exception_handler
 from projects.models import Design
 
 from .conftest import core_fixture
@@ -96,6 +99,38 @@ def test_an_oversized_body_is_a_413(client: APIClient, design: Design) -> None:
 
     assert response.status_code == 413
     _assert_untouched(design)
+
+
+@pytest.mark.parametrize("megabytes", [3, 13])
+def test_a_much_larger_body_is_a_413_too(client: APIClient, design: Design, megabytes: int) -> None:
+    document = core_fixture("valid", str(design.id))
+    document["name"] = "x" * (megabytes * 1024 * 1024)
+
+    response = _save(client, design, document)
+
+    assert response.status_code == 413
+    assert response.json() == {"detail": "The request body is larger than 2 MB."}
+    _assert_untouched(design)
+
+
+def test_a_body_that_does_not_declare_its_length_is_still_limited() -> None:
+    """Such a body gets past the middleware, so the parser and the handler check it."""
+    oversized = io.BytesIO(b" " * (MAX_BODY_BYTES + 1))
+    with pytest.raises(BodyTooLarge):
+        LimitedJSONParser().parse(oversized, "application/json", {})
+
+    class Roomy:
+        max_body_bytes = MAX_BODY_BYTES + 10
+
+    body = b'{"a": 1}' + b" " * MAX_BODY_BYTES
+    parsed = LimitedJSONParser().parse(io.BytesIO(body), "application/json", {"view": Roomy()})
+    assert parsed == {"a": 1}
+
+    # What Django raises when it stops reading at DATA_UPLOAD_MAX_MEMORY_SIZE.
+    response = exception_handler(RequestDataTooBig("too big"), {})
+    assert response is not None
+    assert response.status_code == 413
+    assert response.data == {"detail": "The request body is larger than 12 MB."}
 
 
 def test_a_body_just_under_the_limit_is_read(client: APIClient, design: Design) -> None:

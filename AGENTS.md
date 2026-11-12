@@ -220,7 +220,9 @@ starts PostgreSQL only.
 - **Stored documents.** Every write of a document goes through
   `projects.documents.validate_document`: known `schemaVersion`, the JSON Schema from
   core, `id` equal to the design id, then `ezd-core validate-document`. Failures are a 422
-  with `errors: [{ path, message }]` and nothing is stored. Bodies over 2 MB are a 413.
+  with `errors: [{ path, message }]` and nothing is stored.
+- **Body size.** A request body over 2 MB is a 413. A view that needs more sets
+  `max_body_bytes`, up to `DATA_UPLOAD_MAX_MEMORY_SIZE`, which is the most Django reads.
 - **Autosave on the server** is one `UPDATE ... WHERE id = ? AND draft_revision = ?` on
   the design's own columns. Do not add a join to that filter: Django would move the
   comparison into a subquery and two concurrent saves could both succeed.
