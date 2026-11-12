@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { SEED_CATALOG } from '../catalog/index.js';
 import type { Command } from '../commands/index.js';
 import { sampleDocument } from '../test/fixtures.js';
 import { inches } from '../units/index.js';
@@ -28,6 +29,15 @@ describe('history', () => {
   it('execute returns the error and records nothing when the command fails', () => {
     const result = execute(start(), { type: 'item.remove', id: 'item-missing' });
     expect(result).toMatchObject({ ok: false, error: { code: 'NOT_FOUND' } });
+  });
+
+  it('execute checks the command against the catalog when given one', () => {
+    const resize: Command = { type: 'item.resize', id: 'item-base-01', width: inches(31) };
+    expect(execute(start(), resize).ok).toBe(true);
+    expect(execute(start(), resize, { catalog: SEED_CATALOG })).toMatchObject({
+      ok: false,
+      error: { code: 'INVALID_ARGUMENT', constraintErrors: [{ code: 'UNKNOWN_CATALOG_ID' }] },
+    });
   });
 
   it('undo and redo walk back and forth through the steps', () => {

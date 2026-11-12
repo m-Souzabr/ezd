@@ -49,6 +49,36 @@
       "items": {
         "$ref": "#/$defs/Item"
       }
+    },
+    "countertops": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Countertop"
+      }
+    },
+    "finishes": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "cabinet": {
+          "type": "string",
+          "minLength": 1
+        },
+        "countertop": {
+          "type": "string",
+          "minLength": 1
+        },
+        "wall": {
+          "type": "string",
+          "minLength": 1
+        },
+        "floor": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": [
@@ -307,6 +337,58 @@
           "additionalProperties": false
         }
       ]
+    },
+    "Countertop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{8,36}$"
+        },
+        "wallId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{8,36}$"
+        },
+        "startOffset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "endOffset": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "depth": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "thickness": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "elevation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "finishId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "wallId",
+        "startOffset",
+        "endOffset",
+        "depth",
+        "thickness",
+        "elevation"
+      ],
+      "additionalProperties": false
     }
   }
 }

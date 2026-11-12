@@ -1,4 +1,8 @@
+import { checkItemAgainstCatalog, type ConstraintError } from '../catalog/constraints.js';
+import type { Catalog } from '../catalog/types.js';
 import {
+  type Countertop,
+  countertopProblem,
   type DesignDocument,
   type Id,
   isZeroLength,
@@ -17,6 +21,17 @@ export type CommandError = {
   message: string;
   /** Which command of a `batch` failed. */
   commandIndex?: number;
+  /** Set when the item breaks the catalog's rules. Each lists the allowed values. */
+  constraintErrors?: ConstraintError[];
+};
+
+/** What a command is checked against, beyond the document itself. */
+export type CommandContext = {
+  /**
+   * When given, `item.add`, `item.resize` and `item.setOptions` fail with
+   * `INVALID_ARGUMENT` unless the resulting item satisfies its catalog entry.
+   */
+  catalog?: Catalog;
 };
 
 export type Applied = { doc: DesignDocument; inverse: Command };
@@ -43,12 +58,16 @@ export function parseCommand(input: unknown): Result<Command, CommandError> {
  * The only way to change a document. Returns a new document, which shares the parts the
  * command did not touch, and the command that undoes it exactly. Never mutates `doc`.
  *
- * Checks the command against its schema, then its references and arguments. Design rules
- * such as collisions are not checked here.
+ * Checks the command against its schema, then its references and arguments, then the
+ * catalog if `context` has one. Design rules such as collisions are not checked here.
  */
-export function applyCommand(doc: DesignDocument, cmd: Command): Outcome {
+export function applyCommand(
+  doc: DesignDocument,
+  cmd: Command,
+  context: CommandContext = {},
+): Outcome {
   const parsed = parseCommand(cmd);
-  return parsed.ok ? applyValid(doc, parsed.value) : parsed;
+  return parsed.ok ? applyValid(doc, parsed.value, context) : parsed;
 }
 
 // --- helpers ---------------------------------------------------------------------------
@@ -94,7 +113,9 @@ const indexOfId = (list: readonly { id: Id }[], id: Id): number =>
   list.findIndex((entity) => entity.id === id);
 
 const idInUse = (doc: DesignDocument, id: Id): boolean =>
-  [doc.room.walls, doc.room.openings, doc.items].some((list) => indexOfId(list, id) !== -1);
+  [doc.room.walls, doc.room.openings, doc.items, doc.countertops].some(
+    (list) => indexOfId(list, id) !== -1,
+  );
 
 const hasWall = (doc: DesignDocument, id: Id): boolean => indexOfId(doc.room.walls, id) !== -1;
 
@@ -107,6 +128,10 @@ const withOpenings = (doc: DesignDocument, openings: Opening[]): DesignDocument 
   room: { ...doc.room, openings },
 });
 const withItems = (doc: DesignDocument, items: Item[]): DesignDocument => ({ ...doc, items });
+const withCountertops = (doc: DesignDocument, countertops: Countertop[]): DesignDocument => ({
+  ...doc,
+  countertops,
+});
 
 /** Checks a new entity's id and insert position, and returns the position. */
 function insertion(
@@ -166,10 +191,16 @@ function wallRemove(doc: DesignDocument, cmd: CommandOf<'wall.remove'>): Outcome
       `Wall "${cmd.id}" has ${onWall.length} item(s) placed on it. Move or remove them first.`,
     );
   }
-  // Restoring the openings in ascending index order puts each back where it was.
-  const restoreOpenings: Command[] = [];
+  // Restoring the openings and countertops in ascending index order puts each back where
+  // it was.
+  const restore: Command[] = [];
   doc.room.openings.forEach((opening, i) => {
-    if (opening.wallId === cmd.id) restoreOpenings.push({ type: 'opening.add', opening, index: i });
+    if (opening.wallId === cmd.id) restore.push({ type: 'opening.add', opening, index: i });
+  });
+  const openingCount = restore.length;
+  doc.countertops.forEach((countertop, i) => {
+    if (countertop.wallId === cmd.id)
+      restore.push({ type: 'countertop.add', countertop, index: i });
   });
   return ok({
     doc: {
@@ -177,14 +208,18 @@ function wallRemove(doc: DesignDocument, cmd: CommandOf<'wall.remove'>): Outcome
       room: {
         ...doc.room,
         walls: removeAt(doc.room.walls, index),
-        // Keep sharing the list when the wall had no openings.
+        // Keep sharing each list when the wall had nothing in it.
         openings:
-          restoreOpenings.length === 0
+          openingCount === 0
             ? doc.room.openings
             : doc.room.openings.filter((opening) => opening.wallId !== cmd.id),
       },
+      countertops:
+        restore.length === openingCount
+          ? doc.countertops
+          : doc.countertops.filter((countertop) => countertop.wallId !== cmd.id),
     },
-    inverse: { type: 'batch', commands: [{ type: 'wall.add', wall, index }, ...restoreOpenings] },
+    inverse: { type: 'batch', commands: [{ type: 'wall.add', wall, index }, ...restore] },
   });
 }
 
@@ -235,11 +270,29 @@ function checkPlacement(doc: DesignDocument, placement: Item['placement']) {
   return ok(null);
 }
 
-function itemAdd(doc: DesignDocument, cmd: CommandOf<'item.add'>): Outcome {
+/** Checks an item against the catalog, when the caller gave one. */
+function checkCatalog(item: Item, context: CommandContext): Result<Item, CommandError> {
+  if (!context.catalog) return ok(item);
+  const constraintErrors = checkItemAgainstCatalog(item, context.catalog);
+  if (constraintErrors.length === 0) return ok(item);
+  return err({
+    code: 'INVALID_ARGUMENT',
+    message: constraintErrors.map((error) => error.message).join(' '),
+    constraintErrors,
+  });
+}
+
+function itemAdd(
+  doc: DesignDocument,
+  cmd: CommandOf<'item.add'>,
+  context: CommandContext,
+): Outcome {
   const index = insertion(doc, doc.items, cmd.item.id, cmd.index);
   if (!index.ok) return index;
   const checked = checkPlacement(doc, cmd.item.placement);
   if (!checked.ok) return checked;
+  const allowed = checkCatalog(cmd.item, context);
+  if (!allowed.ok) return allowed;
   return ok({
     doc: withItems(doc, insertAt(doc.items, index.value, cmd.item)),
     inverse: { type: 'item.remove', id: cmd.item.id },
@@ -272,18 +325,33 @@ function itemMove(doc: DesignDocument, cmd: CommandOf<'item.move'>): Outcome {
   });
 }
 
-function itemResize(doc: DesignDocument, cmd: CommandOf<'item.resize'>): Outcome {
+function itemResize(
+  doc: DesignDocument,
+  cmd: CommandOf<'item.resize'>,
+  context: CommandContext,
+): Outcome {
   return updateItem(doc, cmd.id, (item) => {
     const { type, id, ...patch } = cmd;
-    return ok({ item: patched(item, patch), inverse: { type, id, ...inversePatch(item, patch) } });
+    const next = checkCatalog(patched(item, patch), context);
+    if (!next.ok) return next;
+    return ok({ item: next.value, inverse: { type, id, ...inversePatch(item, patch) } });
   });
 }
 
-function itemSetOptions(doc: DesignDocument, cmd: CommandOf<'item.setOptions'>): Outcome {
+function itemSetOptions(
+  doc: DesignDocument,
+  cmd: CommandOf<'item.setOptions'>,
+  context: CommandContext,
+): Outcome {
   return updateItem(doc, cmd.id, (item) => {
     const { type, id, options, ...patch } = cmd;
+    const next = checkCatalog(
+      { ...patched(item, patch), options: patched(item.options, options) },
+      context,
+    );
+    if (!next.ok) return next;
     return ok({
-      item: { ...patched(item, patch), options: patched(item.options, options) },
+      item: next.value,
       inverse: {
         type,
         id,
@@ -304,6 +372,58 @@ function itemRemove(doc: DesignDocument, cmd: CommandOf<'item.remove'>): Outcome
   });
 }
 
+function checkCountertop(doc: DesignDocument, countertop: Countertop): Result<null, CommandError> {
+  if (!hasWall(doc, countertop.wallId)) return notFound('wall', countertop.wallId);
+  const problem = countertopProblem(countertop);
+  return problem ? fail('INVALID_ARGUMENT', `${problem.message}.`) : ok(null);
+}
+
+function countertopAdd(doc: DesignDocument, cmd: CommandOf<'countertop.add'>): Outcome {
+  const index = insertion(doc, doc.countertops, cmd.countertop.id, cmd.index);
+  if (!index.ok) return index;
+  const checked = checkCountertop(doc, cmd.countertop);
+  if (!checked.ok) return checked;
+  return ok({
+    doc: withCountertops(doc, insertAt(doc.countertops, index.value, cmd.countertop)),
+    inverse: { type: 'countertop.remove', id: cmd.countertop.id },
+  });
+}
+
+function countertopUpdate(doc: DesignDocument, cmd: CommandOf<'countertop.update'>): Outcome {
+  const index = indexOfId(doc.countertops, cmd.id);
+  const countertop = doc.countertops[index];
+  if (!countertop) return notFound('countertop', cmd.id);
+  const next = patched(countertop, cmd.patch);
+  const checked = checkCountertop(doc, next);
+  if (!checked.ok) return checked;
+  return ok({
+    doc: withCountertops(doc, replaceAt(doc.countertops, index, next)),
+    inverse: { type: 'countertop.update', id: cmd.id, patch: inversePatch(countertop, cmd.patch) },
+  });
+}
+
+function countertopRemove(doc: DesignDocument, cmd: CommandOf<'countertop.remove'>): Outcome {
+  const index = indexOfId(doc.countertops, cmd.id);
+  const countertop = doc.countertops[index];
+  if (!countertop) return notFound('countertop', cmd.id);
+  return ok({
+    doc: withCountertops(doc, removeAt(doc.countertops, index)),
+    inverse: { type: 'countertop.add', countertop, index },
+  });
+}
+
+function finishSet(doc: DesignDocument, cmd: CommandOf<'finish.set'>): Outcome {
+  const patch = { [cmd.target]: cmd.finishId };
+  return ok({
+    doc: { ...doc, finishes: patched(doc.finishes, patch) },
+    inverse: {
+      type: 'finish.set',
+      target: cmd.target,
+      finishId: doc.finishes[cmd.target] ?? null,
+    },
+  });
+}
+
 function documentRename(doc: DesignDocument, cmd: CommandOf<'document.rename'>): Outcome {
   return ok({
     doc: { ...doc, name: cmd.name },
@@ -311,11 +431,11 @@ function documentRename(doc: DesignDocument, cmd: CommandOf<'document.rename'>):
   });
 }
 
-function batch(doc: DesignDocument, cmd: CommandOf<'batch'>): Outcome {
+function batch(doc: DesignDocument, cmd: CommandOf<'batch'>, context: CommandContext): Outcome {
   let current = doc;
   const inverses: Command[] = [];
   for (const [commandIndex, command] of cmd.commands.entries()) {
-    const applied = applyValid(current, command);
+    const applied = applyValid(current, command, context);
     // `doc` is untouched, so stopping here applies nothing.
     if (!applied.ok) return err({ ...applied.error, commandIndex });
     current = applied.value.doc;
@@ -332,7 +452,7 @@ function batch(doc: DesignDocument, cmd: CommandOf<'batch'>): Outcome {
 }
 
 /** Applies a command that already passed its schema. */
-function applyValid(doc: DesignDocument, cmd: Command): Outcome {
+function applyValid(doc: DesignDocument, cmd: Command, context: CommandContext): Outcome {
   switch (cmd.type) {
     case 'room.setCeilingHeight':
       return setCeilingHeight(doc, cmd);
@@ -349,18 +469,26 @@ function applyValid(doc: DesignDocument, cmd: Command): Outcome {
     case 'opening.remove':
       return openingRemove(doc, cmd);
     case 'item.add':
-      return itemAdd(doc, cmd);
+      return itemAdd(doc, cmd, context);
     case 'item.move':
       return itemMove(doc, cmd);
     case 'item.resize':
-      return itemResize(doc, cmd);
+      return itemResize(doc, cmd, context);
     case 'item.setOptions':
-      return itemSetOptions(doc, cmd);
+      return itemSetOptions(doc, cmd, context);
     case 'item.remove':
       return itemRemove(doc, cmd);
+    case 'countertop.add':
+      return countertopAdd(doc, cmd);
+    case 'countertop.update':
+      return countertopUpdate(doc, cmd);
+    case 'countertop.remove':
+      return countertopRemove(doc, cmd);
+    case 'finish.set':
+      return finishSet(doc, cmd);
     case 'document.rename':
       return documentRename(doc, cmd);
     case 'batch':
-      return batch(doc, cmd);
+      return batch(doc, cmd, context);
   }
 }

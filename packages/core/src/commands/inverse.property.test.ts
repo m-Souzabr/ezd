@@ -41,6 +41,6 @@ describe('applyCommand properties', () => {
       { numRuns: 1500 },
     );
     // The run exercised every command type.
-    expect(seen.size).toBe(14);
+    expect(seen.size).toBe(18);
   });
 });

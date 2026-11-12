@@ -1,0 +1,1300 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateParts > matches the snapshot for the default appliance.dishwasher 1`] = `
+[
+  {
+    "box": {
+      "d": 384,
+      "h": 552,
+      "w": 384,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "appliance",
+    "role": "body",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default appliance.fridge 1`] = `
+[
+  {
+    "box": {
+      "d": 480,
+      "h": 1104,
+      "w": 576,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "appliance",
+    "role": "body",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default appliance.hood 1`] = `
+[
+  {
+    "box": {
+      "d": 288,
+      "h": 96,
+      "w": 480,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "appliance",
+    "role": "body",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default appliance.microwave 1`] = `
+[
+  {
+    "box": {
+      "d": 240,
+      "h": 288,
+      "w": 480,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "appliance",
+    "role": "body",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default appliance.range 1`] = `
+[
+  {
+    "box": {
+      "d": 432,
+      "h": 576,
+      "w": 480,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "appliance",
+    "role": "body",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default base.corner.blind 1`] = `
+[
+  {
+    "box": {
+      "d": 384,
+      "h": 480,
+      "w": 12,
+      "x": 0,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 384,
+      "h": 480,
+      "w": 12,
+      "x": 564,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 552,
+      "x": 12,
+      "y": 72,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 480,
+      "w": 552,
+      "x": 12,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "back",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 72,
+      "w": 576,
+      "x": 0,
+      "y": 0,
+      "z": 324,
+    },
+    "finishSlot": "carcass",
+    "role": "toe-kick",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 478,
+      "w": 190,
+      "x": 385,
+      "y": 73,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default base.corner.susan 1`] = `
+[
+  {
+    "box": {
+      "d": 12,
+      "h": 480,
+      "w": 576,
+      "x": 0,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "back",
+  },
+  {
+    "box": {
+      "d": 564,
+      "h": 480,
+      "w": 12,
+      "x": 0,
+      "y": 72,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "back",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 480,
+      "w": 12,
+      "x": 564,
+      "y": 72,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 480,
+      "w": 372,
+      "x": 12,
+      "y": 72,
+      "z": 564,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 552,
+      "x": 12,
+      "y": 72,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+  },
+  {
+    "box": {
+      "d": 180,
+      "h": 12,
+      "w": 372,
+      "x": 12,
+      "y": 72,
+      "z": 384,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 72,
+      "w": 252,
+      "x": 324,
+      "y": 0,
+      "z": 324,
+    },
+    "finishSlot": "carcass",
+    "role": "toe-kick",
+  },
+  {
+    "box": {
+      "d": 240,
+      "h": 72,
+      "w": 12,
+      "x": 324,
+      "y": 0,
+      "z": 336,
+    },
+    "finishSlot": "carcass",
+    "role": "toe-kick",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 478,
+      "w": 191,
+      "x": 384,
+      "y": 73,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+  {
+    "box": {
+      "d": 177,
+      "h": 478,
+      "w": 12,
+      "x": 384,
+      "y": 73,
+      "z": 398,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default base.drawers 1`] = `
+[
+  {
+    "box": {
+      "d": 384,
+      "h": 480,
+      "w": 12,
+      "x": 0,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 384,
+      "h": 480,
+      "w": 12,
+      "x": 372,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 360,
+      "x": 12,
+      "y": 72,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 480,
+      "w": 360,
+      "x": 12,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "back",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 72,
+      "w": 384,
+      "x": 0,
+      "y": 0,
+      "z": 324,
+    },
+    "finishSlot": "carcass",
+    "role": "toe-kick",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 158,
+      "w": 382,
+      "x": 1,
+      "y": 73,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "drawer-front",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 158,
+      "w": 382,
+      "x": 1,
+      "y": 233,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "drawer-front",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 158,
+      "w": 382,
+      "x": 1,
+      "y": 393,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "drawer-front",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default base.sink 1`] = `
+[
+  {
+    "box": {
+      "d": 384,
+      "h": 480,
+      "w": 12,
+      "x": 0,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 384,
+      "h": 480,
+      "w": 12,
+      "x": 564,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 552,
+      "x": 12,
+      "y": 72,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 480,
+      "w": 552,
+      "x": 12,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "back",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 72,
+      "w": 576,
+      "x": 0,
+      "y": 0,
+      "z": 324,
+    },
+    "finishSlot": "carcass",
+    "role": "toe-kick",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 478,
+      "w": 286,
+      "x": 1,
+      "y": 73,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 478,
+      "w": 286,
+      "x": 289,
+      "y": 73,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default base.standard 1`] = `
+[
+  {
+    "box": {
+      "d": 384,
+      "h": 480,
+      "w": 12,
+      "x": 0,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 384,
+      "h": 480,
+      "w": 12,
+      "x": 468,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 456,
+      "x": 12,
+      "y": 72,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 480,
+      "w": 456,
+      "x": 12,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "back",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 72,
+      "w": 480,
+      "x": 0,
+      "y": 0,
+      "z": 324,
+    },
+    "finishSlot": "carcass",
+    "role": "toe-kick",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 96,
+      "w": 478,
+      "x": 1,
+      "y": 455,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "drawer-front",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 380,
+      "w": 238,
+      "x": 1,
+      "y": 73,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 380,
+      "w": 238,
+      "x": 241,
+      "y": 73,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default filler.base 1`] = `
+[
+  {
+    "box": {
+      "d": 12,
+      "h": 552,
+      "w": 48,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "front",
+    "role": "filler",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default filler.tall 1`] = `
+[
+  {
+    "box": {
+      "d": 12,
+      "h": 1344,
+      "w": 48,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "front",
+    "role": "filler",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default filler.wall 1`] = `
+[
+  {
+    "box": {
+      "d": 12,
+      "h": 480,
+      "w": 48,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "front",
+    "role": "filler",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default panel.end 1`] = `
+[
+  {
+    "box": {
+      "d": 384,
+      "h": 552,
+      "w": 12,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "front",
+    "role": "panel",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default tall.oven 1`] = `
+[
+  {
+    "box": {
+      "d": 384,
+      "h": 1272,
+      "w": 12,
+      "x": 0,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 384,
+      "h": 1272,
+      "w": 12,
+      "x": 468,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 456,
+      "x": 12,
+      "y": 72,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 1272,
+      "w": 456,
+      "x": 12,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "back",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 456,
+      "x": 12,
+      "y": 1332,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "top",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 72,
+      "w": 480,
+      "x": 0,
+      "y": 0,
+      "z": 324,
+    },
+    "finishSlot": "carcass",
+    "role": "toe-kick",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 382,
+      "w": 478,
+      "x": 1,
+      "y": 73,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "drawer-front",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 430,
+      "w": 456,
+      "x": 12,
+      "y": 457,
+      "z": 12,
+    },
+    "finishSlot": "appliance",
+    "role": "body",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 454,
+      "w": 238,
+      "x": 1,
+      "y": 889,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 454,
+      "w": 238,
+      "x": 241,
+      "y": 889,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default tall.pantry 1`] = `
+[
+  {
+    "box": {
+      "d": 384,
+      "h": 1272,
+      "w": 12,
+      "x": 0,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 384,
+      "h": 1272,
+      "w": 12,
+      "x": 372,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 360,
+      "x": 12,
+      "y": 72,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 1272,
+      "w": 360,
+      "x": 12,
+      "y": 72,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "back",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 360,
+      "x": 12,
+      "y": 1332,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "top",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 360,
+      "x": 12,
+      "y": 282,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "shelf",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 360,
+      "x": 12,
+      "y": 492,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "shelf",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 360,
+      "x": 12,
+      "y": 702,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "shelf",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 360,
+      "x": 12,
+      "y": 912,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "shelf",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 360,
+      "x": 12,
+      "y": 1122,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "shelf",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 72,
+      "w": 384,
+      "x": 0,
+      "y": 0,
+      "z": 324,
+    },
+    "finishSlot": "carcass",
+    "role": "toe-kick",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 1270,
+      "w": 190,
+      "x": 1,
+      "y": 73,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 1270,
+      "w": 190,
+      "x": 193,
+      "y": 73,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default wall.corner.diagonal 1`] = `
+[
+  {
+    "box": {
+      "d": 12,
+      "h": 480,
+      "w": 384,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "back",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 480,
+      "w": 12,
+      "x": 0,
+      "y": 0,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "back",
+  },
+  {
+    "box": {
+      "d": 163,
+      "h": 480,
+      "w": 12,
+      "x": 372,
+      "y": 0,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 480,
+      "w": 163,
+      "x": 12,
+      "y": 0,
+      "z": 372,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 163,
+      "h": 12,
+      "w": 360,
+      "x": 12,
+      "y": 0,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+  },
+  {
+    "box": {
+      "d": 197,
+      "h": 12,
+      "w": 163,
+      "x": 12,
+      "y": 0,
+      "z": 175,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+  },
+  {
+    "box": {
+      "d": 147,
+      "h": 12,
+      "w": 295,
+      "x": 384,
+      "y": 0,
+      "z": 175,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+    "rotation": 135,
+  },
+  {
+    "box": {
+      "d": 163,
+      "h": 12,
+      "w": 360,
+      "x": 12,
+      "y": 468,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "top",
+  },
+  {
+    "box": {
+      "d": 197,
+      "h": 12,
+      "w": 163,
+      "x": 12,
+      "y": 468,
+      "z": 175,
+    },
+    "finishSlot": "carcass",
+    "role": "top",
+  },
+  {
+    "box": {
+      "d": 147,
+      "h": 12,
+      "w": 295,
+      "x": 384,
+      "y": 468,
+      "z": 175,
+    },
+    "finishSlot": "carcass",
+    "role": "top",
+    "rotation": 135,
+  },
+  {
+    "box": {
+      "d": 163,
+      "h": 12,
+      "w": 360,
+      "x": 12,
+      "y": 234,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "shelf",
+  },
+  {
+    "box": {
+      "d": 197,
+      "h": 12,
+      "w": 163,
+      "x": 12,
+      "y": 234,
+      "z": 175,
+    },
+    "finishSlot": "carcass",
+    "role": "shelf",
+  },
+  {
+    "box": {
+      "d": 147,
+      "h": 12,
+      "w": 295,
+      "x": 384,
+      "y": 234,
+      "z": 175,
+    },
+    "finishSlot": "carcass",
+    "role": "shelf",
+    "rotation": 135,
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 478,
+      "w": 271,
+      "x": 384,
+      "y": 1,
+      "z": 192,
+    },
+    "finishSlot": "front",
+    "role": "door",
+    "rotation": 135,
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default wall.fridge 1`] = `
+[
+  {
+    "box": {
+      "d": 384,
+      "h": 240,
+      "w": 12,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 384,
+      "h": 240,
+      "w": 12,
+      "x": 564,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 552,
+      "x": 12,
+      "y": 0,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 240,
+      "w": 552,
+      "x": 12,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "back",
+  },
+  {
+    "box": {
+      "d": 372,
+      "h": 12,
+      "w": 552,
+      "x": 12,
+      "y": 228,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "top",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 238,
+      "w": 286,
+      "x": 1,
+      "y": 1,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 238,
+      "w": 286,
+      "x": 289,
+      "y": 1,
+      "z": 384,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+]
+`;
+
+exports[`generateParts > matches the snapshot for the default wall.standard 1`] = `
+[
+  {
+    "box": {
+      "d": 192,
+      "h": 480,
+      "w": 12,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 192,
+      "h": 480,
+      "w": 12,
+      "x": 468,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "side",
+  },
+  {
+    "box": {
+      "d": 180,
+      "h": 12,
+      "w": 456,
+      "x": 12,
+      "y": 0,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "bottom",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 480,
+      "w": 456,
+      "x": 12,
+      "y": 0,
+      "z": 0,
+    },
+    "finishSlot": "carcass",
+    "role": "back",
+  },
+  {
+    "box": {
+      "d": 180,
+      "h": 12,
+      "w": 456,
+      "x": 12,
+      "y": 468,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "top",
+  },
+  {
+    "box": {
+      "d": 180,
+      "h": 12,
+      "w": 456,
+      "x": 12,
+      "y": 234,
+      "z": 12,
+    },
+    "finishSlot": "carcass",
+    "role": "shelf",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 478,
+      "w": 238,
+      "x": 1,
+      "y": 1,
+      "z": 192,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+  {
+    "box": {
+      "d": 12,
+      "h": 478,
+      "w": 238,
+      "x": 241,
+      "y": 1,
+      "z": 192,
+    },
+    "finishSlot": "front",
+    "role": "door",
+  },
+]
+`;

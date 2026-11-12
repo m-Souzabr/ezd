@@ -1,7 +1,7 @@
 import fc from 'fast-check';
 
 import { applyCommand, type Command } from '../commands/index.js';
-import type { DesignDocument, Id, Item, Opening, Wall } from '../document/index.js';
+import type { Countertop, DesignDocument, Id, Item, Opening, Wall } from '../document/index.js';
 import { clone } from './fixtures.js';
 
 // Arbitraries for property tests: random valid documents, and random commands that are
@@ -91,17 +91,42 @@ const item = (id: fc.Arbitrary<Id>, wallIds: Id[]): fc.Arbitrary<Item> =>
     },
   );
 
+const countertop = (id: fc.Arbitrary<Id>, wallIds: Id[]): fc.Arbitrary<Countertop> =>
+  fc
+    .record(
+      {
+        id,
+        wallId: fc.constantFrom(...wallIds),
+        startOffset: distance,
+        length: size,
+        depth: size,
+        thickness: size,
+        elevation: distance,
+        finishId,
+      },
+      {
+        requiredKeys: ['id', 'wallId', 'startOffset', 'length', 'depth', 'thickness', 'elevation'],
+      },
+    )
+    .map(({ length, ...rest }) => ({ ...rest, endOffset: rest.startOffset + length }));
+
+const finishTarget = fc.constantFrom('cabinet', 'countertop', 'wall', 'floor');
+
 const numbered = (prefix: string, i: number): fc.Arbitrary<Id> =>
   fc.constant(`${prefix}-${String(i).padStart(6, '0')}`);
 
-/** A random valid document with up to four walls, three openings and four items. */
+/**
+ * A random valid document with up to four walls, three openings, four items and two
+ * countertops.
+ */
 export const documentArb: fc.Arbitrary<DesignDocument> = fc
   .tuple(
     fc.integer({ min: 0, max: 4 }),
     fc.integer({ min: 0, max: 3 }),
     fc.integer({ min: 0, max: 4 }),
+    fc.integer({ min: 0, max: 2 }),
   )
-  .chain(([wallCount, openingCount, itemCount]) => {
+  .chain(([wallCount, openingCount, itemCount, countertopCount]) => {
     const wallIds = Array.from(
       { length: wallCount },
       (_, i) => `wall-${String(i).padStart(6, '0')}`,
@@ -121,6 +146,12 @@ export const documentArb: fc.Arbitrary<DesignDocument> = fc
         ),
       }),
       items: fc.tuple(...indexes(itemCount).map((i) => item(numbered('item', i), wallIds))),
+      countertops: fc.tuple(
+        ...indexes(wallCount === 0 ? 0 : countertopCount).map((i) =>
+          countertop(numbered('countertop', i), wallIds),
+        ),
+      ),
+      finishes: fc.dictionary(finishTarget, finishId),
     });
   })
   // fast-check builds objects that JSON never would (null prototypes, undefined values).
@@ -150,6 +181,11 @@ function simpleCommands(doc: DesignDocument): fc.Arbitrary<Command>[] {
       item: item(newId, wallIds),
       index: insertIndex(doc.items),
     }),
+    fc.record({
+      type: fc.constant('finish.set'),
+      target: finishTarget,
+      finishId: fc.option(finishId, { nil: null }),
+    }),
   ];
 
   if (walls.length > 0) {
@@ -174,6 +210,11 @@ function simpleCommands(doc: DesignDocument): fc.Arbitrary<Command>[] {
         type: fc.constant('opening.add'),
         opening: opening(newId, wallIds),
         index: insertIndex(openings),
+      }),
+      fc.record({
+        type: fc.constant('countertop.add'),
+        countertop: countertop(newId, wallIds),
+        index: insertIndex(doc.countertops),
       }),
     );
     if (removable.length > 0) {
@@ -207,6 +248,29 @@ function simpleCommands(doc: DesignDocument): fc.Arbitrary<Command>[] {
             kind: fc.constantFrom('door', 'window', 'passage'),
             sillHeight: fc.oneof(fc.constant(0), distance),
             swing: fc.option(swing, { nil: null }),
+          }),
+        })
+        .filter(applies),
+    );
+  }
+
+  if (doc.countertops.length > 0) {
+    const countertopId = fc.constantFrom(...doc.countertops.map((c) => c.id));
+    commands.push(
+      fc.record({ type: fc.constant('countertop.remove'), id: countertopId }),
+      // An end before the start is invalid, so keep the rest.
+      fc
+        .record({
+          type: fc.constant('countertop.update'),
+          id: countertopId,
+          patch: partial({
+            wallId: fc.constantFrom(...wallIds),
+            startOffset: distance,
+            endOffset: size,
+            depth: size,
+            thickness: size,
+            elevation: distance,
+            finishId: fc.option(finishId, { nil: null }),
           }),
         })
         .filter(applies),

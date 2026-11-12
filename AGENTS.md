@@ -138,6 +138,11 @@ There is no Python typecheck or build step yet. pytest needs PostgreSQL running.
   to change a document. Functions return a `Result` and do not throw for bad input. Types
   are inferred from the Zod schemas in `document/schema.ts` and `commands/schema.ts`; do not
   write them a second time.
+- **Catalog.** Items are checked against a `Catalog` (`catalog/`, seed data in
+  `SEED_CATALOG`) only when the caller passes one: `applyCommand(doc, cmd, { catalog })`.
+  Corner cabinets go on the wall that starts at the corner, at offset 0, so the corner is
+  at the item's left end. `generateParts` returns boxes local to the item: x along the
+  width, y up, z from the back.
 - **Relative imports in `packages/core` and `packages/core-cli`** carry a `.js` extension
   (`./units.js`), so the emitted ESM runs in Node unchanged.
 - **Django settings** are `config.settings.dev` (default for `manage.py`),
