@@ -1,9 +1,30 @@
 import { describe, expect, it } from 'vitest';
 
-import { VERSION } from './index.js';
+import * as core from './index.js';
 
-describe('VERSION', () => {
-  it('is a semver string', () => {
-    expect(VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+describe('public API', () => {
+  it('has a semver version', () => {
+    expect(core.VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
+  it('exports each module', () => {
+    for (const name of [
+      'inches',
+      'parseLength',
+      'formatLength',
+      'createEmptyDocument',
+      'parseDocument',
+      'migrate',
+      'wallLength',
+      'itemFootprint',
+      'applyCommand',
+      'execute',
+      'undo',
+      'redo',
+      'designDocumentJsonSchema',
+      'commandsJsonSchema',
+    ] as const) {
+      expect(core[name]).toBeTypeOf('function');
+    }
   });
 });

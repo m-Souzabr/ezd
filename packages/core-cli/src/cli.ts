@@ -1,6 +1,9 @@
-import { run } from './run.js';
+import { readFileSync } from 'node:fs';
 
-const result = run(process.argv.slice(2));
+import { readsStdin, run } from './run.js';
+
+const argv = process.argv.slice(2);
+const result = run(argv, readsStdin(argv) ? readFileSync(0, 'utf8') : '');
 if (result.stdout) process.stdout.write(result.stdout);
 if (result.stderr) process.stderr.write(result.stderr);
 process.exitCode = result.exitCode;
