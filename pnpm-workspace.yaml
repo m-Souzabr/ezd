@@ -5,6 +5,7 @@ packages:
 # One version per tool for the whole workspace. Packages reference these with "catalog:".
 catalog:
   '@eslint/js': ^10.0.1
+  '@playwright/test': ^1.65.0
   '@tailwindcss/vite': ^4.3.5
   '@testing-library/jest-dom': ^7.0.1
   '@testing-library/react': ^16.3.3
@@ -19,18 +20,22 @@ catalog:
   eslint-plugin-react-refresh: ^0.5.7
   fast-check: ^4.10.2
   globals: ^17.14.0
+  immer: ^11.2.10
   jsdom: ^31.0.0
+  konva: ^10.9.1
   license-checker-rseidelsohn: ^5.0.1
   prettier: ^3.9.0
   radix-ui: ^1.8.1
   react: ^19.3.1
   react-dom: ^19.3.1
+  react-konva: ^19.3.2
   tailwindcss: ^4.3.5
   typescript: ~6.0.3
   typescript-eslint: ^8.72.2
   vite: ^8.3.0
   vitest: ^5.1.0
   zod: ^4.6.7
+  zustand: ^5.1.0
 
 # Dependencies allowed to run install scripts.
 allowBuilds:

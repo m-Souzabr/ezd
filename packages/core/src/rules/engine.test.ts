@@ -5,7 +5,7 @@ import type { DesignDocument } from '../document/index.js';
 import { clone } from '../test/fixtures.js';
 import { door, free, kitchen, on } from '../test/kitchen.js';
 import { inches } from '../units/index.js';
-import { validate, validateCommand, wallLabel } from './index.js';
+import { itemLabel, validate, validateCommand, wallLabel } from './index.js';
 
 const messy = () =>
   kitchen(
@@ -204,5 +204,29 @@ describe('wallLabel', () => {
     expect(wallLabel(doc, 'wall-extra-26')).toBe('AA');
     expect(wallLabel(doc, 'wall-extra-27')).toBe('AB');
     expect(wallLabel(doc, 'wall-nowhere')).toBe('?');
+  });
+});
+
+describe('itemLabel', () => {
+  it('names an item by its catalog name, width and place on its wall', () => {
+    const doc = kitchen([
+      on('base.standard', 'wall-north', 12),
+      on('base.corner.susan', 'wall-east', 0),
+      free('base.standard', 48, 48),
+    ]);
+    expect(doc.items.map((item) => itemLabel(doc, SEED_CATALOG, item))).toEqual([
+      'Base cabinet 30" at 12" on wall A',
+      // The seed name says how the corner is measured, in brackets. The label leaves it out.
+      'Lazy Susan corner base 36" at 0" on wall B',
+      'Base cabinet 30" (free-standing)',
+    ]);
+  });
+
+  it('falls back to the kind for an item the catalog does not have', () => {
+    const doc = kitchen([on('base.standard', 'wall-north', 12, { catalogId: 'base.custom' })]);
+    expect(itemLabel(doc, SEED_CATALOG, doc.items[0]!)).toBe('Base cabinet 30" at 12" on wall A');
+    expect(itemLabel(doc, { ...SEED_CATALOG, entries: [] }, doc.items[0]!)).toBe(
+      'Base cabinet 30" at 12" on wall A',
+    );
   });
 });
