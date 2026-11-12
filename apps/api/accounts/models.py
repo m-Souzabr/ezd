@@ -36,7 +36,10 @@ class User(AbstractUser):
     """Account identified by email. There is no username."""
 
     username = None
+    first_name = None
+    last_name = None
     email = models.EmailField("email address", unique=True)
+    name = models.CharField(max_length=150, blank=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS: ClassVar[list[str]] = []
@@ -45,3 +48,9 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return self.email
+
+    def get_full_name(self) -> str:
+        return self.name
+
+    def get_short_name(self) -> str:
+        return self.name

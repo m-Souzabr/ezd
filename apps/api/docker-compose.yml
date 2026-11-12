@@ -16,5 +16,25 @@ services:
       timeout: 3s
       retries: 10
 
+  # The API in a container. Not started by a plain `docker compose up`, which is the
+  # database for `runserver` and pytest:
+  #
+  #   docker compose --profile api up --build
+  api:
+    profiles: [api]
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_DEBUG: 'false'
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DATABASE_URL: postgres://${POSTGRES_USER:-ezd}:${POSTGRES_PASSWORD:-ezd}@db:5432/${POSTGRES_DB:-ezd}
+    ports:
+      - '${API_PORT:-8000}:8000'
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   ezd-pgdata:

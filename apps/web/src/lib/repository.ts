@@ -2,8 +2,9 @@ import { type DesignDocument, err, type Issue, migrate, type Result } from '@ezd
 
 import type { DesignStoreApi } from '../store/designStore';
 
-// Where designs are kept. This phase keeps one design in the browser; the server
-// implementation replaces `createLocalRepository` behind the same interface.
+// Where designs are kept. `createLocalRepository` keeps one design in the browser, for use
+// without an account; `createServerRepository` (serverRepository.ts) keeps a design of a
+// signed-in user on the server, behind the same interface.
 
 export type LoadResult = {
   /** Null when nothing is stored, or what was stored could not be used. */
@@ -75,6 +76,18 @@ export function createLocalRepository(
       }
     },
   };
+}
+
+/** Forgets the design kept in this browser, as after it was imported into an account. */
+export function clearLocalDesign(
+  getStorage: () => Storage = () => window.localStorage,
+  key: string = STORAGE_KEY,
+): void {
+  try {
+    getStorage().removeItem(key);
+  } catch {
+    // Nothing to do: storage is unavailable.
+  }
 }
 
 /**

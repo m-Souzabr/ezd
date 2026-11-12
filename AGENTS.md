@@ -108,14 +108,19 @@ Run from the root with a filter, or `cd` into the package and drop the filter.
   them in a second pass (`vitest.perf.config.ts`) without coverage, which would distort the
   timings.
 - Web dev server: `pnpm --filter @ezd/web dev` (http://localhost:5173, proxies `/api` to
-  http://localhost:8000). The editor works without the API: designs are kept in
-  `localStorage` until #8.
+  http://localhost:8000, or to `EZD_API_URL`). The editor at `/` works without the API: it
+  keeps one design in `localStorage`. Accounts, projects and saved designs need the API.
 - Web end-to-end tests: `pnpm --filter @ezd/web e2e` runs the Playwright tests in
-  `apps/web/e2e` against the dev server, which it starts itself. Install the browser once
-  with `pnpm --filter @ezd/web exec playwright install chromium`. They are not part of
-  `pnpm test`; CI runs them in the `e2e` job. They read the document through
+  `apps/web/e2e` against the dev server and the API, both of which it starts itself. The
+  API runs as Django's `testserver` on port 8010 with the database `test_ezd`, which it
+  empties on each start, so PostgreSQL must be running and `uv sync` done. Install the
+  browser once with `pnpm --filter @ezd/web exec playwright install chromium`. They are
+  not part of `pnpm test`; CI runs them in the `e2e` job. They read the document through
   `window.__ezd` (`getDoc`, `getHistoryLength`, `getViewport`), which only development and
   test builds expose, and drive the canvas by mouse coordinates.
+- OpenAPI: `pnpm run openapi` rewrites `apps/api/openapi.yaml` from the API and
+  `apps/web/src/api/schema.d.ts` from that file. Run it and commit the result whenever an
+  endpoint or a serializer changes; CI fails if the committed files are stale.
 - CLI after a build: `node packages/core-cli/bin/ezd-core.js --version`, or
   `node packages/core-cli/bin/ezd-core.js validate-document < design.json`.
   `ezd-core validate` reads `{ document, commands? }` on stdin and prints the rule
@@ -133,7 +138,12 @@ Run from the root with a filter, or `cd` into the package and drop the filter.
 | Apply migrations   | `uv run python manage.py migrate`                          |
 | Dev server         | `uv run python manage.py runserver`                        |
 
-There is no Python typecheck or build step yet. pytest needs PostgreSQL running.
+There is no Python typecheck or build step yet. pytest needs PostgreSQL running, and the
+built CLI (`pnpm --filter @ezd/core-cli build`), which the API runs to validate documents.
+
+`docker compose --profile api up --build` runs the API in a container next to PostgreSQL,
+from `apps/api/Dockerfile` (built from the repository root). A plain `docker compose up`
+starts PostgreSQL only.
 
 ## Conventions
 
@@ -191,7 +201,29 @@ There is no Python typecheck or build step yet. pytest needs PostgreSQL running.
   entry; core's own message is shown when it refuses a value.
 - **Persistence.** The app talks to a `DesignRepository` (`apps/web/src/lib/repository.ts`).
   The `localStorage` implementation reads through `migrate`, guards every storage access,
-  and autosaves 500 ms after the last change to the document.
+  and autosaves 500 ms after the last change to the document. It serves `/`, the editor
+  without an account. The server implementation (`lib/serverRepository.ts`) holds the
+  draft revision that every save sends back.
+- **Server autosave.** `startServerAutosave` (`lib/autosave.ts`) saves 2 s after the last
+  command with one request in flight at a time. Its status is `saved`, `saving`,
+  `offline` (retried with backoff, with a backup in `localStorage`), `conflict` (stopped
+  until the user chooses) or `error`. A document replaced as a whole (loaded, imported,
+  restored) gets a new store and a new autosave; start one from an effect or a handler,
+  never from a state updater, which React may run twice.
+- **Web API client.** `apps/web/src/api/client.ts` is the only caller of `fetch`. It sends
+  the CSRF token, throws `ApiError` or `NetworkError`, and reports a 401 to the handler
+  that leads to the login page. Its types come from `schema.d.ts`; do not write them by
+  hand. Server state other than the open design goes through TanStack Query.
+- **API.** Every view under `/api/` reads rows through `OwnedQuerysetMixin` and the
+  models' `for_user`, so another account's object is a 404. A new route needs a name and
+  an entry in `tests/test_isolation.py`, which fails otherwise. Unauthenticated is 401.
+- **Stored documents.** Every write of a document goes through
+  `projects.documents.validate_document`: known `schemaVersion`, the JSON Schema from
+  core, `id` equal to the design id, then `ezd-core validate-document`. Failures are a 422
+  with `errors: [{ path, message }]` and nothing is stored. Bodies over 2 MB are a 413.
+- **Autosave on the server** is one `UPDATE ... WHERE id = ? AND draft_revision = ?` on
+  the design's own columns. Do not add a join to that filter: Django would move the
+  comparison into a subquery and two concurrent saves could both succeed.
 - **Relative imports in `packages/core` and `packages/core-cli`** carry a `.js` extension
   (`./units.js`), so the emitted ESM runs in Node unchanged.
 - **Django settings** are `config.settings.dev` (default for `manage.py`),
@@ -199,4 +231,7 @@ There is no Python typecheck or build step yet. pytest needs PostgreSQL running.
   read environment variables; every variable is listed in `apps/api/.env.example`.
 - **User model.** `AUTH_USER_MODEL` is `accounts.User`, which logs in by email and has no
   username. Always use `get_user_model()` or `settings.AUTH_USER_MODEL`.
+- **Sessions.** Authentication is Django's session cookie with CSRF on every unsafe
+  method, including the anonymous ones (login, register, password reset). There are no
+  tokens in JavaScript.
 - **Migrations** are generated by Django and are excluded from Ruff and Prettier.

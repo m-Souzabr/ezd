@@ -1,0 +1,850 @@
+openapi: 3.0.3
+info:
+  title: EZDesign API
+  version: '1'
+paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: Starts a session.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: Ends the session.
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      description: The signed-in user. Sets the CSRF cookie either way, also on a
+        401.
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/auth/password-reset/:
+    post:
+      operationId: auth_password_reset_create
+      description: Emails a reset link. Answers the same whether or not the account
+        exists.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/auth/password-reset/confirm/:
+    post:
+      operationId: auth_password_reset_confirm_create
+      description: Sets a new password with the uid and token from the reset link.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: Creates an account and signs it in.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/designs/{id}/:
+    get:
+      operationId: designs_retrieve
+      description: Read with the draft document, rename, or delete with every snapshot.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - designs
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Design'
+          description: ''
+    patch:
+      operationId: designs_partial_update
+      description: Read with the draft document, rename, or delete with every snapshot.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - designs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDesignRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Design'
+          description: ''
+    delete:
+      operationId: designs_destroy
+      description: Read with the draft document, rename, or delete with every snapshot.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - designs
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/designs/{id}/draft/:
+    put:
+      operationId: designs_draft_update
+      description: Autosave. Stores `document` only if the draft is still at `base_revision`.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - designs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftSaveRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftSaved'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftConflict'
+          description: ''
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidDocument'
+          description: ''
+  /api/designs/{id}/versions/:
+    get:
+      operationId: designs_versions_list
+      description: The snapshots of a design, newest first, without their documents.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - designs
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DesignVersionSummary'
+          description: ''
+    post:
+      operationId: designs_versions_create
+      description: Snapshots the current draft as the next version of the design.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - designs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DesignVersionCreateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DesignVersionSummary'
+          description: ''
+  /api/designs/{id}/versions/{number}/:
+    get:
+      operationId: designs_versions_retrieve
+      description: One snapshot with its document.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: number
+        schema:
+          type: integer
+        required: true
+      tags:
+      - designs
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DesignVersion'
+          description: ''
+  /api/designs/{id}/versions/{number}/restore/:
+    post:
+      operationId: designs_versions_restore_create
+      description: Copies the snapshot into the draft, as a new revision. The snapshot
+        is kept.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: number
+        schema:
+          type: integer
+        required: true
+      tags:
+      - designs
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Design'
+          description: ''
+  /api/health/:
+    get:
+      operationId: health_retrieve
+      description: Liveness probe. Does not touch the database.
+      tags:
+      - health
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: ''
+  /api/projects/:
+    get:
+      operationId: projects_list
+      description: The user's projects that are not archived, newest first.
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+          description: ''
+    post:
+      operationId: projects_create
+      description: The user's projects that are not archived, newest first.
+      tags:
+      - projects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+  /api/projects/{id}/:
+    get:
+      operationId: projects_retrieve
+      description: Read, rename, or archive. An archived project and its designs are
+        no longer found.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    patch:
+      operationId: projects_partial_update
+      description: Read, rename, or archive. An archived project and its designs are
+        no longer found.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - projects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    delete:
+      operationId: projects_destroy
+      description: Read, rename, or archive. An archived project and its designs are
+        no longer found.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/projects/{id}/designs/:
+    get:
+      operationId: projects_designs_list
+      description: The designs of a project, without their documents.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DesignSummary'
+          description: ''
+    post:
+      operationId: projects_designs_create
+      description: Creates a design from `document`, or an empty one.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - projects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DesignCreateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Design'
+          description: ''
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidDocument'
+          description: ''
+components:
+  schemas:
+    Design:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        draft_document:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        draft_revision:
+          type: integer
+          readOnly: true
+        schema_version:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - draft_document
+      - draft_revision
+      - id
+      - name
+      - project
+      - schema_version
+      - updated_at
+    DesignCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        document:
+          type: object
+          additionalProperties: {}
+    DesignSummary:
+      type: object
+      description: A design in a list, without its document.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        draft_revision:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - draft_revision
+      - id
+      - name
+      - project
+      - updated_at
+    DesignVersion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        number:
+          type: integer
+          readOnly: true
+        label:
+          type: string
+          readOnly: true
+        document:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        schema_version:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - document
+      - id
+      - label
+      - number
+      - schema_version
+    DesignVersionCreateRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          default: ''
+          maxLength: 200
+    DesignVersionSummary:
+      type: object
+      description: A snapshot in a list, without its document.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        number:
+          type: integer
+          readOnly: true
+        label:
+          type: string
+          readOnly: true
+        schema_version:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - label
+      - number
+      - schema_version
+    DocumentIssue:
+      type: object
+      properties:
+        path:
+          type: string
+        message:
+          type: string
+      required:
+      - message
+      - path
+    DraftConflict:
+      type: object
+      properties:
+        draft_revision:
+          type: integer
+        updated_at:
+          type: string
+          format: date-time
+        detail:
+          type: string
+      required:
+      - detail
+      - draft_revision
+      - updated_at
+    DraftSaveRequest:
+      type: object
+      properties:
+        document:
+          type: object
+          additionalProperties: {}
+        base_revision:
+          type: integer
+          minimum: 1
+      required:
+      - base_revision
+      - document
+    DraftSaved:
+      type: object
+      properties:
+        draft_revision:
+          type: integer
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - draft_revision
+      - updated_at
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+      - status
+    InvalidDocument:
+      type: object
+      description: The body of a 422.
+      properties:
+        detail:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentIssue'
+      required:
+      - detail
+      - errors
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 128
+      required:
+      - email
+      - password
+    PasswordResetConfirmRequest:
+      type: object
+      properties:
+        uid:
+          type: string
+          minLength: 1
+          maxLength: 64
+        token:
+          type: string
+          minLength: 1
+          maxLength: 128
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 128
+      required:
+      - password
+      - token
+      - uid
+    PasswordResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+      required:
+      - email
+    PatchedDesignRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+    PatchedProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - updated_at
+    ProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - name
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 128
+        name:
+          type: string
+          default: ''
+          maxLength: 150
+      required:
+      - email
+      - password
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        name:
+          type: string
+          readOnly: true
+      required:
+      - email
+      - id
+      - name
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

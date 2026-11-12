@@ -1,7 +1,10 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defaultClientConditions, defaultServerConditions } from 'vite';
+import { defaultClientConditions, defaultServerConditions, loadEnv } from 'vite';
 import { configDefaults, defineConfig } from 'vitest/config';
+
+// Where the dev server sends `/api`. The end-to-end tests point it at their own API.
+const { EZD_API_URL = 'http://localhost:8000' } = loadEnv('development', '.', 'EZD_');
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -10,7 +13,7 @@ export default defineConfig({
   ssr: { resolve: { conditions: ['@ezd/source', ...defaultServerConditions] } },
   server: {
     proxy: {
-      '/api': 'http://localhost:8000',
+      '/api': EZD_API_URL,
     },
   },
   test: {

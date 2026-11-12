@@ -7,6 +7,9 @@ dependencies = [
     "django>=5.2,<5.3",
     "django-environ>=0.14.0",
     "djangorestframework>=3.18.3",
+    "drf-spectacular>=0.30.0",
+    "gunicorn>=27.0.0",
+    "jsonschema>=4.26.0",
     "psycopg[binary]>=3.3.8",
 ]
 
@@ -29,7 +32,7 @@ extend-exclude = ["**/migrations/*.py"]
 select = ["E", "F", "W", "I", "UP", "B", "DJ"]
 
 [tool.ruff.lint.per-file-ignores]
-"config/settings/*.py" = ["F403", "F405"]
+"config/settings/*.py" = ["E402", "F403", "F405"]
 
 [dependency-groups]
 dev = [

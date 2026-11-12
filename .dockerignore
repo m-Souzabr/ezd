@@ -1,0 +1,11 @@
+# For apps/api/Dockerfile, which is built from the repository root.
+.git
+**/node_modules
+**/dist
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/.env
+**/coverage
+apps/web
