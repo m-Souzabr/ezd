@@ -1,9 +1,11 @@
+import { DEFAULT_QUOTE_DEFAULTS, validateQuoteDefaults } from '@ezd/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { api, ApiError, type Quote, type QuoteSummary } from '../api/client';
+import { QuoteDefaultsContext } from '../config/useConfig';
 import { DesignStoreProvider } from '../store/context';
 import { room, seedItem, storeFor, WALLS } from '../test/kitchen';
 import { QuotesDialog } from './QuotesDialog';
@@ -20,6 +22,7 @@ function setup({
   quotes = [] as QuoteSummary[],
   items = [seedItem('item-000001', 'base.standard', A, 0)],
   beforeQuote = vi.fn(async () => 4),
+  defaults = DEFAULT_QUOTE_DEFAULTS,
 } = {}) {
   const store = storeFor(room(144, 120, ...items));
   vi.spyOn(api, 'listQuotes').mockResolvedValue(quotes);
@@ -28,22 +31,24 @@ function setup({
   render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={['/designs/d']}>
-        <DesignStoreProvider store={store}>
-          <Routes>
-            <Route
-              path="/designs/d"
-              element={
-                <QuotesDialog
-                  designId={DESIGN}
-                  trigger={<button type="button">Quotes</button>}
-                  beforeQuote={beforeQuote}
-                  capture={capture}
-                />
-              }
-            />
-            <Route path="/quotes/:id" element={<Where />} />
-          </Routes>
-        </DesignStoreProvider>
+        <QuoteDefaultsContext.Provider value={defaults}>
+          <DesignStoreProvider store={store}>
+            <Routes>
+              <Route
+                path="/designs/d"
+                element={
+                  <QuotesDialog
+                    designId={DESIGN}
+                    trigger={<button type="button">Quotes</button>}
+                    beforeQuote={beforeQuote}
+                    capture={capture}
+                  />
+                }
+              />
+              <Route path="/quotes/:id" element={<Where />} />
+            </Routes>
+          </DesignStoreProvider>
+        </QuoteDefaultsContext.Provider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -82,6 +87,36 @@ describe('QuotesDialog', () => {
       'href',
       '/quotes/q1',
     );
+  });
+
+  it('starts a new quote from the configured rates', async () => {
+    const checked = validateQuoteDefaults({ markupBps: 2000, taxBps: 825 });
+    if (!checked.ok) throw new Error('bad defaults');
+    const create = vi.spyOn(api, 'createQuote').mockResolvedValue({
+      id: 'q9',
+    } as unknown as Quote);
+    setup({
+      defaults: checked.value,
+      items: [
+        seedItem('item-000001', 'base.standard', A, 0),
+        seedItem('item-000002', 'base.standard', A, 30),
+      ],
+    });
+    const form = newQuote();
+    expect(within(form).getByLabelText('Markup %')).toHaveValue('20');
+    expect(within(form).getByLabelText('Discount %')).toHaveValue('0');
+    expect(within(form).getByLabelText('Tax %')).toHaveValue('8.25');
+    // 650 + 130 markup, plus 8.25 percent tax.
+    expect(within(form).getByTestId('quote-form-total')).toHaveTextContent('$844.35');
+    fireEvent.change(within(form).getByLabelText('Customer name'), { target: { value: 'Grace' } });
+    fireEvent.click(within(form).getByRole('button', { name: 'Create quote' }));
+    await waitFor(() => expect(create).toHaveBeenCalled());
+    expect(create.mock.calls[0]![1].settings).toEqual({
+      markupBps: 2000,
+      discountBps: 0,
+      taxBps: 825,
+      currency: 'USD',
+    });
   });
 
   it('deletes a quote after asking once more', async () => {

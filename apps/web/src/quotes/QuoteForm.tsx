@@ -4,14 +4,16 @@ import {
   finishName,
   formatMoney,
   quoteSettingsProblem,
+  type QuoteDefaults,
   type QuoteSettings,
 } from '@ezd/core';
 import { type FormEvent, useId, useMemo, useState } from 'react';
 
 import type { QuoteCreate } from '../api/client';
+import { useQuoteDefaults } from '../config/useConfig';
 import { BUTTON } from '../editor/panels/fields';
 import { useDesign } from '../store/context';
-import { parsePercent } from './format';
+import { formatPercent, parsePercent } from './format';
 
 const INPUT =
   'w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 ' +
@@ -27,15 +29,16 @@ type Fields = {
   notes: string;
 };
 
-const EMPTY: Fields = {
+/** A new quote: nobody named yet, and the rates the Control Panel configured. */
+const initialFields = (defaults: QuoteDefaults): Fields => ({
   customerName: '',
   customerEmail: '',
   customerAddress: '',
-  markup: '0',
-  discount: '0',
-  tax: '0',
+  markup: formatPercent(defaults.markupBps),
+  discount: formatPercent(defaults.discountBps),
+  tax: formatPercent(defaults.taxBps),
   notes: '',
-};
+});
 
 function Field({
   label,
@@ -100,7 +103,8 @@ export function QuoteForm({
   const doc = useDesign((state) => state.doc);
   const catalog = useDesign((state) => state.catalog);
   const violations = useDesign((state) => state.violations);
-  const [fields, setFields] = useState<Fields>(EMPTY);
+  const defaults = useQuoteDefaults();
+  const [fields, setFields] = useState<Fields>(() => initialFields(defaults));
   const [override, setOverride] = useState(false);
   const set = (key: keyof Fields) => (value: string) =>
     setFields((current) => ({ ...current, [key]: value }));

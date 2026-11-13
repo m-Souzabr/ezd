@@ -1,13 +1,7 @@
 import type { Pt } from '../../geometry/index.js';
 import { formatLength } from '../../units/index.js';
 import type { PlacedItem } from '../context.js';
-import {
-  FRIDGE_ID,
-  RANGE_ID,
-  SINK_ID,
-  WORK_TRIANGLE_MAX,
-  WORK_TRIANGLE_MIN,
-} from '../constants.js';
+import { FRIDGE_ID, RANGE_ID, SINK_ID } from '../constants.js';
 import { defineRule } from '../types.js';
 
 const centre = ({ footprint }: PlacedItem): Pt => ({
@@ -25,13 +19,14 @@ export const layoutWorkTriangle = defineRule('layout.work-triangle', 'info', (ct
     ctx.items.find((placed) => placed.item.catalogId === id),
   );
   if (!sink || !range || !fridge) return [];
+  const { workTriangleMin, workTriangleMax } = ctx.config.thresholds;
   const [a, b, c] = [centre(sink), centre(range), centre(fridge)];
   const total = Math.round(distance(a, b) + distance(b, c) + distance(c, a));
-  if (total >= WORK_TRIANGLE_MIN && total <= WORK_TRIANGLE_MAX) return [];
+  if (total >= workTriangleMin && total <= workTriangleMax) return [];
   return [
     {
       itemIds: [sink.item.id, range.item.id, fridge.item.id],
-      message: `The work triangle between the sink, range and refrigerator is ${formatLength(total)} around, ${total < WORK_TRIANGLE_MIN ? 'under' : 'over'} the recommended ${formatLength(WORK_TRIANGLE_MIN)} to ${formatLength(WORK_TRIANGLE_MAX)}.`,
+      message: `The work triangle between the sink, range and refrigerator is ${formatLength(total)} around, ${total < workTriangleMin ? 'under' : 'over'} the recommended ${formatLength(workTriangleMin)} to ${formatLength(workTriangleMax)}.`,
     },
   ];
 });

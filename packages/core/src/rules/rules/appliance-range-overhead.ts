@@ -1,6 +1,6 @@
 import { formatLength } from '../../units/index.js';
 import { planOverlap, the } from '../context.js';
-import { HOOD_ID, RANGE_ID, RANGE_OVERHEAD_CLEARANCE } from '../constants.js';
+import { HOOD_ID, RANGE_ID } from '../constants.js';
 import { defineRule } from '../types.js';
 
 /**
@@ -16,12 +16,12 @@ export const applianceRangeOverhead = defineRule('appliance.range-overhead', 'wa
           (placed) =>
             placed.item.catalogId !== HOOD_ID &&
             placed.bottom >= range.top &&
-            placed.bottom < range.top + RANGE_OVERHEAD_CLEARANCE &&
+            placed.bottom < range.top + ctx.config.thresholds.rangeOverheadClearance &&
             planOverlap(range, placed),
         )
         .map((placed) => ({
           itemIds: [placed.item.id, range.item.id],
-          message: `${placed.label} is only ${formatLength(placed.bottom - range.top)} above ${the(range.label)}. Leave at least ${formatLength(RANGE_OVERHEAD_CLEARANCE)} above a range, unless it is a hood.`,
+          message: `${placed.label} is only ${formatLength(placed.bottom - range.top)} above ${the(range.label)}. Leave at least ${formatLength(ctx.config.thresholds.rangeOverheadClearance)} above a range, unless it is a hood.`,
         })),
     ),
 );

@@ -81,6 +81,8 @@ def test_without_a_draft_the_editor_gets_the_published_config(admin: APIClient) 
     assert admin.get(DRAFT).json() == {
         "revision": 0,
         "app_config": {},
+        "rules_config": {},
+        "quote_defaults": {},
         "based_on": None,
         "updated_at": None,
     }

@@ -1,9 +1,18 @@
 // Writes docs/RULES.md from the rule registry: each rule's id, severity and description
 // (the doc comment above its `defineRule`), in the order `validate` runs them, with the
-// thresholds from rules/constants.ts that it uses. Run through `pnpm --filter @ezd/core
+// thresholds from rules/constants.ts that it uses and whether the Control Panel may change it. Run through `pnpm --filter @ezd/core
 // schema`; CI fails when the file is stale.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+
+import {
+  DEFAULT_RULES_CONFIG,
+  isLockedRule,
+  LOCKED_RULES,
+  RULE_THRESHOLDS,
+  SNAP_RANGES,
+  THRESHOLD_RANGES,
+} from '../dist/index.js';
 
 const root = resolve(import.meta.dirname, '..');
 const rulesDir = join(root, 'src', 'rules', 'rules');
@@ -14,6 +23,9 @@ const prose = (comment) =>
     .map((line) => line.replace(/^\s*\*\s?/, '').trim())
     .filter(Boolean)
     .join(' ');
+
+const camel = (constant) =>
+  constant.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 
 // Thresholds: name, value in inches, and the comment above them (or above their group).
 const constants = read(join(root, 'src', 'rules', 'constants.ts'));
@@ -44,7 +56,9 @@ const rows = order.map((name) => {
   const comment = /\/\*\*([\s\S]*?)\*\/\s*$/.exec(before.slice(start));
   if (start === -1 || !comment)
     throw new Error(`No doc comment above the rule in ${files.get(name)}.ts`);
-  const used = [...thresholds.keys()].filter((key) => new RegExp(`\\b${key}\\b`).test(source));
+  const used = (RULE_THRESHOLDS[rule[1]] ?? []).map((name) =>
+    [...thresholds.keys()].find((key) => camel(key) === name),
+  );
   return { id: rule[1], severity: rule[2], about: prose(comment[1]), used };
 });
 
@@ -58,22 +72,48 @@ const lines = [
   "guidance, not building-code compliance: check local codes and the manufacturer's",
   'instructions before building.',
   '',
-  '| Rule | Severity | What it checks | Thresholds |',
-  '| --- | --- | --- | --- |',
+  '| Rule | Severity | What it checks | Thresholds | Configurable |',
+  '| --- | --- | --- | --- | --- |',
   ...rows.map(
     (row) =>
       `| \`${row.id}\` | ${row.severity} | ${row.about.replace(/\|/g, '\\|')} | ${
-        row.used.map((key) => `\`${key}\` ${thresholds.get(key).inches}"`).join(', ') || '—'
-      } |`,
+        row.used.map((key) => `\`${camel(key)}\` ${thresholds.get(key).inches}"`).join(', ') || '—'
+      } | ${isLockedRule(row.id) ? 'No: always on, error' : 'On or off, any severity'} |`,
   ),
+  '',
+  '## Configuration',
+  '',
+  'The Control Panel (`/admin/rules`) publishes a `RulesConfig` (`rules/config.ts`, JSON Schema',
+  'in `packages/core/schema/rules-config.schema.json`). Unset means the defaults below, which',
+  'are what the rules did before they were configurable. `validate(doc, catalog, rules)`,',
+  '`validateCommand`, `snap` and `ezd-core validate --rules` all read it.',
+  '',
+  'The rules that protect the document cannot be turned off or lowered from error:',
+  '',
+  ...Object.entries(LOCKED_RULES).map(([id, reason]) => `- \`${id}\`: ${reason}`),
   '',
   '## Thresholds',
   '',
-  'From `packages/core/src/rules/constants.ts`.',
+  'Defaults from `packages/core/src/rules/constants.ts`. Each is a length in the configuration,',
+  'kept inside the range shown so a value cannot make its rule do nothing.',
   '',
-  '| Name | Value | Meaning |',
+  '| Name | Default | Range | Meaning |',
+  '| --- | --- | --- | --- |',
+  ...[...thresholds].map(([key, t]) => {
+    const name = camel(key);
+    const [min, max] = THRESHOLD_RANGES[name];
+    return `| \`${name}\` | ${t.inches}" | ${min / 16}" to ${max / 16}" | ${t.about} |`;
+  }),
+  '',
+  '## Snapping',
+  '',
+  '| Option | Default | Range |',
   '| --- | --- | --- |',
-  ...[...thresholds].map(([key, t]) => `| \`${key}\` | ${t.inches}" | ${t.about} |`),
+  ...Object.entries(SNAP_RANGES).map(
+    ([name, [min, max]]) =>
+      `| \`${name}\` | ${DEFAULT_RULES_CONFIG.snap[name] / 16}" | ${min / 16}" to ${max / 16}" |`,
+  ),
+  `| \`freeRotationStep\` | ${DEFAULT_RULES_CONFIG.snap.freeRotationStep} degrees | a divisor of 360 up to 90 |`,
   '',
 ];
 writeFileSync(resolve(root, '..', '..', 'docs', 'RULES.md'), lines.join('\n'));

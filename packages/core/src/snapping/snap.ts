@@ -11,25 +11,9 @@ import {
   wallLength,
   wallNormal,
 } from '../geometry/index.js';
-import { validateCommand, type Violation } from '../rules/index.js';
-import { inches, type Len, STEP } from '../units/index.js';
-
-export type SnapOptions = {
-  /** How near a wall's interior face the pointer must be for the wall to take the item. */
-  wallCaptureDistance?: Len;
-  /** How near a neighbour, wall end or opening edge an item must be to go flush against it. */
-  edgeSnapDistance?: Len;
-  grid?: Len;
-  /** In degrees. */
-  freeRotationStep?: number;
-};
-
-export const DEFAULT_SNAP_OPTIONS: Required<SnapOptions> = {
-  wallCaptureDistance: inches(12),
-  edgeSnapDistance: inches(1.5),
-  grid: STEP,
-  freeRotationStep: 90,
-};
+import { type RulesConfig, validateCommand, type Violation } from '../rules/index.js';
+import { type Len, STEP } from '../units/index.js';
+import { DEFAULT_SNAP_OPTIONS, type SnapOptions } from './defaults.js';
 
 export type SnapInput = {
   doc: DesignDocument;
@@ -43,7 +27,10 @@ export type SnapInput = {
   pointer: Point;
   /** The item's own id when moving an item the document already has. */
   excludeItemId?: Id;
-  options?: SnapOptions;
+  /** Overrides what `rules` says for any one option. */
+  options?: SnapOptions | undefined;
+  /** The configured rules and snap options. Without it, the defaults. */
+  rules?: RulesConfig | undefined;
 };
 
 /** A line to draw while dragging, showing what the item snapped to. */
@@ -167,7 +154,7 @@ function snapFree({ item, pointer }: SnapInput, options: Required<SnapOptions>):
  */
 export function snap(input: SnapInput): SnapResult {
   const { doc, catalog, item, pointer, excludeItemId } = input;
-  const options = { ...DEFAULT_SNAP_OPTIONS, ...input.options };
+  const options = { ...DEFAULT_SNAP_OPTIONS, ...input.rules?.snap, ...input.options };
   const entry = getEntry(catalog, item.catalogId);
   const allowed = entry ? entry.placement : (['wall', 'free'] as const);
   const elevation = entry && excludeItemId === undefined ? entry.defaultElevation : item.elevation;
@@ -186,7 +173,7 @@ export function snap(input: SnapInput): SnapResult {
     excludeItemId === undefined
       ? { type: 'item.add', item: { ...item, placement, elevation } }
       : { type: 'item.move', id: excludeItemId, placement, elevation };
-  const checked = validateCommand(doc, catalog, command);
+  const checked = validateCommand(doc, catalog, command, input.rules);
   return { placement, elevation, guides, introduced: checked.ok ? checked.value.introduced : [] };
 }
 

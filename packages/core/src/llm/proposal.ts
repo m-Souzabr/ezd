@@ -4,7 +4,7 @@ import type { DesignDocument, Id, Item, Opening, Placement } from '../document/i
 import { toIssues } from '../document/index.js';
 import { describeIssues } from '../issues.js';
 import { err, ok, type Result } from '../result.js';
-import { validateCommand, type Violation, wallLabel } from '../rules/index.js';
+import { type RulesConfig, validateCommand, type Violation, wallLabel } from '../rules/index.js';
 import { IN, type Len } from '../units/index.js';
 import { describeProposal } from './describe.js';
 import {
@@ -27,6 +27,8 @@ export type ProposalError = {
 };
 
 export type ProposalOptions = {
+  /** The configured rules, so a proposal is judged by the severities the editor shows. */
+  rules?: RulesConfig;
   /** Makes the id of each new entity. Defaults to `ai-item-01`, `ai-opening-01` and so on. */
   newId?: (prefix: 'item' | 'opening') => Id;
 };
@@ -376,7 +378,7 @@ export function dryRunProposal(
 ): DryRun {
   const converted = proposalToCommands(toolCalls, aliases, doc, catalog, options);
   if (!converted.ok) return { ok: false, errors: converted.error };
-  const checked = validateCommand(doc, catalog, converted.value);
+  const checked = validateCommand(doc, catalog, converted.value, options.rules);
   // `proposalToCommands` applied every command already, so this cannot fail.
   if (!checked.ok) {
     return { ok: false, errors: [{ toolIndex: -1, tool: '', message: checked.error.message }] };

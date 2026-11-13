@@ -2,6 +2,7 @@ import { createEmptyDocument, type DesignDocument } from '@ezd/core';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { useCatalog } from '../catalog/useCatalog';
+import { useRulesConfig } from '../config/useConfig';
 import { Editor } from '../editor/Editor';
 import { newId } from '../editor/ids';
 import { createLocalRepository, type DesignRepository, startAutosave } from '../lib/repository';
@@ -27,6 +28,7 @@ export function LocalEditor({
 }) {
   const repository = useMemo(() => given ?? createLocalRepository(), [given]);
   const catalog = useCatalog();
+  const rules = useRulesConfig();
   const [store, setStore] = useState<DesignStoreApi | null>(null);
   /** How many designs have been imported. Zero while the stored design is open. */
   const [generation, setGeneration] = useState(0);
@@ -36,14 +38,14 @@ export function LocalEditor({
     let cancelled = false;
     void repository.load().then(({ doc, notice }) => {
       if (cancelled) return;
-      const loaded = createDesignStore(doc ?? newDocument(), catalog);
+      const loaded = createDesignStore(doc ?? newDocument(), catalog, rules);
       if (notice) loaded.getState().notify(notice);
       setStore(loaded);
     });
     return () => {
       cancelled = true;
     };
-  }, [repository, catalog]);
+  }, [repository, catalog, rules]);
 
   useEffect(() => {
     if (!store) return;
@@ -64,7 +66,7 @@ export function LocalEditor({
   }
 
   const loadDocument = (doc: DesignDocument) => {
-    setStore(createDesignStore(doc, catalog));
+    setStore(createDesignStore(doc, catalog, rules));
     setGeneration((current) => current + 1);
   };
 

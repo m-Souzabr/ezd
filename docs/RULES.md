@@ -7,42 +7,69 @@ the editor shows errors and warnings next to the design. They are design-quality
 guidance, not building-code compliance: check local codes and the manufacturer's
 instructions before building.
 
-| Rule | Severity | What it checks | Thresholds |
-| --- | --- | --- | --- |
-| `size.width-step` | error | A width off the 3 in step or outside the entry's range. Fillers may be any width in theirs. | — |
-| `size.standard` | error | A height or depth that is not one of the standard values for the catalog entry. | — |
-| `item.catalog` | error | Everything else `checkItemAgainstCatalog` reports: an entry the catalog does not have, the wrong kind, an option the entry does not take, or a placement it does not allow. | — |
-| `item.overlap` | error | Two items that overlap in plan and in height. Countertops are not items, so they never count. Items on walls that meet in a corner are `corner.conflict` instead. | — |
-| `item.outside-wall` | error | An item that runs past the end of its wall. An offset is never negative, so an item cannot start before the wall does. | — |
-| `item.outside-room` | error | A free-placed item whose footprint crosses a wall or lies outside a closed room. | — |
-| `item.exceeds-ceiling` | error | An item whose top is above the ceiling, or above its wall if that is lower. | — |
-| `item.blocks-door` | error | An item on the same stretch of wall as a door or a passage, whatever its height. | — |
-| `item.blocks-window` | error | An item in front of a window: on the same stretch of wall and reaching above the sill. A base cabinet whose top is at or below the sill is fine. | — |
-| `opening.invalid` | error | An opening that runs past its wall, reaches above it, or overlaps another opening. | — |
-| `corner.conflict` | error | Items on two walls that meet, overlapping in the corner. | — |
-| `gap.needs-filler` | warning | A gap too narrow for a cabinet between a cabinet and the next thing at its height: an item on its wall, an item on another wall that reaches its wall in the corner, or the end of the wall. A gap of 6 in or less comes with a filler that closes it. | `MIN_CABINET_GAP` 9", `MAX_FILLER_GAP` 6" |
-| `clearance.door-swing` | warning | An item inside the quarter circle a door sweeps as it opens into the room. `in-left` is hinged at the opening's start, which is on the left seen from inside the room, and `in-right` at its end. A door that swings out sweeps nothing in the room. An item standing in the doorway itself is `item.blocks-door` instead. | — |
-| `clearance.aisle` | warning | Less than 36 in to walk through: between items on facing walls, or between a free-standing item such as an island and a wall or another item. | `MIN_AISLE` 36", `RECOMMENDED_AISLE` 42" |
-| `appliance.range-overhead` | warning | Anything but a hood less than 30 in above a range. For a 36 in high range that is anything whose bottom is below 66 in. | `RANGE_OVERHEAD_CLEARANCE` 30" |
-| `appliance.dishwasher-sink` | warning | A dishwasher with no sink base cabinet within 36 in of it. | `DISHWASHER_SINK_DISTANCE` 36" |
-| `appliance.fridge-door` | warning | A refrigerator on a wall, less than 3 in from the side wall in the corner on its hinge side, so its door cannot open fully. The hinge side is the item's `hinge` option; a refrigerator without one, as in the seed catalog, is checked on both sides. | `FRIDGE_HINGE_CLEARANCE` 3" |
-| `wall.alignment` | info | Wall cabinets on one wall whose tops are not level. The fix raises them to the highest. | — |
-| `countertop.coverage` | info | A run of base cabinets that no countertop covers from end to end, or a countertop that runs more than an overhang past the cabinets under it. | — |
-| `room.open` | info | Walls that do not form a closed loop. A document with no walls yet has nothing to close. | — |
-| `layout.work-triangle` | info | The legs between the centres of the first sink base, range and refrigerator sum to less than 156 in or more than 312 in. Says nothing until the design has all three. | `WORK_TRIANGLE_MIN` 156", `WORK_TRIANGLE_MAX` 312" |
+| Rule | Severity | What it checks | Thresholds | Configurable |
+| --- | --- | --- | --- | --- |
+| `size.width-step` | error | A width off the 3 in step or outside the entry's range. Fillers may be any width in theirs. | — | On or off, any severity |
+| `size.standard` | error | A height or depth that is not one of the standard values for the catalog entry. | — | No: always on, error |
+| `item.catalog` | error | Everything else `checkItemAgainstCatalog` reports: an entry the catalog does not have, the wrong kind, an option the entry does not take, or a placement it does not allow. | — | No: always on, error |
+| `item.overlap` | error | Two items that overlap in plan and in height. Countertops are not items, so they never count. Items on walls that meet in a corner are `corner.conflict` instead. | — | No: always on, error |
+| `item.outside-wall` | error | An item that runs past the end of its wall. An offset is never negative, so an item cannot start before the wall does. | — | No: always on, error |
+| `item.outside-room` | error | A free-placed item whose footprint crosses a wall or lies outside a closed room. | — | No: always on, error |
+| `item.exceeds-ceiling` | error | An item whose top is above the ceiling, or above its wall if that is lower. | — | On or off, any severity |
+| `item.blocks-door` | error | An item on the same stretch of wall as a door or a passage, whatever its height. | — | On or off, any severity |
+| `item.blocks-window` | error | An item in front of a window: on the same stretch of wall and reaching above the sill. A base cabinet whose top is at or below the sill is fine. | — | On or off, any severity |
+| `opening.invalid` | error | An opening that runs past its wall, reaches above it, or overlaps another opening. | — | No: always on, error |
+| `corner.conflict` | error | Items on two walls that meet, overlapping in the corner. | — | No: always on, error |
+| `gap.needs-filler` | warning | A gap too narrow for a cabinet between a cabinet and the next thing at its height: an item on its wall, an item on another wall that reaches its wall in the corner, or the end of the wall. A gap of 6 in or less comes with a filler that closes it. | `minCabinetGap` 9", `maxFillerGap` 6" | On or off, any severity |
+| `clearance.door-swing` | warning | An item inside the quarter circle a door sweeps as it opens into the room. `in-left` is hinged at the opening's start, which is on the left seen from inside the room, and `in-right` at its end. A door that swings out sweeps nothing in the room. An item standing in the doorway itself is `item.blocks-door` instead. | — | On or off, any severity |
+| `clearance.aisle` | warning | Less than 36 in to walk through: between items on facing walls, or between a free-standing item such as an island and a wall or another item. | `minAisle` 36", `recommendedAisle` 42" | On or off, any severity |
+| `appliance.range-overhead` | warning | Anything but a hood less than 30 in above a range. For a 36 in high range that is anything whose bottom is below 66 in. | `rangeOverheadClearance` 30" | On or off, any severity |
+| `appliance.dishwasher-sink` | warning | A dishwasher with no sink base cabinet within 36 in of it. | `dishwasherSinkDistance` 36" | On or off, any severity |
+| `appliance.fridge-door` | warning | A refrigerator on a wall, less than 3 in from the side wall in the corner on its hinge side, so its door cannot open fully. The hinge side is the item's `hinge` option; a refrigerator without one, as in the seed catalog, is checked on both sides. | `fridgeHingeClearance` 3" | On or off, any severity |
+| `wall.alignment` | info | Wall cabinets on one wall whose tops are not level. The fix raises them to the highest. | — | On or off, any severity |
+| `countertop.coverage` | info | A run of base cabinets that no countertop covers from end to end, or a countertop that runs more than an overhang past the cabinets under it. | — | On or off, any severity |
+| `room.open` | info | Walls that do not form a closed loop. A document with no walls yet has nothing to close. | — | On or off, any severity |
+| `layout.work-triangle` | info | The legs between the centres of the first sink base, range and refrigerator sum to less than 156 in or more than 312 in. Says nothing until the design has all three. | `workTriangleMin` 156", `workTriangleMax` 312" | On or off, any severity |
+
+## Configuration
+
+The Control Panel (`/admin/rules`) publishes a `RulesConfig` (`rules/config.ts`, JSON Schema
+in `packages/core/schema/rules-config.schema.json`). Unset means the defaults below, which
+are what the rules did before they were configurable. `validate(doc, catalog, rules)`,
+`validateCommand`, `snap` and `ezd-core validate --rules` all read it.
+
+The rules that protect the document cannot be turned off or lowered from error:
+
+- `item.catalog`: It keeps every item to what the catalog allows.
+- `item.overlap`: Two items cannot occupy the same space.
+- `item.outside-wall`: An item cannot stand past the end of its wall.
+- `item.outside-room`: An item cannot stand outside the room.
+- `opening.invalid`: A door or window must fit in its wall.
+- `corner.conflict`: Two corner cabinets cannot take the same corner.
+- `size.standard`: Heights and depths are the industry-standard sizes.
 
 ## Thresholds
 
-From `packages/core/src/rules/constants.ts`.
+Defaults from `packages/core/src/rules/constants.ts`. Each is a length in the configuration,
+kept inside the range shown so a value cannot make its rule do nothing.
 
-| Name | Value | Meaning |
+| Name | Default | Range | Meaning |
+| --- | --- | --- | --- |
+| `minCabinetGap` | 9" | 3" to 24" | The narrowest cabinet. A gap smaller than this cannot take one, so it needs a filler. |
+| `maxFillerGap` | 6" | 1" to 12" | The widest gap a single filler closes. |
+| `minAisle` | 36" | 24" to 72" | The least room to walk between facing runs or around an island. |
+| `recommendedAisle` | 42" | 24" to 96" | The least room to walk between facing runs or around an island. |
+| `rangeOverheadClearance` | 30" | 12" to 60" | Clear height above a range under anything but a hood. |
+| `dishwasherSinkDistance` | 36" | 12" to 120" | A dishwasher loads from the sink, so it sits within this distance of one. |
+| `fridgeHingeClearance` | 3" | 1" to 12" | What a refrigerator door needs beside a side wall to open past 90 degrees. |
+| `workTriangleMin` | 156" | 60" to 240" | The sum of the three legs between sink, range and refrigerator. |
+| `workTriangleMax` | 312" | 120" to 480" | The sum of the three legs between sink, range and refrigerator. |
+
+## Snapping
+
+| Option | Default | Range |
 | --- | --- | --- |
-| `MIN_CABINET_GAP` | 9" | The narrowest cabinet. A gap smaller than this cannot take one, so it needs a filler. |
-| `MAX_FILLER_GAP` | 6" | The widest gap a single filler closes. |
-| `MIN_AISLE` | 36" | The least room to walk between facing runs or around an island. |
-| `RECOMMENDED_AISLE` | 42" | The least room to walk between facing runs or around an island. |
-| `RANGE_OVERHEAD_CLEARANCE` | 30" | Clear height above a range under anything but a hood. |
-| `DISHWASHER_SINK_DISTANCE` | 36" | A dishwasher loads from the sink, so it sits within this distance of one. |
-| `FRIDGE_HINGE_CLEARANCE` | 3" | What a refrigerator door needs beside a side wall to open past 90 degrees. |
-| `WORK_TRIANGLE_MIN` | 156" | The sum of the three legs between sink, range and refrigerator. |
-| `WORK_TRIANGLE_MAX` | 312" | The sum of the three legs between sink, range and refrigerator. |
+| `grid` | 3" | 0.0625" to 12" |
+| `wallCaptureDistance` | 12" | 1" to 48" |
+| `edgeSnapDistance` | 1.5" | 0.0625" to 12" |
+| `freeRotationStep` | 90 degrees | a divisor of 360 up to 90 |

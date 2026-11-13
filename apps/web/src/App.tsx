@@ -5,6 +5,8 @@ import { RequireSession, SessionExpiry } from './auth/SessionGate';
 import { AdminHome } from './admin/AdminHome';
 import { AppSettingsPage } from './admin/AppSettings';
 import { CatalogAdminPage } from './admin/CatalogAdmin';
+import { QuotesAdminPage } from './admin/QuotesAdmin';
+import { RulesAdminPage } from './admin/RulesAdmin';
 import { AdminLayout } from './admin/AdminLayout';
 import { AISettingsPage } from './admin/AISettings';
 import { AuditPage } from './admin/AuditPage';
@@ -95,7 +97,9 @@ export function App() {
         >
           <Route index element={<AdminHome />} />
           <Route path="catalog" element={<CatalogAdminPage />} />
+          <Route path="rules" element={<RulesAdminPage />} />
           <Route path="app" element={<AppSettingsPage />} />
+          <Route path="quotes" element={<QuotesAdminPage />} />
           <Route path="ai" element={<AISettingsPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="audit" element={<AuditPage />} />

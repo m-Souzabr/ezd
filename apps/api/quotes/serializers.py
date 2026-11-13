@@ -2,10 +2,11 @@ import base64
 import binascii
 from typing import Any
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers, status
 from rest_framework.exceptions import APIException
 
-from controlpanel import catalogs
+from controlpanel import appconfig, catalogs
 
 from .math import (
     DEFAULT_MULTIPLIER_BPS,
@@ -100,6 +101,18 @@ class TotalsSerializer(serializers.Serializer):
     taxableCents = StrictIntegerField(min_value=0)
     taxCents = StrictIntegerField(min_value=0)
     totalCents = StrictIntegerField(min_value=0)
+
+
+class BrandingSerializer(serializers.Serializer):
+    """The company details of a quote's PDF, as they were when the quote was created."""
+
+    numberPrefix = serializers.CharField()
+    companyName = serializers.CharField()
+    address = serializers.CharField()
+    contact = serializers.CharField()
+    # A JPEG or an RGB PNG as a data URI, or empty.
+    logo = serializers.CharField()
+    footerText = serializers.CharField()
 
 
 def _check_png(value: str) -> str:
@@ -241,6 +254,7 @@ class QuoteSerializer(serializers.ModelSerializer):
     lines = LineSerializer(many=True, read_only=True)
     totals = TotalsSerializer(read_only=True)
     drawings = DrawingsSerializer(read_only=True)
+    branding = serializers.SerializerMethodField()
 
     class Meta:
         model = Quote
@@ -260,9 +274,15 @@ class QuoteSerializer(serializers.ModelSerializer):
             "lines",
             "totals",
             "drawings",
+            "branding",
             "created_at",
         )
         read_only_fields = fields
+
+    @extend_schema_field(BrandingSerializer)
+    def get_branding(self, quote: Quote) -> dict[str, str]:
+        # A quote made before branding existed has none: it renders as it always did.
+        return {**appconfig.EMPTY_BRANDING, **quote.branding}
 
 
 class InconsistentQuoteSerializer(serializers.Serializer):

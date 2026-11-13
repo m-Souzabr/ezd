@@ -1,0 +1,528 @@
+{
+  "title": "EZDesign rules config",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "default": {},
+  "type": "object",
+  "properties": {
+    "rules": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "size.width-step": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "size.standard": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "item.catalog": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "item.overlap": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "item.outside-wall": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "item.outside-room": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "item.exceeds-ceiling": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "item.blocks-door": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "item.blocks-window": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "opening.invalid": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "corner.conflict": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "gap.needs-filler": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "warning",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "clearance.door-swing": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "warning",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "clearance.aisle": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "warning",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "appliance.range-overhead": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "warning",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "appliance.dishwasher-sink": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "warning",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "appliance.fridge-door": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "warning",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "wall.alignment": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "info",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "countertop.coverage": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "info",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "room.open": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "info",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "layout.work-triangle": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "info",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "thresholds": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "minCabinetGap": {
+          "default": 144,
+          "type": "integer",
+          "minimum": 48,
+          "maximum": 384
+        },
+        "maxFillerGap": {
+          "default": 96,
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 192
+        },
+        "minAisle": {
+          "default": 576,
+          "type": "integer",
+          "minimum": 384,
+          "maximum": 1152
+        },
+        "recommendedAisle": {
+          "default": 672,
+          "type": "integer",
+          "minimum": 384,
+          "maximum": 1536
+        },
+        "rangeOverheadClearance": {
+          "default": 480,
+          "type": "integer",
+          "minimum": 192,
+          "maximum": 960
+        },
+        "dishwasherSinkDistance": {
+          "default": 576,
+          "type": "integer",
+          "minimum": 192,
+          "maximum": 1920
+        },
+        "fridgeHingeClearance": {
+          "default": 48,
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 192
+        },
+        "workTriangleMin": {
+          "default": 2496,
+          "type": "integer",
+          "minimum": 960,
+          "maximum": 3840
+        },
+        "workTriangleMax": {
+          "default": 4992,
+          "type": "integer",
+          "minimum": 1920,
+          "maximum": 7680
+        }
+      },
+      "additionalProperties": false
+    },
+    "snap": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "grid": {
+          "default": 48,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 192
+        },
+        "wallCaptureDistance": {
+          "default": 192,
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 768
+        },
+        "edgeSnapDistance": {
+          "default": 24,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 192
+        },
+        "freeRotationStep": {
+          "default": 90,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 90
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

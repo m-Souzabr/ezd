@@ -442,7 +442,7 @@ function errorMap(config: AppConfig): Errors {
   return map;
 }
 
-function PublishDialog({
+export function PublishDialog({
   open,
   onClose,
   busy,
@@ -487,7 +487,7 @@ function PublishDialog({
   );
 }
 
-function VersionHistory() {
+export function VersionHistory() {
   const queryClient = useQueryClient();
   const versions = useQuery({ queryKey: configVersionsKey, queryFn: api.listConfigVersions });
   const [target, setTarget] = useState<number | null>(null);

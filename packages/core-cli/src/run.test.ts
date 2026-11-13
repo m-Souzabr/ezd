@@ -547,3 +547,131 @@ describe('validate-catalog and llm-tools', () => {
     expect(run(['llm-tools'], '{').exitCode).toBe(1);
   });
 });
+
+describe('the rules configuration', () => {
+  const parity = JSON.parse(
+    readFileSync(new URL('../../core/test-vectors/rules-parity.json', import.meta.url), 'utf8'),
+  ) as { document: unknown; rules: unknown; expected: unknown[]; expectedDefaults: unknown[] };
+  type Message = { message: string };
+  type Printed = {
+    ok: boolean;
+    errors: (Message & { path: string })[];
+    violations: unknown[];
+    document: unknown;
+    text: string;
+    config: { thresholds: { minAisle: number }; snap: { grid: number } };
+  };
+  const out = (stdout: string) => JSON.parse(stdout) as Printed;
+
+  it('checks a design as the browser does: same document and config, same violations', () => {
+    const input = { document: parity.document, rules: parity.rules };
+    const result = run(['validate'], JSON.stringify(input));
+    expect(result.exitCode).toBe(0);
+    expect(out(result.stdout).violations).toEqual(parity.expected);
+    // Without a config, the defaults.
+    const plain = run(['validate'], JSON.stringify({ document: parity.document }));
+    expect(out(plain.stdout).violations).toEqual(parity.expectedDefaults);
+  });
+
+  it('reads --rules from the file the caller gives, and the stdin one wins', () => {
+    const document = JSON.stringify({ document: parity.document });
+    const fromFile = run(['validate'], document, { rulesFile: JSON.stringify(parity.rules) });
+    expect(out(fromFile.stdout).violations).toEqual(parity.expected);
+    const stdinWins = run(['validate'], JSON.stringify({ document: parity.document, rules: {} }), {
+      rulesFile: JSON.stringify(parity.rules),
+    });
+    expect(out(stdinWins.stdout).violations).toEqual(parity.expectedDefaults);
+  });
+
+  it('reads a config with a bad value as the app does, and refuses one that is not an object', () => {
+    const broken = { thresholds: { minAisle: 1 }, rules: { 'room.open': { enabled: false } } };
+    const result = run(['validate'], JSON.stringify({ document: parity.document, rules: broken }));
+    expect(result.exitCode).toBe(0);
+    const refused = run(['validate'], JSON.stringify({ document: parity.document, rules: [] }));
+    expect(refused.exitCode).toBe(1);
+    expect(out(refused.stdout).errors).toEqual([
+      { path: 'rules', message: 'The rules configuration must be an object.' },
+    ]);
+    const badFile = run(['validate'], JSON.stringify({ document: parity.document }), {
+      rulesFile: '{',
+    });
+    expect(out(badFile.stdout).errors[0]).toMatchObject({ path: '--rules' });
+  });
+
+  it('applies commands and the dry run under it', () => {
+    const doc = out(
+      run(['validate'], JSON.stringify({ document: parity.document })).stdout,
+    ).document;
+    const rules = { rules: { 'gap.needs-filler': { severity: 'error' } } };
+    const call = {
+      name: 'add_item',
+      arguments: { catalogId: 'base.standard', widthIn: 30, wall: 'B', offsetIn: 3 },
+    };
+    const dry = (extra: object) =>
+      out(
+        run(
+          ['llm-dry-run'],
+          JSON.stringify({ document: doc, toolCalls: [call], aliases: {}, ...extra }),
+        ).stdout,
+      );
+    // By default the cabinet 3 in from a wall end is a warning the model may leave.
+    expect(
+      dry({})
+        .errors.map((e) => e.message)
+        .join(),
+    ).not.toContain('filler');
+    expect(
+      dry({ rules })
+        .errors.map((e) => e.message)
+        .join(),
+    ).toContain('Add a 3" filler');
+    const badRules = dry({ rules: 5 });
+    expect(badRules.ok).toBe(false);
+    expect(badRules.errors[0]!.message).toContain('rules:');
+    const badFile = out(
+      run(['llm-dry-run'], JSON.stringify({ document: doc, toolCalls: [call], aliases: {} }), {
+        rulesFile: '{',
+      }).stdout,
+    );
+    expect(badFile.errors[0]!.message).toContain('--rules');
+  });
+
+  it('summarizes the violations the configuration gives', () => {
+    const summary = (extra: object) =>
+      out(run(['llm-summary'], JSON.stringify({ document: parity.document, ...extra })).stdout);
+    expect(summary({ rules: parity.rules }).text).not.toBe(summary({}).text);
+    expect(summary({ rules: 7 }).ok).toBe(false);
+  });
+
+  it('validates a rules config strictly and prints it with its defaults', () => {
+    expect(readsStdin(['validate-rules-config'])).toBe(true);
+    const good = run(['validate-rules-config'], JSON.stringify({ thresholds: { minAisle: 480 } }));
+    expect(good.exitCode).toBe(0);
+    expect(out(good.stdout).config.thresholds.minAisle).toBe(480);
+    expect(out(good.stdout).config.snap.grid).toBe(48);
+
+    const locked = run(
+      ['validate-rules-config'],
+      JSON.stringify({ rules: { 'item.overlap': { enabled: false } } }),
+    );
+    expect(locked.exitCode).toBe(1);
+    expect(out(locked.stdout).errors[0]!.path).toBe('rules.item.overlap.enabled');
+    expect(run(['validate-rules-config'], '{').exitCode).toBe(1);
+  });
+
+  it('validates quote defaults', () => {
+    expect(readsStdin(['validate-quote-defaults'])).toBe(true);
+    const good = run(
+      ['validate-quote-defaults'],
+      JSON.stringify({ taxBps: 825, branding: { companyName: 'Acme' } }),
+    );
+    expect(good.exitCode).toBe(0);
+    expect(out(good.stdout).config).toMatchObject({
+      taxBps: 825,
+      branding: { companyName: 'Acme' },
+    });
+    const bad = run(['validate-quote-defaults'], JSON.stringify({ taxBps: -1 }));
+    expect(bad.exitCode).toBe(1);
+    expect(out(bad.stdout).errors[0]!.path).toBe('taxBps');
+  });
+});

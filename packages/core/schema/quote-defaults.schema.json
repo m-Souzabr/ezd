@@ -1,0 +1,70 @@
+{
+  "title": "EZDesign quote defaults",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "default": {},
+  "type": "object",
+  "properties": {
+    "markupBps": {
+      "default": 0,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000
+    },
+    "discountBps": {
+      "default": 0,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "taxBps": {
+      "default": 0,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000
+    },
+    "currency": {
+      "default": "USD",
+      "type": "string",
+      "const": "USD"
+    },
+    "branding": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "numberPrefix": {
+          "default": "",
+          "type": "string",
+          "maxLength": 10,
+          "pattern": "^[A-Za-z0-9._-]*$"
+        },
+        "companyName": {
+          "default": "",
+          "type": "string",
+          "maxLength": 100
+        },
+        "address": {
+          "default": "",
+          "type": "string",
+          "maxLength": 300
+        },
+        "contact": {
+          "default": "",
+          "type": "string",
+          "maxLength": 300
+        },
+        "logo": {
+          "default": "",
+          "type": "string",
+          "maxLength": 200000
+        },
+        "footerText": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

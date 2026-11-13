@@ -77,7 +77,9 @@ provider is tried.
 - **New catalog entries** (vanities, linen towers, closet shelving) through a
   `CatalogProvider`, with `generateParts` for their boxes.
 - **New rules** in `rules/rules/`, each built with `defineRule(id, severity, find)` and
-  registered in `rules/rules/index.ts`; thresholds in `rules/constants.ts`.
+  registered in `rules/rules/index.ts`; thresholds in `rules/constants.ts`, and in the
+  `RulesConfig` schema (`rules/config.ts`) and `RULE_THRESHOLDS` if staff may change them.
+  A new rule also needs its id in `DEFAULT_SEVERITY` and a line in `RULE_DESCRIPTIONS`.
   `pnpm --filter @ezd/core schema` regenerates `docs/RULES.md`.
 - **What stays shared:** the room (walls, openings, ceiling), commands, history, snapping,
   the plan and elevation views, BOM and quotes, accounts, autosave and versions.

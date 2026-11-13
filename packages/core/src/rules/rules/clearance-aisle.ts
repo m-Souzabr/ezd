@@ -6,11 +6,11 @@ import {
 } from '../../geometry/index.js';
 import { formatLength } from '../../units/index.js';
 import { type PlacedItem, the, verticalOverlap } from '../context.js';
-import { MIN_AISLE, RECOMMENDED_AISLE } from '../constants.js';
 import { defineRule, type Finding } from '../types.js';
 
 /** Touching is no aisle at all, as with a peninsula against a wall. */
-const tooNarrow = (distance: number): boolean => distance > EPS && distance < MIN_AISLE - EPS;
+const tooNarrow = (distance: number, minAisle: number): boolean =>
+  distance > EPS && distance < minAisle - EPS;
 
 /** On two walls that face each other, with some of one item straight across from the other. */
 function facing(a: PlacedItem, b: PlacedItem): boolean {
@@ -27,22 +27,23 @@ function facing(a: PlacedItem, b: PlacedItem): boolean {
  */
 export const clearanceAisle = defineRule('clearance.aisle', 'warning', (ctx) => {
   const findings: Finding[] = [];
-  const advice = `An aisle needs at least ${formatLength(MIN_AISLE)}; ${formatLength(RECOMMENDED_AISLE)} is recommended.`;
+  const { minAisle, recommendedAisle } = ctx.config.thresholds;
+  const advice = `An aisle needs at least ${formatLength(minAisle)}; ${formatLength(recommendedAisle)} is recommended.`;
   for (const placed of ctx.items) {
     if (placed.wall) continue;
     for (const wall of ctx.walls) {
       const distance = distanceRectToSegment(placed.footprint, wall.wall.start, wall.wall.end);
-      if (!tooNarrow(distance)) continue;
+      if (!tooNarrow(distance, minAisle)) continue;
       findings.push({
         itemIds: [placed.item.id, wall.wall.id],
         message: `Only ${formatLength(distance)} between ${the(placed.label)} and wall ${wall.label}. ${advice}`,
       });
     }
   }
-  for (const [a, b] of ctx.pairsWithin(MIN_AISLE)) {
+  for (const [a, b] of ctx.pairsWithin(minAisle)) {
     if (!verticalOverlap(a, b) || (a.wall && b.wall && !facing(a, b))) continue;
     const distance = distanceRectToRect(a.footprint, b.footprint);
-    if (!tooNarrow(distance)) continue;
+    if (!tooNarrow(distance, minAisle)) continue;
     findings.push({
       itemIds: [a.item.id, b.item.id],
       message: `Only ${formatLength(distance)} between ${the(a.label)} and ${the(b.label)}. ${advice}`,

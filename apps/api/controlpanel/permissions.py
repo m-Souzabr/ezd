@@ -37,7 +37,8 @@ class HasControlPanelPerm(BasePermission):
     """Staff holding the permission the view declares.
 
     A view sets `control_panel_perm` to a code, or to a dict from HTTP method to code (a
-    method it does not list is refused). `is_staff` is the gate: a superuser who is not
+    method it does not list is refused). Either may be a tuple of codes, of which holding
+    any one is enough. `is_staff` is the gate: a superuser who is not
     staff does not enter either.
     """
 
@@ -48,4 +49,7 @@ class HasControlPanelPerm(BasePermission):
         needed = view.control_panel_perm
         if isinstance(needed, dict):
             needed = needed.get(request.method)
-        return needed is not None and can(user, needed)
+        if needed is None:
+            return False
+        codes = (needed,) if isinstance(needed, str) else needed
+        return any(can(user, code) for code in codes)

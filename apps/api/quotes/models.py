@@ -36,6 +36,9 @@ class Quote(models.Model):
     notes = models.TextField(blank=True, max_length=5000)
     catalog_version = models.CharField(max_length=50)
     settings = models.JSONField()
+    # The company name, logo and so on of the PDF, as they were published when the quote was
+    # created. Empty for a quote made before branding existed.
+    branding = models.JSONField(default=dict)
     lines = models.JSONField()
     totals = models.JSONField()
     drawings = models.JSONField()

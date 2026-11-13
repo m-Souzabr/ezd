@@ -5,6 +5,7 @@ import {
   type Command,
   type CommandError,
   VERSION as CORE_VERSION,
+  DEFAULT_RULES_CONFIG,
   type DesignDocument,
   dryRunProposal,
   draftProblems,
@@ -14,8 +15,10 @@ import {
   normalizeDraft,
   parseCatalog,
   parseDocument,
+  parseRulesConfig,
   type ProposalError,
   RoomDraftSchema,
+  type RulesConfig,
   SEED_CATALOG,
   summarizeForLLM,
   toIssues,
@@ -24,6 +27,8 @@ import {
   validateAppConfig,
   validateCatalog,
   validateCommand,
+  validateQuoteDefaults,
+  validateRulesConfig,
   type Violation,
 } from '@ezd/core';
 
@@ -33,6 +38,8 @@ import pkg from '../package.json' with { type: 'json' };
 export interface RunOptions {
   /** The text of the file named by `--catalog`, which `cli.ts` reads. */
   catalogFile?: string;
+  /** The text of the file named by `--rules`, which `cli.ts` reads. */
+  rulesFile?: string;
 }
 
 export interface CliResult {
@@ -67,11 +74,22 @@ Commands:
                      confirmed; exits 0 when it can be confirmed
   validate-config    read an app config as JSON on stdin and print { ok, config, errors }:
                      the config with every default filled in; exits 0 when it is valid
+  validate-rules-config
+                     read a rules config (rule switches and severities, thresholds, snap
+                     options) as JSON on stdin and print { ok, config, errors }, strictly:
+                     an integrity rule that is off or lowered is an error
+  validate-quote-defaults
+                     read the quote defaults (rates and branding) as JSON on stdin and
+                     print { ok, config, errors }
 
 The catalog the commands check against is the seed catalog unless one is given: a
 'catalog' key in the stdin object of validate, llm-summary and llm-dry-run (and of
 normalize-draft, as { draft, catalog }), or --catalog <file> for any of them. The stdin
 one wins. A catalog that is not valid is an error, not a fallback.
+
+The same commands read the design rules' configuration from a 'rules' key in stdin or
+--rules <file>, and use the defaults without one. A rules config that has a bad value is
+read as the app reads it: that value takes its default.
 
   validate-catalog   read a catalog as JSON on stdin and print
                      { ok, catalog, problems, errors }: errors are what stops it from
@@ -83,6 +101,7 @@ one wins. A catalog that is not valid is an error, not a fallback.
 
 Options:
   --catalog <file>  read the catalog from this JSON file
+  --rules <file>    read the rules config from this JSON file
   -V, --version     print the CLI and core versions
   -h, --help        print this help
 `;
@@ -97,6 +116,8 @@ export const readsStdin = (argv: readonly string[]): boolean =>
     'normalize-draft',
     'draft-problems',
     'validate-config',
+    'validate-rules-config',
+    'validate-quote-defaults',
     'validate-catalog',
     'llm-tools',
   ].includes(argv[0] ?? '');
@@ -166,18 +187,24 @@ function validateDesign(stdin: string, options: RunOptions): CliResult {
     return done();
   }
   const { catalog } = resolved;
+  const configured = resolveRules((input as Input).rules, options);
+  if (!configured.ok) {
+    output.errors = configured.errors;
+    return done();
+  }
+  const { rules } = configured;
 
   const commands = input.commands ?? [];
   if (!Array.isArray(commands) || commands.length === 0) {
     output.ok = Array.isArray(commands);
     if (!output.ok)
       output.errors = [{ path: 'commands', message: 'Expected an array of commands' }];
-    output.violations = validate(parsed.value, catalog);
+    output.violations = validate(parsed.value, catalog, rules);
     return done();
   }
   // `applyCommand` checks the batch against the command schema, so the cast is safe.
   const batch = { type: 'batch', commands } as Command;
-  const result = validateCommand(parsed.value, catalog, batch);
+  const result = validateCommand(parsed.value, catalog, batch, rules);
   if (result.ok) {
     output.ok = true;
     output.document = result.value.doc;
@@ -185,7 +212,7 @@ function validateDesign(stdin: string, options: RunOptions): CliResult {
     output.introduced = result.value.introduced;
   } else {
     output.commandError = result.error;
-    output.violations = validate(parsed.value, catalog);
+    output.violations = validate(parsed.value, catalog, rules);
   }
   return done();
 }
@@ -225,6 +252,34 @@ function resolveCatalog(
   };
 }
 
+/**
+ * The rules configuration to check with: the one in the input, else the one from
+ * `--rules`, else the defaults. Read as the browser reads it, so a value that is no longer
+ * valid takes its default instead of stopping every check.
+ */
+function resolveRules(
+  fromInput: unknown,
+  options: RunOptions,
+): { ok: true; rules: RulesConfig } | { ok: false; errors: Issue[] } {
+  let source = fromInput;
+  let where = 'rules';
+  if (source === undefined && options.rulesFile !== undefined) {
+    where = '--rules';
+    try {
+      source = JSON.parse(options.rulesFile);
+    } catch (error) {
+      return {
+        ok: false,
+        errors: [{ path: where, message: `Invalid JSON: ${(error as Error).message}` }],
+      };
+    }
+  }
+  if (source === undefined) return { ok: true, rules: DEFAULT_RULES_CONFIG };
+  const parsed = parseRulesConfig(source);
+  if (parsed.ok) return { ok: true, rules: parsed.value.config };
+  return { ok: false, errors: [{ path: where, message: parsed.error.message }] };
+}
+
 /** The JSON object on stdin with its `document` parsed, or the issues that stop it. */
 function readDocumentInput(
   stdin: string,
@@ -262,12 +317,14 @@ function llmSummary(stdin: string, options: RunOptions): CliResult {
   if (!read.ok) return printed(false, { text: '', aliases: {}, errors: read.errors });
   const resolved = resolveCatalog(read.input.catalog, options);
   if (!resolved.ok) return printed(false, { text: '', aliases: {}, errors: resolved.errors });
+  const configured = resolveRules(read.input.rules, options);
+  if (!configured.ok) return printed(false, { text: '', aliases: {}, errors: configured.errors });
   const { catalog } = resolved;
   const { maxChars } = read.input;
   const summary = summarizeForLLM(
     read.document,
     catalog,
-    validate(read.document, catalog),
+    validate(read.document, catalog, configured.rules),
     typeof maxChars === 'number' ? { maxChars } : {},
   );
   return printed(true, { ...summary, errors: [] });
@@ -312,6 +369,15 @@ function llmDryRun(stdin: string, options: RunOptions): CliResult {
     }));
     return printed(false, output);
   }
+  const configured = resolveRules(read.input.rules, options);
+  if (!configured.ok) {
+    output.errors = configured.errors.map((issue) => ({
+      toolIndex: -1,
+      tool: '',
+      message: `${issue.path}: ${issue.message}`,
+    }));
+    return printed(false, output);
+  }
   const { toolCalls, aliases } = read.input;
   if (!Array.isArray(toolCalls) || typeof aliases !== 'object' || aliases === null) {
     output.errors = [
@@ -328,6 +394,7 @@ function llmDryRun(stdin: string, options: RunOptions): CliResult {
     aliases as Record<string, string>,
     read.document,
     resolved.catalog,
+    { rules: configured.rules },
   );
   if (!run.ok) return printed(false, { ...output, errors: run.errors });
   return printed(true, {
@@ -384,6 +451,18 @@ function validateConfigInput(stdin: string): CliResult {
   return printed(true, { config: checked.value, errors: [] });
 }
 
+/** Reads a JSON section that has defaults and prints it with them filled in. */
+function validateSection<T>(
+  stdin: string,
+  check: (input: unknown) => { ok: true; value: T } | { ok: false; error: Issue[] },
+): CliResult {
+  const read = readJson(stdin);
+  if (!read.ok) return printed(false, { config: null, errors: read.errors });
+  const checked = check(read.value);
+  if (!checked.ok) return printed(false, { config: null, errors: checked.error });
+  return printed(true, { config: checked.value, errors: [] });
+}
+
 function readJson(stdin: string): { ok: true; value: unknown } | { ok: false; errors: Issue[] } {
   try {
     return { ok: true, value: JSON.parse(stdin) };
@@ -429,6 +508,8 @@ export function run(argv: readonly string[], stdin = '', options: RunOptions = {
   if (first === 'normalize-draft') return normalizeDraftInput(stdin, options);
   if (first === 'draft-problems') return draftProblemsInput(stdin);
   if (first === 'validate-config') return validateConfigInput(stdin);
+  if (first === 'validate-rules-config') return validateSection(stdin, validateRulesConfig);
+  if (first === 'validate-quote-defaults') return validateSection(stdin, validateQuoteDefaults);
   if (first === 'validate-catalog') return validateCatalogInput(stdin);
   if (first === 'llm-tools') return llmToolsInput(stdin);
   if (first === '--version' || first === '-V') {

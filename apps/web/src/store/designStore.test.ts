@@ -1,7 +1,20 @@
-import { applyCommand, type Command, inches, type Point, SEED_CATALOG, validate } from '@ezd/core';
+import {
+  applyCommand,
+  type Command,
+  inches,
+  parseDocument,
+  type Point,
+  type RulesConfig,
+  SEED_CATALOG,
+  validate,
+  validateRulesConfig,
+} from '@ezd/core';
 import { describe, expect, it } from 'vitest';
 
+import parityText from '../../../../packages/core/test-vectors/rules-parity.json?raw';
+
 import { type Drag, snapDrag } from '../editor/dragging';
+import { createDesignStore } from './designStore';
 import { room, seedItem, storeFor, WALLS } from '../test/kitchen';
 
 const [A, B] = WALLS;
@@ -304,5 +317,86 @@ describe('proposals', () => {
     store.getState().propose(proposalFor(store));
     store.getState().execute(add('item-000009', 96));
     expect(store.getState().proposal).toBeNull();
+  });
+});
+
+describe('the rules configuration', () => {
+  const configured = (input: object): RulesConfig => {
+    const checked = validateRulesConfig(input);
+    if (!checked.ok) throw new Error(JSON.stringify(checked.error));
+    return checked.value;
+  };
+  const aisle = (rules: RulesConfig) =>
+    createDesignStore(
+      room(144, 120, seedItem('item-000001', 'base.standard', A, 40), {
+        ...seedItem('item-000002', 'base.standard', A, 0),
+        placement: { type: 'free', x: inches(40), y: inches(54), rotation: 0 },
+      }),
+      SEED_CATALOG,
+      rules,
+    );
+
+  it('keeps the rules it was given next to the catalog, and the defaults without them', () => {
+    const rules = configured({ thresholds: { minAisle: inches(30) } });
+    expect(aisle(rules).getState().rules).toBe(rules);
+    expect(storeFor(room()).getState().rules.thresholds.minAisle).toBe(inches(36));
+  });
+
+  it('judges the design by the configured thresholds and severities', () => {
+    const ids = (rules: RulesConfig) =>
+      aisle(rules)
+        .getState()
+        .violations.filter((v) => v.ruleId === 'clearance.aisle')
+        .map((v) => v.severity);
+    expect(ids(configured({}))).toEqual(['warning']);
+    expect(ids(configured({ thresholds: { minAisle: inches(30) } }))).toEqual([]);
+    expect(ids(configured({ rules: { 'clearance.aisle': { severity: 'error' } } }))).toEqual([
+      'error',
+    ]);
+    expect(ids(configured({ rules: { 'clearance.aisle': { enabled: false } } }))).toEqual([]);
+  });
+
+  it('applies the same rules after each command, undo and redo', () => {
+    const rules = configured({ rules: { 'gap.needs-filler': { severity: 'error' } } });
+    const store = createDesignStore(room(), SEED_CATALOG, rules);
+    store.getState().execute(add('item-000001', 3));
+    const severities = () =>
+      store
+        .getState()
+        .violations.filter((v) => v.ruleId === 'gap.needs-filler')
+        .map((v) => v.severity);
+    expect(severities()).toEqual(['error']);
+    store.getState().undo();
+    expect(severities()).toEqual([]);
+    store.getState().redo();
+    expect(severities()).toEqual(['error']);
+  });
+
+  it('snaps with the configured options', () => {
+    const rules = configured({ snap: { grid: inches(1) } });
+    const store = createDesignStore(room(), SEED_CATALOG, rules);
+    const drag: Drag = {
+      kind: 'add',
+      item: base('item-000001', 0),
+      snap: null,
+    };
+    const update = (state: RulesConfig | undefined) =>
+      snapDrag(store.getState().doc, SEED_CATALOG, drag, at(71, 5), state).snap?.placement;
+    expect(update(undefined)).toMatchObject({ offset: inches(57) });
+    expect(update(rules)).toMatchObject({ offset: inches(56) });
+  });
+
+  it('gives the browser and the CLI the same violations for the shared fixture', () => {
+    const parity = JSON.parse(parityText) as {
+      document: unknown;
+      rules: object;
+      expected: unknown[];
+      expectedDefaults: unknown[];
+    };
+    const parsed = parseDocument(parity.document);
+    if (!parsed.ok) throw new Error(parsed.error.message);
+    const given = createDesignStore(parsed.value, SEED_CATALOG, configured(parity.rules));
+    expect(given.getState().violations).toEqual(parity.expected);
+    expect(createDesignStore(parsed.value).getState().violations).toEqual(parity.expectedDefaults);
   });
 });

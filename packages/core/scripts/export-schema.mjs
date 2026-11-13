@@ -11,7 +11,9 @@ import {
   designDocumentJsonSchema,
   draftRoomJsonSchema,
   llmToolsJsonSchema,
+  quoteDefaultsJsonSchema,
   roomDraftJsonSchema,
+  rulesConfigJsonSchema,
   SEED_CATALOG,
 } from '../dist/index.js';
 
@@ -26,6 +28,8 @@ const files = {
   'room-draft.schema.json': roomDraftJsonSchema(),
   'app-config.schema.json': appConfigJsonSchema(),
   'catalog.schema.json': catalogJsonSchema(),
+  'rules-config.schema.json': rulesConfigJsonSchema(),
+  'quote-defaults.schema.json': quoteDefaultsJsonSchema(),
 };
 for (const [name, schema] of Object.entries(files)) {
   writeFileSync(join(outDir, name), `${JSON.stringify(schema, null, 2)}\n`);

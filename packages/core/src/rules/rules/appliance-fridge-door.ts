@@ -1,6 +1,6 @@
 import { formatLength, type Len } from '../../units/index.js';
 import type { WallInfo } from '../context.js';
-import { FRIDGE_HINGE_CLEARANCE, FRIDGE_ID } from '../constants.js';
+import { FRIDGE_ID } from '../constants.js';
 import { defineRule } from '../types.js';
 
 /**
@@ -10,6 +10,7 @@ import { defineRule } from '../types.js';
  */
 export const applianceFridgeDoor = defineRule('appliance.fridge-door', 'warning', (ctx) =>
   ctx.items.flatMap((placed) => {
+    const { fridgeHingeClearance } = ctx.config.thresholds;
     const { wall } = placed;
     if (placed.item.catalogId !== FRIDGE_ID || !wall) return [];
     // A wall is a side wall only if it comes into the room from the corner.
@@ -23,11 +24,11 @@ export const applianceFridgeDoor = defineRule('appliance.fridge-door', 'warning'
     return sides
       .filter(
         ([on, , turnsIn, gap]) =>
-          (hinge === on || hinge === 'either') && turnsIn > 0.5 && gap < FRIDGE_HINGE_CLEARANCE,
+          (hinge === on || hinge === 'either') && turnsIn > 0.5 && gap < fridgeHingeClearance,
       )
       .map(([, side, , gap]) => ({
         itemIds: [placed.item.id, side!.wall.id],
-        message: `${placed.label} is ${formatLength(gap)} from wall ${side!.label}. Leave at least ${formatLength(FRIDGE_HINGE_CLEARANCE)} on the hinge side so the door opens fully.`,
+        message: `${placed.label} is ${formatLength(gap)} from wall ${side!.label}. Leave at least ${formatLength(fridgeHingeClearance)} on the hinge side so the door opens fully.`,
       }));
   }),
 );

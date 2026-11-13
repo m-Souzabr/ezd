@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components -- Its components render into a PDF, never into the page. */
-import { type BomUnit, formatMoney, formatQuantity } from '@ezd/core';
+import { type BomUnit, formatMoney, formatQuantity, quoteNumberLabel } from '@ezd/core';
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import robotoBold from 'roboto-fontface/fonts/roboto/Roboto-Bold.woff?url';
 import robotoRegular from 'roboto-fontface/fonts/roboto/Roboto-Regular.woff?url';
@@ -35,6 +35,9 @@ const styles = StyleSheet.create({
     paddingBottom: 56,
     paddingHorizontal: 40,
   },
+  brand: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  logo: { height: 44, maxWidth: 140, objectFit: 'contain', marginRight: 12 },
+  company: { fontSize: 12, fontWeight: 700 },
   header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
   title: { fontSize: 18, fontWeight: 700 },
   muted: { color: MUTED },
@@ -81,7 +84,11 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: MUTED,
   },
+  footerText: { position: 'absolute', bottom: 38, left: 40, right: 40, fontSize: 8, color: MUTED },
 });
+
+/** About how many lines of 8 point text fit across the page, for the room the footer takes. */
+const FOOTER_LINE_CHARS = 120;
 
 const UNIT: Record<BomUnit, string> = { each: '', sqft: ' sq ft' };
 
@@ -116,7 +123,9 @@ function Totals({ quote }: { quote: Quote }) {
 /** The PDF document of a quote, ready for `pdf()`. */
 export function quoteDocument(quote: Quote) {
   const date = new Date(quote.created_at);
-  const title = `Quote ${quote.number}`;
+  const { branding } = quote;
+  const title = `Quote ${quoteNumberLabel(branding.numberPrefix, quote.number)}`;
+  const footerLines = Math.ceil(branding.footerText.length / FOOTER_LINE_CHARS);
   return (
     <Document
       title={`${title}, ${quote.project_name}`}
@@ -126,7 +135,22 @@ export function quoteDocument(quote: Quote) {
       creationDate={date}
       modificationDate={date}
     >
-      <Page size="LETTER" style={styles.page}>
+      <Page size="LETTER" style={[styles.page, { paddingBottom: 56 + footerLines * 10 }]}>
+        {(branding.logo !== '' ||
+          branding.companyName !== '' ||
+          branding.address !== '' ||
+          branding.contact !== '') && (
+          <View style={styles.brand}>
+            {branding.logo !== '' && <Image style={styles.logo} src={branding.logo} />}
+            <View>
+              {branding.companyName !== '' && (
+                <Text style={styles.company}>{branding.companyName}</Text>
+              )}
+              {branding.address !== '' && <Text style={styles.muted}>{branding.address}</Text>}
+              {branding.contact !== '' && <Text style={styles.muted}>{branding.contact}</Text>}
+            </View>
+          </View>
+        )}
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>{title}</Text>
@@ -184,6 +208,11 @@ export function quoteDocument(quote: Quote) {
           </View>
         ))}
 
+        {branding.footerText !== '' && (
+          <Text style={[styles.footerText, { bottom: 38 }]} fixed>
+            {branding.footerText}
+          </Text>
+        )}
         <View style={styles.footer} fixed>
           <Text>
             {title} · Design version {quote.design_version} · Catalog {quote.catalog_version}
