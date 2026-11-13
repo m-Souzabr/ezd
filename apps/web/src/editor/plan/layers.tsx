@@ -25,6 +25,7 @@ import {
   wallOf,
 } from '../tools/select';
 import { type Bounds, gridStep, pixels, type Viewport } from '../viewport';
+import type { PreviewGhosts } from '../preview';
 import { itemDimensions, openingSymbol, wallDimensions, wallPolygon } from './model';
 
 // The plan's layers, bottom to top: grid, floor, walls, openings, countertops, items,
@@ -403,6 +404,55 @@ export function GhostLayer({
         bold
         viewport={viewport}
       />
+    </Group>
+  );
+}
+
+/** A pending proposal: what it removes in red, under what it adds in green. */
+export function ProposalLayer({
+  doc,
+  previewDoc,
+  ghosts,
+  viewport,
+}: {
+  doc: DesignDocument;
+  previewDoc: DesignDocument;
+  ghosts: PreviewGhosts;
+  viewport: Viewport;
+}) {
+  const shapes = [
+    ...ghosts.removed.map((item) => ({ item, from: doc, added: false })),
+    ...ghosts.added.map((item) => ({ item, from: previewDoc, added: true })),
+  ];
+  return (
+    <Group>
+      {shapes.map(({ item, from, added }) => {
+        const footprint = itemFootprint(from, item);
+        if (!footprint) return null;
+        const line = added ? COLORS.proposalAddedLine : COLORS.proposalRemovedLine;
+        return (
+          <Group key={`${added ? 'add' : 'remove'}-${item.id}`}>
+            <Line
+              points={flat(footprint)}
+              closed
+              fill={added ? COLORS.proposalAdded : COLORS.proposalRemoved}
+              stroke={line}
+              dash={added ? [] : [6, 4]}
+              {...thin}
+              strokeWidth={2}
+            />
+            {added && (
+              <CenteredText
+                at={centre(footprint)}
+                text={itemCode(item)}
+                fill={line}
+                bold
+                viewport={viewport}
+              />
+            )}
+          </Group>
+        );
+      })}
     </Group>
   );
 }

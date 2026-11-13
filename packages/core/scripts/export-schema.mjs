@@ -3,7 +3,13 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { commandsJsonSchema, designDocumentJsonSchema } from '../dist/index.js';
+import {
+  catalogIndexForLLM,
+  commandsJsonSchema,
+  designDocumentJsonSchema,
+  llmToolsJsonSchema,
+  SEED_CATALOG,
+} from '../dist/index.js';
 
 const outDir = resolve(import.meta.dirname, '..', 'schema');
 mkdirSync(outDir, { recursive: true });
@@ -11,8 +17,13 @@ mkdirSync(outDir, { recursive: true });
 const files = {
   'design-document.schema.json': designDocumentJsonSchema(),
   'commands.schema.json': commandsJsonSchema(),
+  'llm-tools.schema.json': llmToolsJsonSchema(),
 };
 for (const [name, schema] of Object.entries(files)) {
   writeFileSync(join(outDir, name), `${JSON.stringify(schema, null, 2)}\n`);
   console.log(`wrote schema/${name}`);
 }
+
+// The catalog as the model reads it: part of the prompt prefix the server sends unchanged.
+writeFileSync(join(outDir, 'llm-catalog-index.txt'), `${catalogIndexForLLM(SEED_CATALOG)}\n`);
+console.log('wrote schema/llm-catalog-index.txt');

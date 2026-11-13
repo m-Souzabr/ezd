@@ -1,0 +1,22 @@
+{
+  "note": "Scripted, not recorded: exercises the pipeline in CI. Replace with `run_evals --client live --record`.",
+  "responses": [
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "name": "classify_request",
+          "arguments": {
+            "category": "off_topic"
+          }
+        }
+      ],
+      "stop_reason": "completed",
+      "usage": {
+        "input_tokens": 180,
+        "output_tokens": 12,
+        "cached_tokens": 0
+      }
+    }
+  ]
+}

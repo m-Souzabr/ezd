@@ -36,19 +36,24 @@ function announcement(state: DesignStore): string {
 
 /**
  * The editor screen: the toolbar across the top, the catalog on the left, the plan or an
- * elevation in the middle, and the properties and validation panels on the right.
+ * elevation in the middle, the properties and validation panels on the right, and the
+ * assistant beyond them when there is one.
  */
 export function Editor({
   onLoadDocument,
   header,
+  assistant,
 }: {
   onLoadDocument(doc: DesignDocument): void;
   /** Shown in the header after the title: where the design is kept, and links away. */
   header?: ReactNode;
+  /** The chat assistant, docked at the right. Only a design saved on the server has one. */
+  assistant?: ReactNode;
 }) {
   const store = useDesignStore();
   const view = useDesign((state) => state.view);
   const notice = useDesign((state) => state.notice);
+  const previewDoc = useDesign((state) => state.proposal?.doc);
   const selected = useDesign(announcement);
   const [materialsOpen, setMaterialsOpen] = useState(false);
 
@@ -80,7 +85,11 @@ export function Editor({
         </aside>
         <main className="relative flex min-w-0 flex-1 flex-col">
           <div className="relative min-h-0 flex-1">
-            {view.kind === 'plan' ? <PlanCanvas /> : <ElevationCanvas wallId={view.wallId} />}
+            {view.kind === 'plan' ? (
+              <PlanCanvas previewDoc={previewDoc} />
+            ) : (
+              <ElevationCanvas wallId={view.wallId} previewDoc={previewDoc} />
+            )}
           </div>
           {materialsOpen && (
             <div className="flex max-h-[40%] min-h-0 flex-col border-t border-slate-200 bg-white">
@@ -116,6 +125,11 @@ export function Editor({
             <ValidationPanel />
           </div>
         </aside>
+        {assistant && (
+          <aside className="flex w-80 shrink-0 flex-col border-l border-slate-200 bg-white">
+            {assistant}
+          </aside>
+        )}
       </div>
       <p aria-live="polite" className="sr-only" data-testid="announcement">
         {selected}

@@ -8,3 +8,12 @@ export const quotesKey = (designId: string) => ['designs', designId, 'quotes'] a
 
 /** One stored quote, which never changes. */
 export const quoteKey = (id: string) => ['quotes', id] as const;
+
+/** The signed-in user's assistant usage this month. */
+export const chatUsageKey = ['chat', 'usage'] as const;
+
+/** The chat of a design. */
+export const chatKey = (designId: string) => ['designs', designId, 'chat'] as const;
+
+/** The site's assistant settings (staff only). */
+export const llmSettingsKey = ['llm', 'settings'] as const;

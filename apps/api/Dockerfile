@@ -27,7 +27,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PATH="/app/.venv/bin:$PATH" \
     DJANGO_SETTINGS_MODULE=config.settings.prod \
     DESIGN_DOCUMENT_SCHEMA_PATH=/opt/ezd/design-document.schema.json \
-    EZD_CORE_CLI=node,/opt/ezd/cli.js
+    EZD_CORE_CLI=node,/opt/ezd/cli.js \
+    LLM_TOOLS_SCHEMA_PATH=/opt/ezd/llm-tools.schema.json \
+    LLM_CATALOG_INDEX_PATH=/opt/ezd/llm-catalog-index.txt
 
 WORKDIR /app
 COPY apps/api/pyproject.toml apps/api/uv.lock apps/api/.python-version ./
@@ -35,6 +37,8 @@ RUN uv sync --frozen --no-dev
 COPY apps/api ./
 COPY --from=core /repo/packages/core-cli/dist/cli.js /opt/ezd/cli.js
 COPY packages/core/schema/design-document.schema.json /opt/ezd/design-document.schema.json
+COPY packages/core/schema/llm-tools.schema.json /opt/ezd/llm-tools.schema.json
+COPY packages/core/schema/llm-catalog-index.txt /opt/ezd/llm-catalog-index.txt
 
 RUN useradd --system --no-create-home ezd
 USER ezd

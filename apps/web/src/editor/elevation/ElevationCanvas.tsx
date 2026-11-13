@@ -1,4 +1,12 @@
-import { type Id, IN, type Item, pointOnWall, type Pt, wallLabel } from '@ezd/core';
+import {
+  type DesignDocument,
+  type Id,
+  IN,
+  type Item,
+  pointOnWall,
+  type Pt,
+  wallLabel,
+} from '@ezd/core';
 import { useMemo } from 'react';
 import { Group, Layer, Line, Rect, Stage } from 'react-konva';
 
@@ -8,6 +16,7 @@ import { CanvasHost, type CanvasPointer } from '../CanvasHost';
 import { CenteredText } from '../draw';
 import { type Drag, dragGhost, dragHasError } from '../dragging';
 import { itemCode } from '../labels';
+import { elevationGhosts, previewGhosts } from '../preview';
 import { COLORS } from '../style';
 import { wallOf } from '../tools/select';
 import { box } from './box';
@@ -21,7 +30,14 @@ const thin = { strokeWidth: 1, strokeScaleEnabled: false, listening: false } as 
  * y the height above the floor. It draws from the same document as the plan, and dragging
  * an item sideways moves it along this wall with the same snapping.
  */
-export function ElevationCanvas({ wallId }: { wallId: Id }) {
+export function ElevationCanvas({
+  wallId,
+  previewDoc,
+}: {
+  wallId: Id;
+  /** A pending proposal: the items that differ from the document are drawn as ghosts. */
+  previewDoc?: DesignDocument | undefined;
+}) {
   const store = useDesignStore();
   const doc = useDesign((state) => state.doc);
   const catalog = useDesign((state) => state.catalog);
@@ -31,6 +47,10 @@ export function ElevationCanvas({ wallId }: { wallId: Id }) {
 
   const model = useMemo(() => elevationModel(doc, catalog, wallId), [doc, catalog, wallId]);
   const severities = useMemo(() => severityById(violations), [violations]);
+  const ghosts = useMemo(
+    () => (previewDoc ? elevationGhosts(previewGhosts(doc, previewDoc), wallId) : null),
+    [doc, previewDoc, wallId],
+  );
   if (!model) return null;
 
   const onPress = ({ point }: CanvasPointer): Drag | null => {
@@ -107,6 +127,34 @@ export function ElevationCanvas({ wallId }: { wallId: Id }) {
             scaleY={viewport.scale / IN}
             listening={false}
           >
+            {ghosts &&
+              [
+                ...ghosts.removed.map((ghost) => ({ ghost, added: false })),
+                ...ghosts.added.map((ghost) => ({ ghost, added: true })),
+              ].map(({ ghost, added }) => (
+                <Group key={`${added ? 'add' : 'remove'}-${ghost.id}`}>
+                  <Rect
+                    {...box(ghost.rect)}
+                    fill={added ? COLORS.proposalAdded : COLORS.proposalRemoved}
+                    stroke={added ? COLORS.proposalAddedLine : COLORS.proposalRemovedLine}
+                    dash={added ? [] : [6, 4]}
+                    {...thin}
+                    strokeWidth={2}
+                  />
+                  {added && (
+                    <CenteredText
+                      at={{
+                        x: ghost.rect.x + ghost.rect.w / 2,
+                        y: -(ghost.rect.y + ghost.rect.h / 2),
+                      }}
+                      text={ghost.code}
+                      fill={COLORS.proposalAddedLine}
+                      bold
+                      viewport={viewport}
+                    />
+                  )}
+                </Group>
+              ))}
             {ghostHere && ghostHere.placement.type === 'wall' && (
               <Group>
                 <Rect

@@ -1,0 +1,33 @@
+Catalog seed-1. Sizes in inches: width x height x depth.
+Entries (id | name | kind | widths | heights | depths | default size | placement | options):
+base.standard | Base cabinet | kind base | widths 9 to 48 in steps of 3 | heights 34.5 | depths 24 | default 30 x 34.5 x 24 at elevation 0 | placement wall, free | options doors 1|2 (default 2); topDrawer true|false (default true); hinge left|right (default left)
+base.drawers | Drawer base cabinet | kind base | widths 12 to 36 in steps of 3 | heights 34.5 | depths 24 | default 24 x 34.5 x 24 at elevation 0 | placement wall, free | options drawers 3|4 (default 3)
+base.sink | Sink base cabinet | kind base | widths 24 to 42 in steps of 3 | heights 34.5 | depths 24 | default 36 x 34.5 x 24 at elevation 0 | placement wall, free | options doors 2 (default 2)
+base.corner.blind | Blind corner base (width along its own wall, blind end behind the adjacent run) | kind corner | widths 36 to 48 in steps of 3 | heights 34.5 | depths 24 | default 36 x 34.5 x 24 at elevation 0 | placement wall | options blind left|right (default left)
+base.corner.susan | Lazy Susan corner base (width along its own wall, depth along the wall to its left) | kind corner | widths 33, 36 | heights 34.5 | depths 33, 36 | default 36 x 34.5 x 36 at elevation 0 | placement wall
+wall.standard | Wall cabinet | kind wall | widths 9 to 48 in steps of 3 | heights 12, 15, 18, 24, 30, 36, 42 | depths 12 | default 30 x 30 x 12 at elevation 54 | placement wall | options doors 1|2 (default 2); hinge left|right (default left)
+wall.fridge | Over-refrigerator wall cabinet | kind wall | widths 30, 33, 36 | heights 12, 15, 18, 24 | depths 24 | default 36 x 15 x 24 at elevation 69 | placement wall | options doors 2 (default 2)
+wall.corner.diagonal | Diagonal corner wall cabinet (width along its own wall, depth along the wall to its left) | kind corner | widths 24 | heights 30, 36, 42 | depths 24 | default 24 x 30 x 24 at elevation 54 | placement wall | options hinge left|right (default left)
+tall.pantry | Pantry cabinet | kind tall | widths 18 to 36 in steps of 3 | heights 84, 90, 96 | depths 12, 24 | default 24 x 84 x 24 at elevation 0 | placement wall, free | options doors 2|4 (default 2)
+tall.oven | Oven cabinet | kind tall | widths 27, 30, 33 | heights 84, 90, 96 | depths 24 | default 30 x 84 x 24 at elevation 0 | placement wall, free | options ovens 1|2 (default 1)
+filler.base | Base filler | kind filler | widths any from 0.5 to 6 (filler) | heights 34.5 | depths 0.75 | default 3 x 34.5 x 0.75 at elevation 0 | placement wall, free
+filler.wall | Wall filler | kind filler | widths any from 0.5 to 6 (filler) | heights 12, 15, 18, 24, 30, 36, 42 | depths 0.75 | default 3 x 30 x 0.75 at elevation 54 | placement wall
+filler.tall | Tall filler | kind filler | widths any from 0.5 to 6 (filler) | heights 84, 90, 96 | depths 0.75 | default 3 x 84 x 0.75 at elevation 0 | placement wall, free
+panel.end | End panel | kind panel | widths 0.75 | heights 34.5, 84, 90, 96, 12, 15, 18, 24, 30, 36, 42 | depths 12, 24 | default 0.75 x 34.5 x 24 at elevation 0 | placement wall, free
+appliance.range | Range | kind appliance | widths 30, 36 | heights 36 | depths 27 | default 30 x 36 x 27 at elevation 0 | placement wall, free
+appliance.fridge | Refrigerator | kind appliance | widths 30, 33, 36 | heights 66, 69, 72 | depths 30 | default 36 x 69 x 30 at elevation 0 | placement wall, free
+appliance.dishwasher | Dishwasher | kind appliance | widths 18, 24 | heights 34.5 | depths 24 | default 24 x 34.5 x 24 at elevation 0 | placement wall, free
+appliance.hood | Range hood | kind appliance | widths 30, 36 | heights 6, 18 | depths 18 | default 30 x 6 x 18 at elevation 66 | placement wall, free
+appliance.microwave | Over-the-range microwave | kind appliance | widths 30 | heights 18 | depths 15 | default 30 x 18 x 15 at elevation 54 | placement wall
+Finishes (id | name | applies to):
+cabinet.white | White | cabinet
+cabinet.navy | Navy | cabinet
+cabinet.sage | Sage green | cabinet
+cabinet.oak | Natural oak | cabinet
+countertop.white | White stone | countertop
+countertop.charcoal | Charcoal stone | countertop
+countertop.butcher | Butcher block | countertop
+wall.white | Soft white | wall
+wall.greige | Greige | wall
+floor.oak | Light oak | floor
+floor.slate | Slate grey | floor

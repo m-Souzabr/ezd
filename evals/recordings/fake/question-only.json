@@ -1,0 +1,32 @@
+{
+  "note": "Scripted, not recorded: exercises the pipeline in CI. Replace with `run_evals --client live --record`.",
+  "responses": [
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "name": "classify_request",
+          "arguments": {
+            "category": "question"
+          }
+        }
+      ],
+      "stop_reason": "completed",
+      "usage": {
+        "input_tokens": 180,
+        "output_tokens": 12,
+        "cached_tokens": 0
+      }
+    },
+    {
+      "text": "The sink base is 36 inches wide.",
+      "tool_calls": [],
+      "stop_reason": "completed",
+      "usage": {
+        "input_tokens": 5200,
+        "output_tokens": 40,
+        "cached_tokens": 4096
+      }
+    }
+  ]
+}

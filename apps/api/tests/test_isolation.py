@@ -4,6 +4,7 @@ import pytest
 from django.urls import URLPattern, URLResolver, get_resolver, reverse
 from rest_framework.test import APIClient
 
+from chat.models import Conversation, Message
 from projects.models import Design, DesignVersion, Project
 from quotes.models import Quote
 
@@ -20,7 +21,9 @@ PUBLIC = {
     "auth-password-reset",
     "auth-password-reset-confirm",
 }
-OWN_SESSION = {"auth-logout", "auth-me"}
+OWN_SESSION = {"auth-logout", "auth-me", "chat-usage"}
+# Site-wide settings that only staff may read or change.
+STAFF = {"llm-settings"}
 # Routes that list or create inside the signed-in account, with no object in the path.
 COLLECTIONS = {"project-list"}
 
@@ -57,10 +60,31 @@ def _quote(version: DesignVersion) -> Quote:
     return quote
 
 
+def _chat_message(design: Design) -> Message:
+    conversation, _ = Conversation.objects.get_or_create(design=design)
+    user_message, _ = Message.objects.get_or_create(
+        conversation=conversation, role=Message.Role.USER, defaults={"text": "Add a cabinet"}
+    )
+    message, _ = Message.objects.get_or_create(
+        conversation=conversation,
+        role=Message.Role.ASSISTANT,
+        defaults={
+            "parent": user_message,
+            "status": Message.Status.PROPOSED,
+            "tool_calls": [{"name": "generate_countertops", "arguments": {}}],
+        },
+    )
+    return message
+
+
 def _object_routes(design: Design, version: DesignVersion) -> dict[str, str]:
     """Every route with an owned object in its path, for the first user's objects."""
     project, number = design.project, version.number
+    message = _chat_message(design)
     return {
+        "design-chat": reverse("design-chat", args=[design.id]),
+        "chat-message-retry": reverse("chat-message-retry", args=[message.id]),
+        "chat-message-resolve": reverse("chat-message-resolve", args=[message.id]),
         "design-quote-list": reverse("design-quote-list", args=[design.id]),
         "quote-detail": reverse("quote-detail", args=[_quote(version).id]),
         "project-detail": reverse("project-detail", args=[project.id]),
@@ -79,6 +103,12 @@ def _bodies(design: Design) -> list[dict]:
     return [
         {"name": "Taken over", "label": "Taken over", "document": document, "base_revision": 1},
         QUOTE,
+        {
+            "message": "Remove everything",
+            "summary": "Wall A",
+            "errors": ["x"],
+            "status": "rejected",
+        },
     ]
 
 
@@ -88,11 +118,13 @@ def _everything() -> tuple[list, ...]:
         list(Design.objects.values()),
         list(DesignVersion.objects.values()),
         list(Quote.objects.values()),
+        list(Conversation.objects.values()),
+        list(Message.objects.values()),
     )
 
 
 def test_every_api_route_is_accounted_for(design: Design, version: DesignVersion) -> None:
-    covered = PUBLIC | OWN_SESSION | COLLECTIONS | set(_object_routes(design, version))
+    covered = PUBLIC | OWN_SESSION | COLLECTIONS | STAFF | set(_object_routes(design, version))
     assert _api_route_names() == covered
 
 
@@ -136,7 +168,7 @@ def test_every_route_but_the_public_ones_needs_a_session(
 ) -> None:
     urls = {
         **_object_routes(design, version),
-        **{name: reverse(name) for name in OWN_SESSION | COLLECTIONS},
+        **{name: reverse(name) for name in OWN_SESSION | COLLECTIONS | STAFF},
     }
     for name, url in urls.items():
         for method in METHODS:

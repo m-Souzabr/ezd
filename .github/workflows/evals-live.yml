@@ -1,0 +1,68 @@
+name: Evals (live)
+
+# The assistant's eval suite against the real model. Run by hand: it costs money. The key
+# comes from the repository secret LLM_API_KEY.
+on:
+  workflow_dispatch:
+    inputs:
+      vendor:
+        description: A key of LLM_CLIENTS
+        default: openai
+      router_model:
+        description: Router model (empty for the default)
+        required: false
+      default_model:
+        description: Default model (empty for the default)
+        required: false
+      escalation_model:
+        description: Escalation model (empty for the default)
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    env:
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - run: uv sync --frozen
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ezd/core-cli build
+      - name: Eval suite (live)
+        env:
+          VENDOR: ${{ inputs.vendor }}
+          ROUTER_MODEL: ${{ inputs.router_model }}
+          DEFAULT_MODEL: ${{ inputs.default_model }}
+          ESCALATION_MODEL: ${{ inputs.escalation_model }}
+        run: |
+          args=(--client live --vendor "$VENDOR" --record --out ../../evals/reports/live)
+          [ -n "$ROUTER_MODEL" ] && args+=(--router-model "$ROUTER_MODEL")
+          [ -n "$DEFAULT_MODEL" ] && args+=(--default-model "$DEFAULT_MODEL")
+          [ -n "$ESCALATION_MODEL" ] && args+=(--escalation-model "$ESCALATION_MODEL")
+          uv run python manage.py run_evals "${args[@]}"
+      - name: Eval report
+        if: ${{ !cancelled() }}
+        run: cat ../../evals/reports/live/report.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: eval-report
+          path: |
+            evals/reports/live/
+            evals/recordings/
+          retention-days: 30
