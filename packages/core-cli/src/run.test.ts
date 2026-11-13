@@ -294,3 +294,35 @@ describe('llm-dry-run', () => {
     expect(run(['llm-dry-run'], '{').stdout).toContain('Invalid JSON');
   });
 });
+
+describe('normalize-draft', () => {
+  const answer = {
+    shape: 'single-wall',
+    ceilingHeightIn: null,
+    walls: [{ label: 'back', lengthIn: 120, visible: true, confidence: 'high' }],
+    openings: [],
+    items: [{ wall: 'back', category: 'base', offsetIn: 0, widthIn: 31, confidence: 'high' }],
+    notes: '',
+  };
+
+  it('prints the normalized draft', () => {
+    const result = run(['normalize-draft'], JSON.stringify(answer));
+    expect(result.exitCode).toBe(0);
+    const output = JSON.parse(result.stdout) as {
+      ok: boolean;
+      draft: { walls: { label: string }[]; items: { width: { value: number } }[] };
+    };
+    expect(output.ok).toBe(true);
+    expect(output.draft.walls[0]!.label).toBe('A');
+    expect(output.draft.items[0]!.width.value).toBe(30 * 16);
+  });
+
+  it('rejects an answer that does not match the draft schema, and bad JSON', () => {
+    const result = run(['normalize-draft'], JSON.stringify({ ...answer, shape: 'circle' }));
+    expect(result.exitCode).toBe(1);
+    expect((JSON.parse(result.stdout) as { errors: { path: string }[] }).errors[0]!.path).toBe(
+      'shape',
+    );
+    expect(run(['normalize-draft'], '{').stdout).toContain('Invalid JSON');
+  });
+});

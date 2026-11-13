@@ -1,0 +1,234 @@
+{
+  "title": "EZDesign draft room (photo analysis)",
+  "type": "object",
+  "properties": {
+    "shape": {
+      "type": "string",
+      "enum": [
+        "single-wall",
+        "galley",
+        "l-shape",
+        "u-shape",
+        "rectangle",
+        "unknown"
+      ]
+    },
+    "ceilingHeightIn": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "walls": {
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+          },
+          "lengthIn": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          }
+        },
+        "required": [
+          "label",
+          "lengthIn",
+          "visible",
+          "confidence"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "openings": {
+      "maxItems": 20,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "wall": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "door",
+              "window",
+              "passage"
+            ]
+          },
+          "offsetIn": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "widthIn": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "heightIn": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sillIn": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          }
+        },
+        "required": [
+          "wall",
+          "kind",
+          "offsetIn",
+          "widthIn",
+          "heightIn",
+          "sillIn",
+          "confidence"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "items": {
+      "maxItems": 60,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "wall": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "base",
+              "wall",
+              "tall",
+              "range",
+              "fridge",
+              "dishwasher",
+              "sink",
+              "hood",
+              "microwave"
+            ]
+          },
+          "offsetIn": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "widthIn": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          }
+        },
+        "required": [
+          "wall",
+          "category",
+          "offsetIn",
+          "widthIn",
+          "confidence"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 2000
+    }
+  },
+  "required": [
+    "shape",
+    "ceilingHeightIn",
+    "walls",
+    "openings",
+    "items",
+    "notes"
+  ],
+  "additionalProperties": false
+}

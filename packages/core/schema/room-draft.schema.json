@@ -1,0 +1,238 @@
+{
+  "title": "EZDesign room draft",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "#/$defs/RoomDraft",
+  "$defs": {
+    "RoomDraft": {
+      "type": "object",
+      "properties": {
+        "shape": {
+          "type": "string",
+          "enum": [
+            "single-wall",
+            "galley",
+            "l-shape",
+            "u-shape",
+            "rectangle",
+            "unknown"
+          ]
+        },
+        "ceilingHeight": {
+          "$ref": "#/$defs/DraftLen"
+        },
+        "walls": {
+          "maxItems": 8,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "pattern": "^[A-Z]$"
+              },
+              "length": {
+                "$ref": "#/$defs/DraftLen"
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              }
+            },
+            "required": [
+              "label",
+              "length",
+              "visible",
+              "confidence"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "galleyWidth": {
+          "$ref": "#/$defs/DraftLen"
+        },
+        "openings": {
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "wall": {
+                "type": "string",
+                "pattern": "^[A-Z]$"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "door",
+                  "window",
+                  "passage"
+                ]
+              },
+              "offset": {
+                "$ref": "#/$defs/DraftLen"
+              },
+              "width": {
+                "$ref": "#/$defs/DraftLen"
+              },
+              "height": {
+                "$ref": "#/$defs/DraftLen"
+              },
+              "sillHeight": {
+                "$ref": "#/$defs/DraftLen"
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              }
+            },
+            "required": [
+              "wall",
+              "kind",
+              "offset",
+              "width",
+              "height",
+              "sillHeight",
+              "confidence"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "items": {
+          "maxItems": 60,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "wall": {
+                "type": "string",
+                "pattern": "^[A-Z]$"
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "base",
+                  "wall",
+                  "tall",
+                  "range",
+                  "fridge",
+                  "dishwasher",
+                  "sink",
+                  "hood",
+                  "microwave"
+                ]
+              },
+              "catalogId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "base",
+                  "wall",
+                  "tall",
+                  "corner",
+                  "appliance",
+                  "filler",
+                  "panel"
+                ]
+              },
+              "offset": {
+                "$ref": "#/$defs/DraftLen"
+              },
+              "width": {
+                "$ref": "#/$defs/DraftLen"
+              },
+              "height": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "depth": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "elevation": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              }
+            },
+            "required": [
+              "wall",
+              "category",
+              "catalogId",
+              "kind",
+              "offset",
+              "width",
+              "height",
+              "depth",
+              "elevation",
+              "confidence"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "shape",
+        "ceilingHeight",
+        "walls",
+        "galleyWidth",
+        "openings",
+        "items",
+        "notes"
+      ],
+      "additionalProperties": false
+    },
+    "DraftLen": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "estimated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "value",
+        "estimated"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
