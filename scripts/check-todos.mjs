@@ -8,7 +8,7 @@ const result = spawnSync(
   [
     'grep',
     '-nIE',
-    // POSIX classes only: macOS's git grep has no \\b or \\s.
+    // POSIX classes only: git grep on macOS supports neither \b nor \s.
     '(^|[^A-Za-z])(TODO|FIXME)[[:space:]]*[:(]',
     '--',
     '.',
