@@ -4,6 +4,7 @@ import { useConfig } from './config/useConfig';
 import { RequireSession, SessionExpiry } from './auth/SessionGate';
 import { AdminHome } from './admin/AdminHome';
 import { AppSettingsPage } from './admin/AppSettings';
+import { CatalogAdminPage } from './admin/CatalogAdmin';
 import { AdminLayout } from './admin/AdminLayout';
 import { AISettingsPage } from './admin/AISettings';
 import { AuditPage } from './admin/AuditPage';
@@ -93,6 +94,7 @@ export function App() {
           }
         >
           <Route index element={<AdminHome />} />
+          <Route path="catalog" element={<CatalogAdminPage />} />
           <Route path="app" element={<AppSettingsPage />} />
           <Route path="ai" element={<AISettingsPage />} />
           <Route path="users" element={<UsersPage />} />

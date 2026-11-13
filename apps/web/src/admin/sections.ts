@@ -7,7 +7,7 @@ export type Section = {
 };
 
 export const SECTIONS: Section[] = [
-  { path: 'catalog', label: 'Catalog', permission: 'config.catalog.edit', soon: true },
+  { path: 'catalog', label: 'Catalog', permission: 'config.catalog.edit' },
   { path: 'rules', label: 'Rules', permission: 'config.rules.edit', soon: true },
   { path: 'app', label: 'App settings', permission: 'config.app.edit' },
   { path: 'quotes', label: 'Quotes', permission: 'config.quote.edit', soon: true },
