@@ -55,7 +55,10 @@ for fillers), its standard `heights` and `depths`, its options, where it can be 
 its price (`baseCents`, `perInchWidthCents`, `optionCents`). `checkItemAgainstCatalog`
 (`catalog/constraints.ts`) enforces all of it, and `generateParts` (`catalog/parts.ts`)
 builds the boxes the elevation and the BOM use. `firstAvailable([vendor, seedCatalogProvider])`
-falls back to the seed catalog.
+falls back to the seed catalog. The Control Panel's published catalog reaches the browser
+and the server the same way: `jsonCatalogProvider` (`catalogData/provider.ts`) loads JSON and
+checks it with `parseCatalog`, so a catalog that breaks a rule is an error and the next
+provider is tried.
 
 - **Versioning.** Bump `version` whenever entries, sizes or prices change. A quote stores
   the `catalog_version` it was priced with and never changes; the API refuses a quote

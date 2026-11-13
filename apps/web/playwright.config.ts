@@ -2,8 +2,9 @@ import { resolve } from 'node:path';
 
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 5173;
-const API_PORT = 8010;
+// Both can be moved when something else of yours already listens on them.
+const PORT = Number(process.env.E2E_PORT ?? 5173);
+const API_PORT = Number(process.env.E2E_API_PORT ?? 8010);
 const CI = Boolean(process.env.CI);
 
 // End-to-end tests drive the editor in a real browser against the Vite dev server, which
@@ -31,14 +32,14 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: /config\.spec/,
+      testIgnore: /(config|catalog)\.spec/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     {
-      // The app configuration is global: publishing it changes every other test's editor, so
-      // these run alone, after the rest, and put it back as they found it.
+      // The app configuration and the catalog are global: publishing one changes every other
+      // test's editor, so these run alone, after the rest, and put it back as they found it.
       name: 'config',
-      testMatch: /config\.spec/,
+      testMatch: /(config|catalog)\.spec/,
       dependencies: ['chromium'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },

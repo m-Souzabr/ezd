@@ -173,6 +173,30 @@ starts PostgreSQL only.
   Corner cabinets go on the wall that starts at the corner, at offset 0, so the corner is
   at the item's left end. `generateParts` returns boxes local to the item: x along the
   width, y up, z from the back.
+- **Catalog data.** The catalog is versioned data, not code. `CatalogSchema` (`catalog/schema.ts`)
+  is the shape; `validateCatalog` and `parseCatalog` (`catalogData/`) are every rule a catalog
+  must satisfy to be published, with a `{ path, message }` for each. Ids that code looks up
+  (`REQUIRED_CATALOG_IDS`) must exist and not be retired, and an option key may only be used
+  by the kinds whose `generateParts` reads it (`OPTION_KINDS`): add to those lists when
+  code starts to depend on a new id or key. `retired` (entries and finishes) keeps a thing
+  valid in existing documents but hides it from the palette and the assistant and makes
+  `item.add` refuse it; nothing is ever hard-deleted. `SEED_CATALOG` is the compiled
+  fallback and the first published version (`catalog.seed.json`, written by `schema`).
+- **Catalog storage.** `CatalogVersion` (`controlpanel/models.py`) holds a draft (at most
+  one, saved with a revision check) and published rows, which never change or get deleted:
+  a stored quote names the `catalog_version` it was priced with and the server checks its
+  lines against that version (`quotes/math.py:unit_price_cents` is a port of
+  `entryUnitPriceCents`, tested with `test-vectors/quote.json`). The current catalog is the
+  published row with the greatest number; rollback publishes a copy as a new one.
+  `GET /api/catalog/` is public and cacheable, `/api/catalog/{version}/` is immutable.
+  Publishing needs `config.catalog.publish` and runs every rule through
+  `ezd-core validate-catalog`; editing the draft needs `config.catalog.edit`. Every
+  `ezd-core` command that checks against a catalog takes it on stdin (`catalog` key) or as
+  `--catalog <file>`, and uses the seed without one. The chat tools and index are made per
+  catalog version by `ezd-core llm-tools` (`llm/prompt.py:assistant_for`); the committed
+  `llm-tools.schema.json` and `llm-catalog-index.txt` are the seed snapshot. The web app
+  reads the published catalog through `CatalogProvider` / `useCatalog()` and passes it to
+  `createDesignStore`.
 - **Rules.** `validate(doc, catalog)` returns every `Violation`, sorted;
   `validateCommand` applies a command and also returns the violations it `introduced`.
   Each rule is one file in `rules/rules/`, built with `defineRule` and registered in
