@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from config.api import LLMThrottledMixin
+from controlpanel import catalogs
 from llm import config
 from llm.client import LLMClient, LLMUnavailable
 from projects.models import Design
@@ -180,6 +181,7 @@ class DesignChatView(LLMThrottledMixin, OwnedQuerysetMixin, APIView):
                     summary=data["summary"],
                     history=history,
                     earlier=earlier,
+                    catalog=catalogs.published_catalog(),
                 ),
             )
         except AssistantUnavailable:
@@ -230,6 +232,7 @@ class MessageRetryView(LLMThrottledMixin, OwnedQuerysetMixin, APIView):
                 attempt=previous.attempt + 1,
                 previous_tool_calls=previous.tool_calls,
                 errors=previous.errors,
+                catalog=catalogs.published_catalog(),
                 # A retry is an edit that went wrong: it never goes back to the router model.
                 category="complex_edit",
             ),

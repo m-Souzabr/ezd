@@ -15,6 +15,8 @@ from django.conf import settings
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import best_match
 
+from controlpanel import catalogs
+
 from .client import ToolCall, ToolDefinition
 
 SYSTEM_PROMPT = """\
@@ -86,6 +88,39 @@ def _validators() -> dict[str, Draft202012Validator]:
 
 
 @dataclass(frozen=True)
+class Assistant:
+    """What the model is sent for one catalog: its tools, its index, and the tool checkers."""
+
+    tools: list[ToolDefinition]
+    catalog_index: str
+    validators: dict[str, Draft202012Validator]
+
+
+@cache
+def _assistant_for(version: str, catalog_json: str) -> Assistant:
+    raw, index = catalogs.assistant_tools(json.loads(catalog_json))
+    definitions = [
+        ToolDefinition(name=t["name"], description=t["description"], parameters=t["parameters"])
+        for t in raw
+    ]
+    return Assistant(
+        tools=definitions,
+        catalog_index=index,
+        validators={tool.name: Draft202012Validator(tool.parameters) for tool in definitions},
+    )
+
+
+def assistant_for(catalog: dict[str, Any] | None) -> Assistant:
+    """The tools and index for a catalog, made by core and cached per version.
+
+    Without a catalog it is the seed snapshot that core committed, which needs no process.
+    """
+    if catalog is None:
+        return Assistant(tools=tools(), catalog_index=catalog_index(), validators=_validators())
+    return _assistant_for(catalog["version"], json.dumps(catalog, sort_keys=True))
+
+
+@dataclass(frozen=True)
 class CheckedCall:
     name: str
     arguments: dict[str, Any]
@@ -125,12 +160,14 @@ def _problem(validator: Draft202012Validator, arguments: dict[str, Any]) -> str 
     return _describe(best_match(errors))
 
 
-def check_tool_calls(calls: list[ToolCall]) -> tuple[list[CheckedCall], list[str]]:
+def check_tool_calls(
+    calls: list[ToolCall], catalog: dict[str, Any] | None = None
+) -> tuple[list[CheckedCall], list[str]]:
     """Each call parsed and checked against its tool's JSON Schema, or the reasons it is not.
 
     Any malformed call makes the whole proposal malformed, so the errors cover every call.
     """
-    validators = _validators()
+    validators = assistant_for(catalog).validators
     checked: list[CheckedCall] = []
     errors: list[str] = []
     for index, call in enumerate(calls):

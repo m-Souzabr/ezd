@@ -1,10 +1,11 @@
-import { draftProblems, type RoomDraft, RoomDraftSchema, SEED_CATALOG } from '@ezd/core';
+import { draftProblems, type RoomDraft, RoomDraftSchema } from '@ezd/core';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 
 import { api, ApiError, type PhotoDraft } from '../api/client';
 import { photoDraftKey } from '../api/keys';
+import { useCatalog } from '../catalog/useCatalog';
 import { errorMessage } from '../pages/format';
 import { FormError, LINK, Page, PRIMARY } from '../pages/ui';
 import { BUTTON } from '../editor/panels/fields';
@@ -175,6 +176,7 @@ function Correction({
   notes: string;
 }) {
   const navigate = useNavigate();
+  const catalog = useCatalog();
   const [draft, setDraft] = useState(initial);
   const [name, setName] = useState(DEFAULT_NAME);
   const [save, setSave] = useState<SaveState>('saved');
@@ -223,7 +225,7 @@ function Correction({
       } else {
         await inFlight.current;
       }
-      const built = buildDocument(latest.current, name.trim() || DEFAULT_NAME);
+      const built = buildDocument(latest.current, name.trim() || DEFAULT_NAME, catalog);
       if (!built.ok) throw new Error(built.error.join(' '));
       return api.confirmPhotoDraft(draftId, built.value, name.trim() || DEFAULT_NAME);
     },
@@ -265,7 +267,7 @@ function Correction({
           <section aria-label="Plan preview" className="rounded-lg bg-white p-3 shadow-sm">
             <DraftPlan draft={draft} />
           </section>
-          <DraftEditor draft={draft} catalog={SEED_CATALOG} onChange={change} />
+          <DraftEditor draft={draft} catalog={catalog} onChange={change} />
           <section
             aria-label="Confirm"
             className="flex flex-col gap-2 rounded-lg bg-white p-3 shadow-sm"

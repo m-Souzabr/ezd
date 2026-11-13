@@ -143,6 +143,11 @@ EZD_CORE_CLI = env.list(
     default=["node", str(REPO_DIR / "packages/core-cli/bin/ezd-core.js")],
 )
 
+# The seed catalog as JSON, written by core: the first published catalog.
+CATALOG_SEED_PATH = env.str(
+    "CATALOG_SEED_PATH", default=str(REPO_DIR / "packages/core/schema/catalog.seed.json")
+)
+
 # The chat assistant. LLM_VENDOR picks a client from LLM_CLIENTS: "openai" for the real
 # model, "fake" for tests and CI. The API key and model names entered by staff on the AI
 # settings page override LLM_API_KEY and the three model names.

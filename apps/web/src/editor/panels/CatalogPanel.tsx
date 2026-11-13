@@ -1,4 +1,11 @@
-import { allowedWidths, type CatalogEntry, formatLength, type Len, parseLength } from '@ezd/core';
+import {
+  activeEntries,
+  allowedWidths,
+  type CatalogEntry,
+  formatLength,
+  type Len,
+  parseLength,
+} from '@ezd/core';
 import { useId, useState } from 'react';
 
 import { useConfig } from '../../config/useConfig';
@@ -136,7 +143,9 @@ export function CatalogPanel() {
     .map((kind) => ({ kind, title: groupConfig[kind].title }))
     .map((group) => ({
       ...group,
-      entries: catalog.entries.filter((entry) => entry.kind === group.kind && matches(entry)),
+      entries: activeEntries(catalog).filter(
+        (entry) => entry.kind === group.kind && matches(entry),
+      ),
     }))
     .filter((group) => group.entries.length > 0);
 

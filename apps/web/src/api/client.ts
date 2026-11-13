@@ -32,6 +32,10 @@ export type Role = Schemas['Role'];
 export type PublicConfig = Schemas['AppConfig'];
 export type ConfigDraft = Schemas['ConfigDraft'];
 export type ConfigVersion = Schemas['ConfigVersion'];
+export type PublicCatalog = Schemas['Catalog'];
+export type CatalogDraft = Schemas['CatalogDraft'];
+export type CatalogVersion = Schemas['CatalogVersion'];
+export type CatalogValidation = Schemas['CatalogValidation'];
 export type LLMSettingsUpdate = Schemas['PatchedLLMSettingsUpdateRequest'];
 
 /** The server answered, but not with success. */
@@ -345,6 +349,31 @@ export const api = {
   publishConfig: (revision: number, note: string) =>
     request<ConfigVersion>('POST', '/api/admin/config/publish/', { body: { revision, note } }),
   listConfigVersions: () => request<ConfigVersion[]>('GET', '/api/admin/config/versions/'),
+  /** The published catalog. Needs no session. */
+  getCatalog: () => request<PublicCatalog>('GET', '/api/catalog/', { allowUnauthorized: true }),
+  /** An old published version, as a quote or design that used it needs it. */
+  getCatalogVersion: (version: string) =>
+    request<PublicCatalog>('GET', `/api/catalog/${encodeURIComponent(version)}/`, {
+      allowUnauthorized: true,
+    }),
+  getCatalogDraft: () => request<CatalogDraft>('GET', '/api/admin/catalog/draft/'),
+  /** A stale `revision` is a 409; something that is not a catalog at all is a 422. */
+  saveCatalogDraft: (revision: number, catalog: object) =>
+    request<CatalogDraft>('PUT', '/api/admin/catalog/draft/', { body: { revision, catalog } }),
+  validateCatalog: (catalog?: object) =>
+    request<CatalogValidation>('POST', '/api/admin/catalog/validate/', {
+      body: catalog ? { catalog } : {},
+    }),
+  /** A catalog that breaks a rule is a 422 with `errors`. */
+  publishCatalog: (revision: number, note: string) =>
+    request<CatalogVersion>('POST', '/api/admin/catalog/publish/', { body: { revision, note } }),
+  listCatalogVersions: () => request<CatalogVersion[]>('GET', '/api/admin/catalog/versions/'),
+  rollbackCatalog: (version: string) =>
+    request<CatalogVersion>(
+      'POST',
+      `/api/admin/catalog/versions/${encodeURIComponent(version)}/rollback/`,
+      { body: {} },
+    ),
   rollbackConfig: (number: number) =>
     request<ConfigVersion>('POST', `/api/admin/config/versions/${number}/rollback/`, { body: {} }),
 

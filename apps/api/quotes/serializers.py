@@ -5,7 +5,15 @@ from typing import Any
 from rest_framework import serializers, status
 from rest_framework.exceptions import APIException
 
-from .math import TOTAL_KEYS, compute_quote, line_total_cents
+from controlpanel import catalogs
+
+from .math import (
+    DEFAULT_MULTIPLIER_BPS,
+    TOTAL_KEYS,
+    compute_quote,
+    line_total_cents,
+    unit_price_cents,
+)
 from .models import Quote
 
 MAX_LINES = 500
@@ -19,6 +27,8 @@ MAX_QUANTITY = 10**7
 PNG_PREFIX = "data:image/png;base64,"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 PNG_RGB = b"\x02"
+# The catalog id of a countertop line, as core's bill of materials names it.
+COUNTERTOP_CATALOG_ID = "countertop"
 
 
 class StrictIntegerField(serializers.IntegerField):
@@ -127,6 +137,45 @@ class DrawingsSerializer(serializers.Serializer):
     elevations = ElevationSerializer(many=True, max_length=MAX_ELEVATIONS)
 
 
+def _price_errors(catalog_version: str, lines: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """Each line's unit price, checked against the catalog version the quote names.
+
+    The browser prices with the catalog it loaded; the server prices nothing, but it knows
+    that version's prices, so a line that does not follow from them is refused.
+    """
+    catalog = catalogs.catalog_for_version(catalog_version)
+    if catalog is None:
+        return [
+            {
+                "path": "catalog_version",
+                "message": f'There is no catalog version "{catalog_version}".',
+            }
+        ]
+    entries = {entry["id"]: entry for entry in catalog["entries"]}
+    finishes = {finish["id"]: finish for finish in catalog["finishes"]}
+    errors = []
+    for index, line in enumerate(lines):
+        finish = finishes.get(line["finishId"] or "")
+        if line["catalogId"] == COUNTERTOP_CATALOG_ID:
+            expected = (finish or {}).get("pricePerSqftCents", 0)
+        else:
+            entry = entries.get(line["catalogId"])
+            multiplier = (finish or {}).get("multiplierBps", DEFAULT_MULTIPLIER_BPS)
+            expected = (
+                unit_price_cents(entry["price"], line["width"], line["options"], multiplier)
+                if entry
+                else 0
+            )
+        if line["unitPriceCents"] != expected:
+            errors.append(
+                {
+                    "path": f"lines[{index}].unitPriceCents",
+                    "message": f"Expected {expected} from {catalog_version}'s prices.",
+                }
+            )
+    return errors
+
+
 class QuoteCreateSerializer(serializers.Serializer):
     # The draft revision the lines were computed from. The quote is refused if the draft
     # on the server is at another one, so it always matches the version it points to.
@@ -142,7 +191,7 @@ class QuoteCreateSerializer(serializers.Serializer):
     drawings = DrawingsSerializer()
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        errors = []
+        errors = _price_errors(attrs["catalog_version"], attrs["lines"])
         for index, line in enumerate(attrs["lines"]):
             expected = line_total_cents(line["quantity"], line["unit"], line["unitPriceCents"])
             if line["lineTotalCents"] != expected:

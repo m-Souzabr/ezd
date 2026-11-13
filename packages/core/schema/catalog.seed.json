@@ -1,0 +1,837 @@
+{
+  "version": "seed-1",
+  "entries": [
+    {
+      "id": "base.standard",
+      "kind": "base",
+      "name": "Base cabinet",
+      "width": {
+        "min": 144,
+        "max": 768,
+        "step": 48
+      },
+      "heights": [
+        552
+      ],
+      "depths": [
+        384
+      ],
+      "defaultSize": {
+        "width": 480,
+        "height": 552,
+        "depth": 384
+      },
+      "defaultElevation": 0,
+      "options": [
+        {
+          "key": "doors",
+          "type": "int",
+          "values": [
+            1,
+            2
+          ],
+          "default": 2
+        },
+        {
+          "key": "topDrawer",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "hinge",
+          "type": "enum",
+          "values": [
+            "left",
+            "right"
+          ],
+          "default": "left"
+        }
+      ],
+      "placement": [
+        "wall",
+        "free"
+      ],
+      "price": {
+        "baseCents": 12000,
+        "perInchWidthCents": 600,
+        "optionCents": {
+          "topDrawer=true": 2500
+        }
+      }
+    },
+    {
+      "id": "base.drawers",
+      "kind": "base",
+      "name": "Drawer base cabinet",
+      "width": {
+        "min": 192,
+        "max": 576,
+        "step": 48
+      },
+      "heights": [
+        552
+      ],
+      "depths": [
+        384
+      ],
+      "defaultSize": {
+        "width": 384,
+        "height": 552,
+        "depth": 384
+      },
+      "defaultElevation": 0,
+      "options": [
+        {
+          "key": "drawers",
+          "type": "int",
+          "values": [
+            3,
+            4
+          ],
+          "default": 3
+        }
+      ],
+      "placement": [
+        "wall",
+        "free"
+      ],
+      "price": {
+        "baseCents": 18000,
+        "perInchWidthCents": 800,
+        "optionCents": {
+          "drawers=4": 3000
+        }
+      }
+    },
+    {
+      "id": "base.sink",
+      "kind": "base",
+      "name": "Sink base cabinet",
+      "width": {
+        "min": 384,
+        "max": 672,
+        "step": 48
+      },
+      "heights": [
+        552
+      ],
+      "depths": [
+        384
+      ],
+      "defaultSize": {
+        "width": 576,
+        "height": 552,
+        "depth": 384
+      },
+      "defaultElevation": 0,
+      "options": [
+        {
+          "key": "doors",
+          "type": "int",
+          "values": [
+            2
+          ],
+          "default": 2
+        }
+      ],
+      "placement": [
+        "wall",
+        "free"
+      ],
+      "price": {
+        "baseCents": 11000,
+        "perInchWidthCents": 600
+      }
+    },
+    {
+      "id": "base.corner.blind",
+      "kind": "corner",
+      "name": "Blind corner base (width along its own wall, blind end behind the adjacent run)",
+      "width": {
+        "min": 576,
+        "max": 768,
+        "step": 48
+      },
+      "heights": [
+        552
+      ],
+      "depths": [
+        384
+      ],
+      "defaultSize": {
+        "width": 576,
+        "height": 552,
+        "depth": 384
+      },
+      "defaultElevation": 0,
+      "options": [
+        {
+          "key": "blind",
+          "type": "enum",
+          "values": [
+            "left",
+            "right"
+          ],
+          "default": "left"
+        }
+      ],
+      "placement": [
+        "wall"
+      ],
+      "corner": "blind",
+      "price": {
+        "baseCents": 16000,
+        "perInchWidthCents": 700
+      }
+    },
+    {
+      "id": "base.corner.susan",
+      "kind": "corner",
+      "name": "Lazy Susan corner base (width along its own wall, depth along the wall to its left)",
+      "width": {
+        "values": [
+          528,
+          576
+        ]
+      },
+      "heights": [
+        552
+      ],
+      "depths": [
+        528,
+        576
+      ],
+      "defaultSize": {
+        "width": 576,
+        "height": 552,
+        "depth": 576
+      },
+      "defaultElevation": 0,
+      "options": [],
+      "placement": [
+        "wall"
+      ],
+      "corner": "l",
+      "price": {
+        "baseCents": 32000,
+        "perInchWidthCents": 0
+      }
+    },
+    {
+      "id": "wall.standard",
+      "kind": "wall",
+      "name": "Wall cabinet",
+      "width": {
+        "min": 144,
+        "max": 768,
+        "step": 48
+      },
+      "heights": [
+        192,
+        240,
+        288,
+        384,
+        480,
+        576,
+        672
+      ],
+      "depths": [
+        192
+      ],
+      "defaultSize": {
+        "width": 480,
+        "height": 480,
+        "depth": 192
+      },
+      "defaultElevation": 864,
+      "options": [
+        {
+          "key": "doors",
+          "type": "int",
+          "values": [
+            1,
+            2
+          ],
+          "default": 2
+        },
+        {
+          "key": "hinge",
+          "type": "enum",
+          "values": [
+            "left",
+            "right"
+          ],
+          "default": "left"
+        }
+      ],
+      "placement": [
+        "wall"
+      ],
+      "price": {
+        "baseCents": 9000,
+        "perInchWidthCents": 450
+      }
+    },
+    {
+      "id": "wall.fridge",
+      "kind": "wall",
+      "name": "Over-refrigerator wall cabinet",
+      "width": {
+        "values": [
+          480,
+          528,
+          576
+        ]
+      },
+      "heights": [
+        192,
+        240,
+        288,
+        384
+      ],
+      "depths": [
+        384
+      ],
+      "defaultSize": {
+        "width": 576,
+        "height": 240,
+        "depth": 384
+      },
+      "defaultElevation": 1104,
+      "options": [
+        {
+          "key": "doors",
+          "type": "int",
+          "values": [
+            2
+          ],
+          "default": 2
+        }
+      ],
+      "placement": [
+        "wall"
+      ],
+      "price": {
+        "baseCents": 10000,
+        "perInchWidthCents": 500
+      }
+    },
+    {
+      "id": "wall.corner.diagonal",
+      "kind": "corner",
+      "name": "Diagonal corner wall cabinet (width along its own wall, depth along the wall to its left)",
+      "width": {
+        "values": [
+          384
+        ]
+      },
+      "heights": [
+        480,
+        576,
+        672
+      ],
+      "depths": [
+        384
+      ],
+      "defaultSize": {
+        "width": 384,
+        "height": 480,
+        "depth": 384
+      },
+      "defaultElevation": 864,
+      "options": [
+        {
+          "key": "hinge",
+          "type": "enum",
+          "values": [
+            "left",
+            "right"
+          ],
+          "default": "left"
+        }
+      ],
+      "placement": [
+        "wall"
+      ],
+      "corner": "diagonal",
+      "price": {
+        "baseCents": 21000,
+        "perInchWidthCents": 0
+      }
+    },
+    {
+      "id": "tall.pantry",
+      "kind": "tall",
+      "name": "Pantry cabinet",
+      "width": {
+        "min": 288,
+        "max": 576,
+        "step": 48
+      },
+      "heights": [
+        1344,
+        1440,
+        1536
+      ],
+      "depths": [
+        192,
+        384
+      ],
+      "defaultSize": {
+        "width": 384,
+        "height": 1344,
+        "depth": 384
+      },
+      "defaultElevation": 0,
+      "options": [
+        {
+          "key": "doors",
+          "type": "int",
+          "values": [
+            2,
+            4
+          ],
+          "default": 2
+        }
+      ],
+      "placement": [
+        "wall",
+        "free"
+      ],
+      "price": {
+        "baseCents": 30000,
+        "perInchWidthCents": 1200,
+        "optionCents": {
+          "doors=4": 4000
+        }
+      }
+    },
+    {
+      "id": "tall.oven",
+      "kind": "tall",
+      "name": "Oven cabinet",
+      "width": {
+        "values": [
+          432,
+          480,
+          528
+        ]
+      },
+      "heights": [
+        1344,
+        1440,
+        1536
+      ],
+      "depths": [
+        384
+      ],
+      "defaultSize": {
+        "width": 480,
+        "height": 1344,
+        "depth": 384
+      },
+      "defaultElevation": 0,
+      "options": [
+        {
+          "key": "ovens",
+          "type": "int",
+          "values": [
+            1,
+            2
+          ],
+          "default": 1
+        }
+      ],
+      "placement": [
+        "wall",
+        "free"
+      ],
+      "price": {
+        "baseCents": 34000,
+        "perInchWidthCents": 1200
+      }
+    },
+    {
+      "id": "filler.base",
+      "kind": "filler",
+      "name": "Base filler",
+      "width": {
+        "free": {
+          "min": 8,
+          "max": 96
+        }
+      },
+      "heights": [
+        552
+      ],
+      "depths": [
+        12
+      ],
+      "defaultSize": {
+        "width": 48,
+        "height": 552,
+        "depth": 12
+      },
+      "defaultElevation": 0,
+      "options": [],
+      "placement": [
+        "wall",
+        "free"
+      ],
+      "price": {
+        "baseCents": 2500,
+        "perInchWidthCents": 0
+      }
+    },
+    {
+      "id": "filler.wall",
+      "kind": "filler",
+      "name": "Wall filler",
+      "width": {
+        "free": {
+          "min": 8,
+          "max": 96
+        }
+      },
+      "heights": [
+        192,
+        240,
+        288,
+        384,
+        480,
+        576,
+        672
+      ],
+      "depths": [
+        12
+      ],
+      "defaultSize": {
+        "width": 48,
+        "height": 480,
+        "depth": 12
+      },
+      "defaultElevation": 864,
+      "options": [],
+      "placement": [
+        "wall"
+      ],
+      "price": {
+        "baseCents": 2500,
+        "perInchWidthCents": 0
+      }
+    },
+    {
+      "id": "filler.tall",
+      "kind": "filler",
+      "name": "Tall filler",
+      "width": {
+        "free": {
+          "min": 8,
+          "max": 96
+        }
+      },
+      "heights": [
+        1344,
+        1440,
+        1536
+      ],
+      "depths": [
+        12
+      ],
+      "defaultSize": {
+        "width": 48,
+        "height": 1344,
+        "depth": 12
+      },
+      "defaultElevation": 0,
+      "options": [],
+      "placement": [
+        "wall",
+        "free"
+      ],
+      "price": {
+        "baseCents": 4500,
+        "perInchWidthCents": 0
+      }
+    },
+    {
+      "id": "panel.end",
+      "kind": "panel",
+      "name": "End panel",
+      "width": {
+        "values": [
+          12
+        ]
+      },
+      "heights": [
+        552,
+        1344,
+        1440,
+        1536,
+        192,
+        240,
+        288,
+        384,
+        480,
+        576,
+        672
+      ],
+      "depths": [
+        192,
+        384
+      ],
+      "defaultSize": {
+        "width": 12,
+        "height": 552,
+        "depth": 384
+      },
+      "defaultElevation": 0,
+      "options": [],
+      "placement": [
+        "wall",
+        "free"
+      ],
+      "price": {
+        "baseCents": 6000,
+        "perInchWidthCents": 0
+      }
+    },
+    {
+      "id": "appliance.range",
+      "kind": "appliance",
+      "name": "Range",
+      "width": {
+        "values": [
+          480,
+          576
+        ]
+      },
+      "heights": [
+        576
+      ],
+      "depths": [
+        432
+      ],
+      "defaultSize": {
+        "width": 480,
+        "height": 576,
+        "depth": 432
+      },
+      "defaultElevation": 0,
+      "options": [],
+      "placement": [
+        "wall",
+        "free"
+      ],
+      "price": {
+        "baseCents": 0,
+        "perInchWidthCents": 0
+      }
+    },
+    {
+      "id": "appliance.fridge",
+      "kind": "appliance",
+      "name": "Refrigerator",
+      "width": {
+        "values": [
+          480,
+          528,
+          576
+        ]
+      },
+      "heights": [
+        1056,
+        1104,
+        1152
+      ],
+      "depths": [
+        480
+      ],
+      "defaultSize": {
+        "width": 576,
+        "height": 1104,
+        "depth": 480
+      },
+      "defaultElevation": 0,
+      "options": [],
+      "placement": [
+        "wall",
+        "free"
+      ],
+      "price": {
+        "baseCents": 0,
+        "perInchWidthCents": 0
+      }
+    },
+    {
+      "id": "appliance.dishwasher",
+      "kind": "appliance",
+      "name": "Dishwasher",
+      "width": {
+        "values": [
+          288,
+          384
+        ]
+      },
+      "heights": [
+        552
+      ],
+      "depths": [
+        384
+      ],
+      "defaultSize": {
+        "width": 384,
+        "height": 552,
+        "depth": 384
+      },
+      "defaultElevation": 0,
+      "options": [],
+      "placement": [
+        "wall",
+        "free"
+      ],
+      "price": {
+        "baseCents": 0,
+        "perInchWidthCents": 0
+      }
+    },
+    {
+      "id": "appliance.hood",
+      "kind": "appliance",
+      "name": "Range hood",
+      "width": {
+        "values": [
+          480,
+          576
+        ]
+      },
+      "heights": [
+        96,
+        288
+      ],
+      "depths": [
+        288
+      ],
+      "defaultSize": {
+        "width": 480,
+        "height": 96,
+        "depth": 288
+      },
+      "defaultElevation": 1056,
+      "options": [],
+      "placement": [
+        "wall",
+        "free"
+      ],
+      "price": {
+        "baseCents": 0,
+        "perInchWidthCents": 0
+      }
+    },
+    {
+      "id": "appliance.microwave",
+      "kind": "appliance",
+      "name": "Over-the-range microwave",
+      "width": {
+        "values": [
+          480
+        ]
+      },
+      "heights": [
+        288
+      ],
+      "depths": [
+        240
+      ],
+      "defaultSize": {
+        "width": 480,
+        "height": 288,
+        "depth": 240
+      },
+      "defaultElevation": 864,
+      "options": [],
+      "placement": [
+        "wall"
+      ],
+      "price": {
+        "baseCents": 0,
+        "perInchWidthCents": 0
+      }
+    }
+  ],
+  "finishes": [
+    {
+      "id": "cabinet.white",
+      "name": "White",
+      "target": "cabinet",
+      "color": "#f4f3ef",
+      "multiplierBps": 10000
+    },
+    {
+      "id": "cabinet.navy",
+      "name": "Navy",
+      "target": "cabinet",
+      "color": "#27364a",
+      "multiplierBps": 11000
+    },
+    {
+      "id": "cabinet.sage",
+      "name": "Sage green",
+      "target": "cabinet",
+      "color": "#8a9a82",
+      "multiplierBps": 11000
+    },
+    {
+      "id": "cabinet.oak",
+      "name": "Natural oak",
+      "target": "cabinet",
+      "color": "#c8a877",
+      "multiplierBps": 12500
+    },
+    {
+      "id": "countertop.white",
+      "name": "White stone",
+      "target": "countertop",
+      "color": "#ecebe6",
+      "pricePerSqftCents": 6500
+    },
+    {
+      "id": "countertop.charcoal",
+      "name": "Charcoal stone",
+      "target": "countertop",
+      "color": "#3a3b3d",
+      "pricePerSqftCents": 7500
+    },
+    {
+      "id": "countertop.butcher",
+      "name": "Butcher block",
+      "target": "countertop",
+      "color": "#b58450",
+      "pricePerSqftCents": 4500
+    },
+    {
+      "id": "wall.white",
+      "name": "Soft white",
+      "target": "wall",
+      "color": "#f7f5f0"
+    },
+    {
+      "id": "wall.greige",
+      "name": "Greige",
+      "target": "wall",
+      "color": "#d6cfc3"
+    },
+    {
+      "id": "floor.oak",
+      "name": "Light oak",
+      "target": "floor",
+      "color": "#d2b48c"
+    },
+    {
+      "id": "floor.slate",
+      "name": "Slate grey",
+      "target": "floor",
+      "color": "#6b6f73"
+    }
+  ]
+}

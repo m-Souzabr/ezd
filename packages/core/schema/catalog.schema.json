@@ -1,0 +1,426 @@
+{
+  "title": "EZDesign catalog",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "#/$defs/Catalog",
+  "$defs": {
+    "Catalog": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CatalogEntry"
+          }
+        },
+        "finishes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Finish"
+          }
+        }
+      },
+      "required": [
+        "version",
+        "entries",
+        "finishes"
+      ],
+      "additionalProperties": false
+    },
+    "CatalogEntry": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "base",
+            "wall",
+            "tall",
+            "corner",
+            "appliance",
+            "filler",
+            "panel"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "width": {
+          "$ref": "#/$defs/WidthRule"
+        },
+        "heights": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "depths": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "defaultSize": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "height": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "depth": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "width",
+            "height",
+            "depth"
+          ],
+          "additionalProperties": false
+        },
+        "defaultElevation": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OptionDef"
+          }
+        },
+        "placement": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "wall",
+              "free"
+            ]
+          }
+        },
+        "corner": {
+          "type": "string",
+          "enum": [
+            "blind",
+            "l",
+            "diagonal"
+          ]
+        },
+        "price": {
+          "type": "object",
+          "properties": {
+            "baseCents": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "perInchWidthCents": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "optionCents": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            }
+          },
+          "required": [
+            "baseCents",
+            "perInchWidthCents"
+          ],
+          "additionalProperties": false
+        },
+        "retired": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "width",
+        "heights",
+        "depths",
+        "defaultSize",
+        "defaultElevation",
+        "options",
+        "placement",
+        "price"
+      ],
+      "additionalProperties": false
+    },
+    "WidthRule": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "max": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "step": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "min",
+            "max",
+            "step"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            }
+          },
+          "required": [
+            "values"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "free": {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "max": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "min",
+                "max"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "free"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "OptionDef": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "enum"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "default": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "key",
+            "type",
+            "values",
+            "default"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "int"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "default": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "key",
+            "type",
+            "values",
+            "default"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "int"
+            },
+            "range": {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "max": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "min",
+                "max"
+              ],
+              "additionalProperties": false
+            },
+            "default": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "key",
+            "type",
+            "range",
+            "default"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "bool"
+            },
+            "default": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "key",
+            "type",
+            "default"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Finish": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string",
+          "enum": [
+            "cabinet",
+            "countertop",
+            "wall",
+            "floor"
+          ]
+        },
+        "color": {
+          "type": "string"
+        },
+        "multiplierBps": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "pricePerSqftCents": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "retired": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "target",
+        "color"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

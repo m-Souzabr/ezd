@@ -1,6 +1,7 @@
 import type { Item, OptionValue } from '../document/index.js';
 import { formatLength, type Len, STEP } from '../units/index.js';
 import {
+  activeEntries,
   allowedWidths,
   type Catalog,
   type CatalogEntry,
@@ -10,6 +11,7 @@ import {
 
 export type ConstraintCode =
   | 'UNKNOWN_CATALOG_ID'
+  | 'ENTRY_RETIRED'
   | 'KIND_MISMATCH'
   | 'WIDTH_OFF_STEP'
   | 'WIDTH_OUT_OF_RANGE'
@@ -129,10 +131,15 @@ function optionErrors(item: Item, entry: CatalogEntry): ConstraintError[] {
  * Everything about the item that its catalog entry does not allow, or an empty list.
  * An option the item leaves out is fine: it takes the entry's default.
  */
-export function checkItemAgainstCatalog(item: Item, catalog: Catalog): ConstraintError[] {
+export function checkItemAgainstCatalog(
+  item: Item,
+  catalog: Catalog,
+  /** Set for an item that is being added: a retired entry may not be added, only kept. */
+  options: { adding?: boolean } = {},
+): ConstraintError[] {
   const entry = getEntry(catalog, item.catalogId);
   if (!entry) {
-    const ids = catalog.entries.map((candidate) => candidate.id);
+    const ids = activeEntries(catalog).map((candidate) => candidate.id);
     return [
       {
         code: 'UNKNOWN_CATALOG_ID',
@@ -143,6 +150,16 @@ export function checkItemAgainstCatalog(item: Item, catalog: Catalog): Constrain
   }
 
   const errors: ConstraintError[] = [];
+  if (options.adding && entry.retired) {
+    const ids = activeEntries(catalog)
+      .filter((candidate) => candidate.kind === entry.kind)
+      .map((candidate) => candidate.id);
+    errors.push({
+      code: 'ENTRY_RETIRED',
+      message: `${entry.id} is retired and cannot be added.${ids.length > 0 ? ` Use ${listed(ids)}.` : ''}`,
+      allowed: ids,
+    });
+  }
   if (item.kind !== entry.kind) {
     errors.push({
       code: 'KIND_MISMATCH',

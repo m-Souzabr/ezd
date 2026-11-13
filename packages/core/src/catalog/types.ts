@@ -1,16 +1,21 @@
-import type { FinishTarget, Item, ItemKind, Placement } from '../document/index.js';
+import type { z } from 'zod';
+
+import type { Item, Placement } from '../document/index.js';
 import type { Len } from '../units/index.js';
+import type {
+  CatalogEntrySchema,
+  CatalogSchema,
+  CornerShapeSchema,
+  FinishSchema,
+  OptionDefSchema,
+  WidthRuleSchema,
+} from './schema.js';
 
 /** Which widths an entry comes in. Only fillers are `free`. */
-export type WidthRule =
-  { min: Len; max: Len; step: Len } | { values: Len[] } | { free: { min: Len; max: Len } };
+export type WidthRule = z.infer<typeof WidthRuleSchema>;
 
 /** One option of an entry. An item that leaves the option out gets `default`. */
-export type OptionDef =
-  | { key: string; type: 'enum'; values: string[]; default: string }
-  | { key: string; type: 'int'; values: number[]; default: number }
-  | { key: string; type: 'int'; range: { min: number; max: number }; default: number }
-  | { key: string; type: 'bool'; default: boolean };
+export type OptionDef = z.infer<typeof OptionDefSchema>;
 
 /**
  * How a corner entry fills its corner. Every corner item's `width` runs along the wall it
@@ -20,50 +25,24 @@ export type OptionDef =
  * - `l` and `diagonal`: the corner is at the item's left end, where its wall starts.
  *   `depth` runs along the adjacent wall and must equal `width`.
  */
-export type CornerShape = 'blind' | 'l' | 'diagonal';
+export type CornerShape = z.infer<typeof CornerShapeSchema>;
 
-export type CatalogEntry = {
-  /** For example `base.standard`. */
-  id: string;
-  kind: ItemKind;
-  name: string;
-  width: WidthRule;
-  heights: Len[];
-  depths: Len[];
-  /** The size `defaultItemFor` gives a new item. Each value is an allowed one. */
-  defaultSize: { width: Len; height: Len; depth: Len };
-  defaultElevation: Len;
-  options: OptionDef[];
-  placement: Placement['type'][];
-  /** Entries of kind `corner` only. */
-  corner?: CornerShape;
-  price: {
-    baseCents: number;
-    perInchWidthCents: number;
-    /** Added per option value, keyed as `key=value`: `{ 'topDrawer=true': 2500 }`. */
-    optionCents?: Record<string, number>;
-  };
-};
+export type CatalogEntry = z.infer<typeof CatalogEntrySchema>;
 
-export type Finish = {
-  id: string;
-  name: string;
-  target: FinishTarget;
-  /** `#rrggbb`. */
-  color: string;
-  /**
-   * What the finish does to the price of an item, in basis points: 10000 leaves it as it
-   * is and 11500 adds 15 percent. Defaults to 10000.
-   */
-  multiplierBps?: number;
-  /** Countertop finishes only: the price of one square foot. */
-  pricePerSqftCents?: number;
-};
+export type Finish = z.infer<typeof FinishSchema>;
 
 /** The price multiplier of a finish that does not set one: no change. */
 export const DEFAULT_MULTIPLIER_BPS = 10000;
 
-export type Catalog = { version: string; entries: CatalogEntry[]; finishes: Finish[] };
+export type Catalog = z.infer<typeof CatalogSchema>;
+
+/** Entries that can be added to a design: every one that is not retired. */
+export const activeEntries = (catalog: Catalog): CatalogEntry[] =>
+  catalog.entries.filter((entry) => !entry.retired);
+
+/** Finishes that can be chosen: every one that is not retired. */
+export const activeFinishes = (catalog: Catalog): Finish[] =>
+  catalog.finishes.filter((finish) => !finish.retired);
 
 export const getEntry = (catalog: Catalog, id: string): CatalogEntry | undefined =>
   catalog.entries.find((entry) => entry.id === id);

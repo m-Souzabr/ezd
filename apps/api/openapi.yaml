@@ -40,6 +40,338 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedAuditEntryList'
           description: ''
+  /api/admin/catalog/draft/:
+    get:
+      operationId: admin_catalog_draft_retrieve
+      description: The catalog being edited. Without a saved draft it is the published
+        one.
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDraft'
+          description: ''
+    put:
+      operationId: admin_catalog_draft_update
+      description: |-
+        Saves the draft if `revision` is the one the editor loaded, else 409.
+
+        A draft may break the catalog's rules (it is work in progress) but it must be a
+        catalog: publishing is what checks the rules.
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogDraftUpdateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDraft'
+          description: ''
+  /api/admin/catalog/entries/:
+    post:
+      operationId: admin_catalog_entries_create
+      description: Adds an entry to the draft.
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogEntryCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDraft'
+          description: ''
+  /api/admin/catalog/entries/{entry_id}/:
+    patch:
+      operationId: admin_catalog_entries_partial_update
+      description: Replaces the given fields of an entry of the draft.
+      parameters:
+      - in: path
+        name: entry_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCatalogEntryChangeRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDraft'
+          description: ''
+  /api/admin/catalog/entries/{entry_id}/restore/:
+    post:
+      operationId: admin_catalog_entries_restore_create
+      description: 'The shared part of every granular change: load the draft, change
+        it, save, audit.'
+      parameters:
+      - in: path
+        name: entry_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogRevisionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDraft'
+          description: ''
+  /api/admin/catalog/entries/{entry_id}/retire/:
+    post:
+      operationId: admin_catalog_entries_retire_create
+      description: 'The shared part of every granular change: load the draft, change
+        it, save, audit.'
+      parameters:
+      - in: path
+        name: entry_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogRevisionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDraft'
+          description: ''
+  /api/admin/catalog/finishes/:
+    post:
+      operationId: admin_catalog_finishes_create
+      description: Adds a finish to the draft.
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogFinishCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDraft'
+          description: ''
+  /api/admin/catalog/finishes/{finish_id}/:
+    patch:
+      operationId: admin_catalog_finishes_partial_update
+      description: Replaces the given fields of a finish of the draft.
+      parameters:
+      - in: path
+        name: finish_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCatalogEntryChangeRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDraft'
+          description: ''
+  /api/admin/catalog/finishes/{finish_id}/restore/:
+    post:
+      operationId: admin_catalog_finishes_restore_create
+      description: 'The shared part of every granular change: load the draft, change
+        it, save, audit.'
+      parameters:
+      - in: path
+        name: finish_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogRevisionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDraft'
+          description: ''
+  /api/admin/catalog/finishes/{finish_id}/retire/:
+    post:
+      operationId: admin_catalog_finishes_retire_create
+      description: 'The shared part of every granular change: load the draft, change
+        it, save, audit.'
+      parameters:
+      - in: path
+        name: finish_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogRevisionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDraft'
+          description: ''
+  /api/admin/catalog/publish/:
+    post:
+      operationId: admin_catalog_publish_create
+      description: Checks every rule, then makes the draft the next published version,
+        for good.
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogPublishRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogVersion'
+          description: ''
+  /api/admin/catalog/validate/:
+    post:
+      operationId: admin_catalog_validate_create
+      description: Every problem with a catalog (the draft unless given one), as publishing
+        finds them.
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogValidateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogValidation'
+          description: ''
+  /api/admin/catalog/versions/:
+    get:
+      operationId: admin_catalog_versions_list
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogVersion'
+          description: ''
+  /api/admin/catalog/versions/{version}/rollback/:
+    post:
+      operationId: admin_catalog_versions_rollback_create
+      description: Publishes a copy of an old version as a new one. The old rows stay
+        as they were.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogRollbackRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogVersion'
+          description: ''
   /api/admin/config/draft/:
     get:
       operationId: admin_config_draft_retrieve
@@ -400,6 +732,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+          description: ''
+  /api/catalog/:
+    get:
+      operationId: catalog_retrieve
+      description: 'The published catalog. Anyone may read it: the editor at `/` needs
+        no session.'
+      tags:
+      - catalog
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalog'
+          description: ''
+  /api/catalog/{version}/:
+    get:
+      operationId: catalog_version_retrieve
+      description: One published version, for a design or quote that was made with
+        an older catalog.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+        required: true
+      tags:
+      - catalog
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalog'
           description: ''
   /api/chat/messages/{id}/resolve/:
     post:
@@ -1520,6 +1890,140 @@ components:
       - id
       - object_id
       - object_type
+    Catalog:
+      type: object
+      description: A published catalog, as the web app and the server read it.
+      properties:
+        version:
+          type: string
+        catalog: {}
+      required:
+      - catalog
+      - version
+    CatalogDraft:
+      type: object
+      properties:
+        revision:
+          type: integer
+        catalog: {}
+        based_on:
+          type: string
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - based_on
+      - catalog
+      - revision
+      - updated_at
+    CatalogDraftUpdateRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 0
+        catalog: {}
+      required:
+      - catalog
+      - revision
+    CatalogEntryCreateRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 0
+        entry: {}
+      required:
+      - entry
+      - revision
+    CatalogFinishCreateRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 0
+        finish: {}
+      required:
+      - finish
+      - revision
+    CatalogProblem:
+      type: object
+      properties:
+        path:
+          type: string
+        message:
+          type: string
+      required:
+      - message
+      - path
+    CatalogPublishRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+        note:
+          type: string
+          default: ''
+          maxLength: 200
+      required:
+      - revision
+    CatalogRevisionRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 0
+      required:
+      - revision
+    CatalogRollbackRequest:
+      type: object
+      properties:
+        note:
+          type: string
+          default: ''
+          maxLength: 200
+    CatalogValidateRequest:
+      type: object
+      properties:
+        catalog: {}
+    CatalogValidation:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        problems:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogProblem'
+      required:
+      - ok
+      - problems
+    CatalogVersion:
+      type: object
+      properties:
+        number:
+          type: integer
+        version:
+          type: string
+        current:
+          type: boolean
+        note:
+          type: string
+        created_by:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - created_by
+      - current
+      - note
+      - number
+      - version
     ChatRequestRequest:
       type: object
       properties:
@@ -2287,6 +2791,13 @@ components:
             type: string
             minLength: 1
             maxLength: 150
+    PatchedCatalogEntryChangeRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 0
+        changes: {}
     PatchedDesignRequest:
       type: object
       properties:

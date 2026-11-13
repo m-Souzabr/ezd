@@ -1,4 +1,10 @@
-import { allowedOptionValues, type Catalog, type CatalogEntry } from '../catalog/index.js';
+import {
+  activeEntries,
+  activeFinishes,
+  allowedOptionValues,
+  type Catalog,
+  type CatalogEntry,
+} from '../catalog/index.js';
 import { inchesText } from './summary.js';
 
 // The catalog as compact text for the model. Part of the prompt prefix that is identical on
@@ -42,8 +48,8 @@ export function catalogIndexForLLM(catalog: Catalog): string {
   return [
     `Catalog ${catalog.version}. Sizes in inches: width x height x depth.`,
     'Entries (id | name | kind | widths | heights | depths | default size | placement | options):',
-    ...catalog.entries.map(entryLine),
+    ...activeEntries(catalog).map(entryLine),
     'Finishes (id | name | applies to):',
-    ...catalog.finishes.map((finish) => `${finish.id} | ${finish.name} | ${finish.target}`),
+    ...activeFinishes(catalog).map((finish) => `${finish.id} | ${finish.name} | ${finish.target}`),
   ].join('\n');
 }

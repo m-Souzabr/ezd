@@ -111,13 +111,18 @@ function describe(entry: CatalogEntry, options: BomLine['options']): string {
  * option's price, all times the finish multiplier. A filler's width may be a fraction of
  * an inch, so the sum is kept in sixteenths of a cent and rounded half up once.
  */
-function unitPrice(item: Item, entry: CatalogEntry, options: BomLine['options'], bps: number) {
+export function entryUnitPriceCents(
+  entry: CatalogEntry,
+  width: Len,
+  options: BomLine['options'],
+  bps: number,
+): number {
   const { baseCents, perInchWidthCents, optionCents = {} } = entry.price;
   const optionsCents = Object.entries(options).reduce(
     (sum, [key, value]) => sum + (optionCents[`${key}=${String(value)}`] ?? 0),
     0,
   );
-  const sixteenths = (baseCents + optionsCents) * IN + perInchWidthCents * item.width;
+  const sixteenths = (baseCents + optionsCents) * IN + perInchWidthCents * width;
   return divideHalfUp(sixteenths * bps, IN * BPS);
 }
 
@@ -146,7 +151,7 @@ function itemLine(item: Item, catalog: Catalog, cabinetFinish: string | null): B
     options,
     quantity: 1,
     unit: 'each',
-    unitPriceCents: entry ? unitPrice(item, entry, options, bps) : 0,
+    unitPriceCents: entry ? entryUnitPriceCents(entry, item.width, options, bps) : 0,
     lineTotalCents: 0,
     itemIds: [item.id],
   };

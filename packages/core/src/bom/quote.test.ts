@@ -2,7 +2,8 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import vectors from '../../test-vectors/quote.json' with { type: 'json' };
-import { type BomUnit, lineTotalCents } from './bom.js';
+import { type BomUnit, entryUnitPriceCents, lineTotalCents } from './bom.js';
+import { getEntry, SEED_CATALOG } from '../catalog/index.js';
 import { applyBps, divideHalfUp, formatMoney } from './money.js';
 import {
   computeQuote,
@@ -27,6 +28,19 @@ describe('the shared quote vectors', () => {
     }
     expect(computeQuote(lines, settings as QuoteSettings)).toEqual(totals);
   });
+});
+
+describe('the shared unit price vectors', () => {
+  const base = getEntry(SEED_CATALOG, 'base.standard')!;
+
+  it.each(vectors.unitPrices)(
+    '$name',
+    ({ price, width, options, multiplierBps, unitPriceCents }) => {
+      expect(entryUnitPriceCents({ ...base, price }, width, options, multiplierBps)).toBe(
+        unitPriceCents,
+      );
+    },
+  );
 });
 
 describe('computeQuote', () => {

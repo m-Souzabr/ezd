@@ -28,6 +28,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DJANGO_SETTINGS_MODULE=config.settings.prod \
     DESIGN_DOCUMENT_SCHEMA_PATH=/opt/ezd/design-document.schema.json \
     EZD_CORE_CLI=node,/opt/ezd/cli.js \
+    CATALOG_SEED_PATH=/opt/ezd/catalog.seed.json \
     LLM_TOOLS_SCHEMA_PATH=/opt/ezd/llm-tools.schema.json \
     LLM_CATALOG_INDEX_PATH=/opt/ezd/llm-catalog-index.txt \
     DRAFT_ROOM_SCHEMA_PATH=/opt/ezd/draft-room.schema.json \
@@ -40,6 +41,7 @@ RUN uv sync --frozen --no-dev
 COPY apps/api ./
 COPY --from=core /repo/packages/core-cli/dist/cli.js /opt/ezd/cli.js
 COPY packages/core/schema/design-document.schema.json /opt/ezd/design-document.schema.json
+COPY packages/core/schema/catalog.seed.json /opt/ezd/catalog.seed.json
 COPY packages/core/schema/llm-tools.schema.json /opt/ezd/llm-tools.schema.json
 COPY packages/core/schema/llm-catalog-index.txt /opt/ezd/llm-catalog-index.txt
 COPY packages/core/schema/draft-room.schema.json /opt/ezd/draft-room.schema.json

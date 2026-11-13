@@ -141,3 +141,77 @@ class ConfigVersionSerializer(serializers.Serializer):
     note = serializers.CharField()
     created_by = serializers.CharField()
     created_at = serializers.DateTimeField()
+
+
+class CatalogSerializer(serializers.Serializer):
+    """A published catalog, as the web app and the server read it."""
+
+    version = serializers.CharField()
+    catalog = serializers.JSONField()
+
+
+class CatalogDraftSerializer(serializers.Serializer):
+    # 0 while no draft has been saved: the catalog is then the published one.
+    revision = serializers.IntegerField()
+    catalog = serializers.JSONField()
+    based_on = serializers.CharField(allow_null=True)
+    updated_at = serializers.DateTimeField(allow_null=True)
+
+
+class CatalogDraftUpdateSerializer(serializers.Serializer):
+    revision = serializers.IntegerField(min_value=0)
+    catalog = serializers.JSONField()
+
+
+class CatalogValidateSerializer(serializers.Serializer):
+    # Leave it out to check the draft (or the published catalog if there is no draft).
+    catalog = serializers.JSONField(required=False)
+
+
+class CatalogProblemSerializer(serializers.Serializer):
+    path = serializers.CharField()
+    message = serializers.CharField()
+
+
+class CatalogValidationSerializer(serializers.Serializer):
+    ok = serializers.BooleanField()
+    problems = CatalogProblemSerializer(many=True)
+
+
+class CatalogPublishSerializer(serializers.Serializer):
+    revision = serializers.IntegerField(min_value=1)
+    note = serializers.CharField(max_length=200, allow_blank=True, required=False, default="")
+
+
+class CatalogRollbackSerializer(serializers.Serializer):
+    note = serializers.CharField(max_length=200, allow_blank=True, required=False, default="")
+
+
+class CatalogVersionSerializer(serializers.Serializer):
+    number = serializers.IntegerField()
+    version = serializers.CharField()
+    # Whether it is the catalog the app uses now.
+    current = serializers.BooleanField()
+    note = serializers.CharField()
+    created_by = serializers.CharField()
+    created_at = serializers.DateTimeField()
+
+
+class CatalogEntryCreateSerializer(serializers.Serializer):
+    revision = serializers.IntegerField(min_value=0)
+    entry = serializers.JSONField()
+
+
+class CatalogEntryChangeSerializer(serializers.Serializer):
+    revision = serializers.IntegerField(min_value=0)
+    # The fields to replace, whole; a null removes an optional field. `id` cannot change.
+    changes = serializers.JSONField()
+
+
+class CatalogRevisionSerializer(serializers.Serializer):
+    revision = serializers.IntegerField(min_value=0)
+
+
+class CatalogFinishCreateSerializer(serializers.Serializer):
+    revision = serializers.IntegerField(min_value=0)
+    finish = serializers.JSONField()

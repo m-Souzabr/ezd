@@ -133,6 +133,9 @@ export function proposalToCommands(
         if (!entry) {
           return err(`The catalog has no entry "${args.catalogId}". Use an id from the catalog.`);
         }
+        if (entry.retired) {
+          return err(`The catalog entry "${entry.id}" is retired. Use an id from the catalog.`);
+        }
         const placement = placementOf(current, args);
         if (!placement.ok) return placement;
         const defaults = Object.fromEntries(entry.options.map((def) => [def.key, def.default]));
@@ -210,7 +213,7 @@ export function proposalToCommands(
         }
         if (args.finishId !== undefined) {
           const finish = catalog.finishes.find((candidate) => candidate.id === args.finishId);
-          if (finish?.target !== 'cabinet') {
+          if (finish?.target !== 'cabinet' || finish.retired) {
             return err(`"${args.finishId}" is not a cabinet finish. Use a cabinet finish id.`);
           }
         }
@@ -282,7 +285,9 @@ export function proposalToCommands(
       case 'set_finish': {
         const args = input as ToolArgs<'set_finish'>;
         const finish = catalog.finishes.find((candidate) => candidate.id === args.finishId);
-        if (!finish) return err(`The catalog has no finish "${args.finishId}".`);
+        if (!finish || finish.retired) {
+          return err(`The catalog has no finish "${args.finishId}".`);
+        }
         if (finish.target !== args.target) {
           return err(`"${finish.id}" is a ${finish.target} finish, not a ${args.target} finish.`);
         }

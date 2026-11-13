@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { SEED_CATALOG } from '../catalog/index.js';
+import { type Catalog, CatalogSchema } from '../catalog/index.js';
 import { AppConfigSchema } from '../config/index.js';
 import { CommandSchema } from '../commands/index.js';
 import { DesignDocumentSchema } from '../document/index.js';
@@ -25,11 +25,17 @@ export const commandsJsonSchema = (): JsonSchema => ({
   ...z.toJSONSchema(CommandSchema),
 });
 
-/** The chat assistant's tools for the seed catalog, as the server sends them to the model. */
-export const llmToolsJsonSchema = (): JsonSchema => ({
+/** The chat assistant's tools for a catalog, as the server sends them to the model. */
+export const llmToolsJsonSchema = (catalog: Catalog): JsonSchema => ({
   title: 'EZDesign LLM tools',
-  catalogVersion: SEED_CATALOG.version,
-  tools: llmToolDefinitions(SEED_CATALOG),
+  catalogVersion: catalog.version,
+  tools: llmToolDefinitions(catalog),
+});
+
+/** A catalog, as the Control Panel stores and publishes it. */
+export const catalogJsonSchema = (): JsonSchema => ({
+  title: 'EZDesign catalog',
+  ...z.toJSONSchema(CatalogSchema),
 });
 
 /**

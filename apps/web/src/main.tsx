@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router';
 
 import { ApiError } from './api/client';
 import { App } from './App';
+import { CatalogProvider } from './catalog/CatalogProvider';
 import { ConfigProvider } from './config/ConfigProvider';
 import { ErrorBoundary } from './ErrorBoundary';
 import { reportError } from './lib/reportError';
@@ -33,9 +34,11 @@ createRoot(root).render(
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ConfigProvider>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
+          <CatalogProvider>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </CatalogProvider>
         </ConfigProvider>
       </QueryClientProvider>
     </ErrorBoundary>

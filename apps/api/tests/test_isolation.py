@@ -24,6 +24,8 @@ PUBLIC = {
     "auth-password-reset",
     "auth-password-reset-confirm",
     "app-config",
+    "catalog",
+    "catalog-version",
 }
 OWN_SESSION = {"auth-logout", "auth-me", "chat-usage"}
 # Site-wide settings that only staff may read or change.
@@ -35,9 +37,26 @@ STAFF = {
     "admin-config-draft",
     "admin-config-publish",
     "admin-config-versions",
+    "admin-catalog-draft",
+    "admin-catalog-validate",
+    "admin-catalog-publish",
+    "admin-catalog-versions",
+    "admin-catalog-entry-list",
+    "admin-catalog-finish-list",
 }
 # Staff routes with an account in the path.
-STAFF_OBJECTS = {"admin-user-detail", "admin-user-reset-password", "admin-config-rollback"}
+STAFF_OBJECTS = {
+    "admin-user-detail",
+    "admin-user-reset-password",
+    "admin-config-rollback",
+    "admin-catalog-rollback",
+    "admin-catalog-entry-detail",
+    "admin-catalog-entry-retire",
+    "admin-catalog-entry-restore",
+    "admin-catalog-finish-detail",
+    "admin-catalog-finish-retire",
+    "admin-catalog-finish-restore",
+}
 # Routes that list or create inside the signed-in account, with no object in the path.
 COLLECTIONS = {"project-list"}
 

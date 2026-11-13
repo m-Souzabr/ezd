@@ -20,6 +20,232 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/catalog/draft/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The catalog being edited. Without a saved draft it is the published one. */
+        get: operations["admin_catalog_draft_retrieve"];
+        /**
+         * @description Saves the draft if `revision` is the one the editor loaded, else 409.
+         *
+         *     A draft may break the catalog's rules (it is work in progress) but it must be a
+         *     catalog: publishing is what checks the rules.
+         */
+        put: operations["admin_catalog_draft_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/catalog/entries/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Adds an entry to the draft. */
+        post: operations["admin_catalog_entries_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/catalog/entries/{entry_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Replaces the given fields of an entry of the draft. */
+        patch: operations["admin_catalog_entries_partial_update"];
+        trace?: never;
+    };
+    "/api/admin/catalog/entries/{entry_id}/restore/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description The shared part of every granular change: load the draft, change it, save, audit. */
+        post: operations["admin_catalog_entries_restore_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/catalog/entries/{entry_id}/retire/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description The shared part of every granular change: load the draft, change it, save, audit. */
+        post: operations["admin_catalog_entries_retire_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/catalog/finishes/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Adds a finish to the draft. */
+        post: operations["admin_catalog_finishes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/catalog/finishes/{finish_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Replaces the given fields of a finish of the draft. */
+        patch: operations["admin_catalog_finishes_partial_update"];
+        trace?: never;
+    };
+    "/api/admin/catalog/finishes/{finish_id}/restore/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description The shared part of every granular change: load the draft, change it, save, audit. */
+        post: operations["admin_catalog_finishes_restore_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/catalog/finishes/{finish_id}/retire/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description The shared part of every granular change: load the draft, change it, save, audit. */
+        post: operations["admin_catalog_finishes_retire_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/catalog/publish/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Checks every rule, then makes the draft the next published version, for good. */
+        post: operations["admin_catalog_publish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/catalog/validate/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every problem with a catalog (the draft unless given one), as publishing finds them. */
+        post: operations["admin_catalog_validate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/catalog/versions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_catalog_versions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/catalog/versions/{version}/rollback/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Publishes a copy of an old version as a new one. The old rows stay as they were. */
+        post: operations["admin_catalog_versions_rollback_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/config/draft/": {
         parameters: {
             query?: never;
@@ -253,6 +479,40 @@ export interface paths {
         put?: never;
         /** @description Creates an account and signs it in, unless registration is closed. */
         post: operations["auth_register_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalog/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The published catalog. Anyone may read it: the editor at `/` needs no session. */
+        get: operations["catalog_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalog/{version}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One published version, for a design or quote that was made with an older catalog. */
+        get: operations["catalog_version_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -758,6 +1018,62 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        /** @description A published catalog, as the web app and the server read it. */
+        Catalog: {
+            version: string;
+            catalog: unknown;
+        };
+        CatalogDraft: {
+            revision: number;
+            catalog: unknown;
+            based_on: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        CatalogDraftUpdateRequest: {
+            revision: number;
+            catalog: unknown;
+        };
+        CatalogEntryCreateRequest: {
+            revision: number;
+            entry: unknown;
+        };
+        CatalogFinishCreateRequest: {
+            revision: number;
+            finish: unknown;
+        };
+        CatalogProblem: {
+            path: string;
+            message: string;
+        };
+        CatalogPublishRequest: {
+            revision: number;
+            /** @default  */
+            note: string;
+        };
+        CatalogRevisionRequest: {
+            revision: number;
+        };
+        CatalogRollbackRequest: {
+            /** @default  */
+            note: string;
+        };
+        CatalogValidateRequest: {
+            catalog?: unknown;
+        };
+        CatalogValidation: {
+            ok: boolean;
+            problems: components["schemas"]["CatalogProblem"][];
+        };
+        CatalogVersion: {
+            number: number;
+            version: string;
+            current: boolean;
+            note: string;
+            created_by: string;
+            /** Format: date-time */
+            created_at: string;
+        };
         ChatRequestRequest: {
             message: string;
             summary: string;
@@ -1045,6 +1361,10 @@ export interface components {
             is_staff?: boolean;
             is_superuser?: boolean;
             roles?: string[];
+        };
+        PatchedCatalogEntryChangeRequest: {
+            revision?: number;
+            changes?: unknown;
         };
         PatchedDesignRequest: {
             name?: string;
@@ -1338,6 +1658,334 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedAuditEntryList"];
+                };
+            };
+        };
+    };
+    admin_catalog_draft_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDraft"];
+                };
+            };
+        };
+    };
+    admin_catalog_draft_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogDraftUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDraft"];
+                };
+            };
+        };
+    };
+    admin_catalog_entries_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogEntryCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDraft"];
+                };
+            };
+        };
+    };
+    admin_catalog_entries_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCatalogEntryChangeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDraft"];
+                };
+            };
+        };
+    };
+    admin_catalog_entries_restore_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogRevisionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDraft"];
+                };
+            };
+        };
+    };
+    admin_catalog_entries_retire_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogRevisionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDraft"];
+                };
+            };
+        };
+    };
+    admin_catalog_finishes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogFinishCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDraft"];
+                };
+            };
+        };
+    };
+    admin_catalog_finishes_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                finish_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCatalogEntryChangeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDraft"];
+                };
+            };
+        };
+    };
+    admin_catalog_finishes_restore_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                finish_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogRevisionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDraft"];
+                };
+            };
+        };
+    };
+    admin_catalog_finishes_retire_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                finish_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogRevisionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDraft"];
+                };
+            };
+        };
+    };
+    admin_catalog_publish_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogPublishRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogVersion"];
+                };
+            };
+        };
+    };
+    admin_catalog_validate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CatalogValidateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogValidation"];
+                };
+            };
+        };
+    };
+    admin_catalog_versions_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogVersion"][];
+                };
+            };
+        };
+    };
+    admin_catalog_versions_rollback_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CatalogRollbackRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogVersion"];
                 };
             };
         };
@@ -1714,6 +2362,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["User"];
+                };
+            };
+        };
+    };
+    catalog_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Catalog"];
+                };
+            };
+        };
+    };
+    catalog_version_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Catalog"];
                 };
             };
         };
