@@ -226,6 +226,11 @@ starts PostgreSQL only.
 - **Autosave on the server** is one `UPDATE ... WHERE id = ? AND draft_revision = ?` on
   the design's own columns. Do not add a join to that filter: Django would move the
   comparison into a subquery and two concurrent saves could both succeed.
+- **Deployment.** Railway builds `main` into two services from the repository root, each
+  with its own `railway.json`: `api` (`apps/api/Dockerfile`, private, port 8000, with
+  `config.settings.prod`) and `web` (`apps/web/Dockerfile`: Caddy serves the build and proxies
+  `/api` to `API_UPSTREAM`, so the browser sees one origin). Django sits behind the host's
+  edge and Caddy, so `DJANGO_NUM_PROXIES=2`, and Caddy tells it the request was https.
 - **Relative imports in `packages/core` and `packages/core-cli`** carry a `.js` extension
   (`./units.js`), so the emitted ESM runs in Node unchanged.
 - **Django settings** are `config.settings.dev` (default for `manage.py`),

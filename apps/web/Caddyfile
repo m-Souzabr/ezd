@@ -1,0 +1,27 @@
+{
+	admin off
+}
+
+:{$PORT:8080} {
+	encode zstd gzip
+
+	handle /api/* {
+		# Host is passed through unchanged, so Django checks the public host name. The
+		# TLS ends at the host's edge: tell Django the request was https, or it redirects
+		# every request to https again.
+		reverse_proxy {$API_UPSTREAM} {
+			header_up X-Forwarded-Proto https
+		}
+	}
+
+	handle {
+		root * /srv
+		# Hashed build output never changes; index.html must always be fetched again.
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@html not path /assets/*
+		header @html Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
