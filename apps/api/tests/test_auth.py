@@ -22,6 +22,8 @@ def test_register_creates_the_account_and_signs_in(anonymous: APIClient) -> None
         "email": "new@example.com",
         "name": "New",
         "is_staff": False,
+        "is_superuser": False,
+        "permissions": [],
     }
     assert "password" not in response.content.decode()
     assert anonymous.get("/api/auth/me/").json()["email"] == "new@example.com"
@@ -66,6 +68,8 @@ def test_login_starts_a_session(anonymous: APIClient, user: User) -> None:
         "email": "ada@example.com",
         "name": "Ada",
         "is_staff": False,
+        "is_superuser": False,
+        "permissions": [],
     }
     assert anonymous.get("/api/auth/me/").status_code == 200
 

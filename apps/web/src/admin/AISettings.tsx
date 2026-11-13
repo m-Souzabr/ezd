@@ -3,10 +3,11 @@ import { type FormEvent, useState } from 'react';
 
 import { api, type LLMSettings, type LLMSettingsUpdate } from '../api/client';
 import { llmSettingsKey } from '../api/keys';
-import { useSession } from '../auth/session';
+import { RequirePermission } from '../auth/permissions';
 import { BUTTON } from '../editor/panels/fields';
-import { fieldErrors, formatDate } from './format';
-import { FormError, Page, PRIMARY, TextField } from './ui';
+import { fieldErrors, formatDate } from '../pages/format';
+import { NoAccess } from './AdminLayout';
+import { FormError, PRIMARY, TextField } from '../pages/ui';
 
 const SOURCE_TEXT: Record<LLMSettings['key_source'], string> = {
   settings: 'A key entered here is in use',
@@ -18,7 +19,7 @@ type Models = { router: string; default: string; escalation: string };
 
 /**
  * The assistant's settings for the whole site: the vendor API key and the three models.
- * Staff only. The key is sent once and never shown again; the server keeps it encrypted.
+ * The key is sent once and never shown again; the server keeps it encrypted.
  */
 function SettingsForm({ settings }: { settings: LLMSettings }) {
   const queryClient = useQueryClient();
@@ -113,22 +114,15 @@ function SettingsForm({ settings }: { settings: LLMSettings }) {
 }
 
 export function AISettingsPage() {
-  const user = useSession();
-  const staff = user?.is_staff === true;
-  const settings = useQuery({
-    queryKey: llmSettingsKey,
-    queryFn: api.getLLMSettings,
-    enabled: staff,
-  });
+  const settings = useQuery({ queryKey: llmSettingsKey, queryFn: api.getLLMSettings });
   return (
-    <Page title="AI settings">
-      {!staff ? (
-        <p className="text-sm text-slate-700">Only an administrator can change these settings.</p>
-      ) : settings.data ? (
+    <RequirePermission permission="llm.settings.edit" fallback={<NoAccess />}>
+      <h1 className="mb-4 text-xl font-semibold">AI settings</h1>
+      {settings.data ? (
         <SettingsForm settings={settings.data} />
       ) : (
         <FormError error={settings.error} />
       )}
-    </Page>
+    </RequirePermission>
   );
 }

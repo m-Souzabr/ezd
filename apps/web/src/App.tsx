@@ -1,7 +1,12 @@
 import { Navigate, Route, Routes } from 'react-router';
 
 import { RequireSession, SessionExpiry } from './auth/SessionGate';
-import { AISettingsPage } from './pages/AISettings';
+import { AdminHome } from './admin/AdminHome';
+import { AdminLayout } from './admin/AdminLayout';
+import { AISettingsPage } from './admin/AISettings';
+import { AuditPage } from './admin/AuditPage';
+import { UsersPage } from './admin/UsersPage';
+import { RequireStaff } from './auth/RequireStaff';
 import { ForgotPasswordPage, LoginPage, RegisterPage, ResetPasswordPage } from './pages/AuthPages';
 import { DesignEditorPage } from './pages/DesignEditor';
 import { LocalEditor } from './pages/LocalEditor';
@@ -64,14 +69,24 @@ export function App() {
             </RequireSession>
           }
         />
+        <Route path="/settings/ai" element={<Navigate to="/admin/ai" replace />} />
         <Route
-          path="/settings/ai"
+          path="/admin"
           element={
             <RequireSession>
-              <AISettingsPage />
+              <RequireStaff>
+                <AdminLayout />
+              </RequireStaff>
             </RequireSession>
           }
-        />
+        >
+          <Route index element={<AdminHome />} />
+          <Route path="ai" element={<AISettingsPage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="audit" element={<AuditPage />} />
+          {/* An unknown admin path stays in the Control Panel instead of falling through to `/`. */}
+          <Route path="*" element={<AdminHome />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

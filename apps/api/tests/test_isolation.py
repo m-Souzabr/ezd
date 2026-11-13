@@ -26,7 +26,14 @@ PUBLIC = {
 }
 OWN_SESSION = {"auth-logout", "auth-me", "chat-usage"}
 # Site-wide settings that only staff may read or change.
-STAFF = {"llm-settings"}
+STAFF = {
+    "llm-settings",
+    "admin-user-list",
+    "admin-role-list",
+    "admin-audit-list",
+}
+# Staff routes with an account in the path.
+STAFF_OBJECTS = {"admin-user-detail", "admin-user-reset-password"}
 # Routes that list or create inside the signed-in account, with no object in the path.
 COLLECTIONS = {"project-list"}
 
@@ -149,7 +156,14 @@ def _everything() -> tuple[list, ...]:
 
 
 def test_every_api_route_is_accounted_for(design: Design, version: DesignVersion) -> None:
-    covered = PUBLIC | OWN_SESSION | COLLECTIONS | STAFF | set(_object_routes(design, version))
+    covered = (
+        PUBLIC
+        | OWN_SESSION
+        | COLLECTIONS
+        | STAFF
+        | STAFF_OBJECTS
+        | set(_object_routes(design, version))
+    )
     assert _api_route_names() == covered
 
 
@@ -194,6 +208,7 @@ def test_every_route_but_the_public_ones_needs_a_session(
     urls = {
         **_object_routes(design, version),
         **{name: reverse(name) for name in OWN_SESSION | COLLECTIONS | STAFF},
+        **{name: reverse(name, args=[design.project.owner_id]) for name in STAFF_OBJECTS},
     }
     for name, url in urls.items():
         for method in METHODS:

@@ -4,6 +4,91 @@
  */
 
 export interface paths {
+    "/api/admin/audit/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_audit_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/roles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The roles and the permission codes each one holds. Read-only. */
+        get: operations["admin_roles_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every account, for staff. Searchable, filterable and sortable. */
+        get: operations["admin_users_list"];
+        put?: never;
+        /** @description Creates an account with no password and emails its owner a link to choose one. */
+        post: operations["admin_users_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_users_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Changes name, email, active, staff, superuser or roles. */
+        patch: operations["admin_users_partial_update"];
+        trace?: never;
+    };
+    "/api/admin/users/{id}/reset-password/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Emails the account's owner a link to choose a new password. */
+        post: operations["admin_users_reset_password_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/login/": {
         parameters: {
             query?: never;
@@ -531,6 +616,58 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AdminUser: {
+            readonly id: number;
+            /**
+             * Email address
+             * Format: email
+             */
+            readonly email: string;
+            readonly name: string;
+            /**
+             * Active
+             * @description Designates whether this user should be treated as active. Unselect this instead of deleting accounts.
+             */
+            readonly is_active: boolean;
+            /**
+             * Staff status
+             * @description Designates whether the user can log into this admin site.
+             */
+            readonly is_staff: boolean;
+            /**
+             * Superuser status
+             * @description Designates that this user has all permissions without explicitly assigning them.
+             */
+            readonly is_superuser: boolean;
+            readonly roles: string[];
+            /** Format: date-time */
+            readonly last_login: string | null;
+            /** Format: date-time */
+            readonly date_joined: string;
+            readonly active_projects: number;
+            readonly chat_tokens_this_month: number;
+        };
+        AdminUserCreateRequest: {
+            /** Format: email */
+            email: string;
+            /** @default  */
+            name: string;
+            /** @default false */
+            is_staff: boolean;
+            roles?: string[];
+        };
+        AuditEntry: {
+            readonly id: number;
+            readonly actor: number | null;
+            readonly actor_email: string;
+            readonly action: string;
+            readonly object_type: string;
+            readonly object_id: string;
+            readonly before: unknown;
+            readonly after: unknown;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
         ChatRequestRequest: {
             message: string;
             summary: string;
@@ -760,6 +897,8 @@ export interface components {
         NotReady: {
             status: string;
         };
+        PaginatedAdminUserList: components["schemas"]["AdminUser"][];
+        PaginatedAuditEntryList: components["schemas"]["AuditEntry"][];
         PaginatedDesignSummaryList: components["schemas"]["DesignSummary"][];
         PaginatedDesignVersionSummaryList: components["schemas"]["DesignVersionSummary"][];
         PaginatedPhotoList: components["schemas"]["Photo"][];
@@ -773,6 +912,15 @@ export interface components {
         PasswordResetRequest: {
             /** Format: email */
             email: string;
+        };
+        PatchedAdminUserUpdateRequest: {
+            /** Format: email */
+            email?: string;
+            name?: string;
+            is_active?: boolean;
+            is_staff?: boolean;
+            is_superuser?: boolean;
+            roles?: string[];
         };
         PatchedDesignRequest: {
             name?: string;
@@ -948,6 +1096,10 @@ export interface components {
             errors: string[];
             summary: string;
         };
+        Role: {
+            name: string;
+            permissions: string[];
+        };
         /**
          * @description * `user` - User
          *     * `assistant` - Assistant
@@ -1021,6 +1173,13 @@ export interface components {
              * @description Designates whether the user can log into this admin site.
              */
             readonly is_staff: boolean;
+            /**
+             * Superuser status
+             * @description Designates that this user has all permissions without explicitly assigning them.
+             */
+            readonly is_superuser: boolean;
+            /** @description The Control Panel codes the user holds; the web app only uses them to hide things. */
+            readonly permissions: string[];
         };
     };
     responses: never;
@@ -1031,6 +1190,174 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    admin_audit_list: {
+        parameters: {
+            query?: {
+                /** @description An action, or the start of one. */
+                action?: string;
+                /** @description An actor's id or part of their email. */
+                actor?: string;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAuditEntryList"];
+                };
+            };
+        };
+    };
+    admin_roles_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Role"][];
+                };
+            };
+        };
+    };
+    admin_users_list: {
+        parameters: {
+            query?: {
+                is_active?: boolean;
+                is_staff?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /** @description The name of a role. */
+                role?: string;
+                /** @description Part of the email or name. */
+                search?: string;
+                /** @description A column, with `-` for descending. */
+                sort?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAdminUserList"];
+                };
+            };
+        };
+    };
+    admin_users_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminUserCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+        };
+    };
+    admin_users_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+        };
+    };
+    admin_users_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAdminUserUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+        };
+    };
+    admin_users_reset_password_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     auth_login_create: {
         parameters: {
             query?: never;

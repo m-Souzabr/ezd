@@ -1,0 +1,32 @@
+[
+  {
+    "model": "accounts.user",
+    "pk": 9001,
+    "fields": {
+      "email": "admin-e2e@example.com",
+      "name": "E2E Administrator",
+      "password": "pbkdf2_sha256$1000000$e2eFixtureSaltFixedValue$Y4h4jW9E3TmQStKEnIMHbhN6GiXyAAGLiEI+15JodxY=",
+      "is_staff": true,
+      "is_active": true,
+      "is_superuser": false,
+      "groups": [["Administrator"]],
+      "user_permissions": [],
+      "date_joined": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 9002,
+    "fields": {
+      "email": "support-e2e@example.com",
+      "name": "E2E Support",
+      "password": "pbkdf2_sha256$1000000$e2eFixtureSaltFixedValue$Y4h4jW9E3TmQStKEnIMHbhN6GiXyAAGLiEI+15JodxY=",
+      "is_staff": true,
+      "is_active": true,
+      "is_superuser": false,
+      "groups": [["Support"]],
+      "user_permissions": [],
+      "date_joined": "2026-01-01T00:00:00Z"
+    }
+  }
+]

@@ -38,7 +38,7 @@ export default defineConfig({
     {
       command:
         'pnpm --filter @ezd/core-cli build && cd ../api && ' +
-        `uv run python manage.py testserver tests/fixtures/empty.json --noinput --addrport 127.0.0.1:${API_PORT}`,
+        `uv run python manage.py testserver tests/fixtures/empty.json tests/fixtures/staff.json --noinput --addrport 127.0.0.1:${API_PORT}`,
       url: `http://127.0.0.1:${API_PORT}/api/health/`,
       // Without the line the API logs for each request. The assistant answers from a script.
       env: {
