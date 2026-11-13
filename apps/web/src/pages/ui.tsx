@@ -1,9 +1,9 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type FormEvent, type ReactNode, useId, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 
-import { api, ApiError } from '../api/client';
-import { SESSION_KEY, useSession } from '../auth/session';
+import { ApiError } from '../api/client';
+import { useSession } from '../auth/session';
+import { useSignOut } from '../auth/useSignOut';
 import { BUTTON } from '../editor/panels/fields';
 import { errorMessage } from './format';
 
@@ -19,21 +19,6 @@ export const LINK =
 const INPUT =
   'w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 ' +
   'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500';
-
-/** Signs out and returns to the design kept in this browser. */
-function useSignOut(): () => void {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const signOut = useMutation({
-    mutationFn: api.logout,
-    onSettled: () => {
-      queryClient.clear();
-      queryClient.setQueryData(SESSION_KEY, null);
-      void navigate('/login');
-    },
-  });
-  return () => signOut.mutate();
-}
 
 /** The links at the right of a header: the account when signed in, or the way in. */
 export function AccountLinks() {
