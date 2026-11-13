@@ -1,10 +1,12 @@
 import { Navigate, Route, Routes } from 'react-router';
 
 import { RequireSession, SessionExpiry } from './auth/SessionGate';
+import { AISettingsPage } from './pages/AISettings';
 import { ForgotPasswordPage, LoginPage, RegisterPage, ResetPasswordPage } from './pages/AuthPages';
 import { DesignEditorPage } from './pages/DesignEditor';
 import { LocalEditor } from './pages/LocalEditor';
 import { ProjectDetailPage, ProjectsPage } from './pages/Projects';
+import { QuotePage } from './pages/QuotePage';
 import { AccountLinks } from './pages/ui';
 
 /**
@@ -42,6 +44,22 @@ export function App() {
           element={
             <RequireSession>
               <DesignEditorPage />
+            </RequireSession>
+          }
+        />
+        <Route
+          path="/quotes/:id"
+          element={
+            <RequireSession>
+              <QuotePage />
+            </RequireSession>
+          }
+        />
+        <Route
+          path="/settings/ai"
+          element={
+            <RequireSession>
+              <AISettingsPage />
             </RequireSession>
           }
         />

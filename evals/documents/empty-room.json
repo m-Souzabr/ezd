@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "id": "eval-empty-room",
+  "name": "Empty kitchen",
+  "room": {
+    "ceilingHeight": 1536,
+    "walls": [
+      {
+        "id": "wall-north",
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "end": {
+          "x": 2304,
+          "y": 0
+        },
+        "thickness": 72
+      },
+      {
+        "id": "wall-east",
+        "start": {
+          "x": 2304,
+          "y": 0
+        },
+        "end": {
+          "x": 2304,
+          "y": 1920
+        },
+        "thickness": 72
+      },
+      {
+        "id": "wall-south",
+        "start": {
+          "x": 2304,
+          "y": 1920
+        },
+        "end": {
+          "x": 0,
+          "y": 1920
+        },
+        "thickness": 72
+      },
+      {
+        "id": "wall-west",
+        "start": {
+          "x": 0,
+          "y": 1920
+        },
+        "end": {
+          "x": 0,
+          "y": 0
+        },
+        "thickness": 72
+      }
+    ],
+    "openings": [
+      {
+        "id": "door-south",
+        "wallId": "wall-south",
+        "kind": "door",
+        "offset": 960,
+        "width": 512,
+        "height": 1280,
+        "sillHeight": 0,
+        "swing": "in-left"
+      },
+      {
+        "id": "window-a",
+        "wallId": "wall-north",
+        "kind": "window",
+        "offset": 768,
+        "width": 576,
+        "height": 576,
+        "sillHeight": 672
+      }
+    ]
+  },
+  "items": [],
+  "countertops": [],
+  "finishes": {}
+}

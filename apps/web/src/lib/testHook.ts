@@ -11,6 +11,8 @@ declare global {
       getHistoryLength(): number;
       /** Pixels per inch and the canvas position of the origin, to aim the mouse. */
       getViewport(): Viewport;
+      /** The document of the assistant's pending proposal, which the views draw as ghosts. */
+      getPreviewDoc(): DesignDocument | null;
     };
   }
 }
@@ -24,5 +26,6 @@ export function exposeTestHook(store: DesignStoreApi): void {
     getDoc: () => store.getState().doc,
     getHistoryLength: () => store.getState().history.past.length,
     getViewport: () => store.getState().viewport,
+    getPreviewDoc: () => store.getState().proposal?.doc ?? null,
   };
 }

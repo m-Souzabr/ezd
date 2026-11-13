@@ -201,3 +201,96 @@ describe('validate', () => {
     expect(output.violations.filter((v) => v.ruleId === 'item.catalog')).toHaveLength(4);
   });
 });
+
+describe('llm-summary', () => {
+  it('prints the summary and aliases of a document', () => {
+    expect(readsStdin(['llm-summary'])).toBe(true);
+    const result = run(['llm-summary'], JSON.stringify({ document: JSON.parse(fixture('valid')) }));
+    expect(result.exitCode).toBe(0);
+    const output = JSON.parse(result.stdout) as { ok: boolean; text: string; aliases: object };
+    expect(output.ok).toBe(true);
+    expect(output.text).toContain('Wall A: length 120');
+    expect(output.aliases).toMatchObject({ c1: 'item-base-01', o1: 'door-south' });
+  });
+
+  it('honours maxChars and rejects an invalid document', () => {
+    const document = JSON.parse(fixture('valid')) as object;
+    const short = JSON.parse(
+      run(['llm-summary'], JSON.stringify({ document, maxChars: 200 })).stdout,
+    ) as {
+      text: string;
+    };
+    expect(short.text.length).toBeLessThanOrEqual(200);
+    const bad = run(['llm-summary'], JSON.stringify({ document: {} }));
+    expect(bad.exitCode).toBe(1);
+    expect((JSON.parse(bad.stdout) as { errors: { path: string }[] }).errors[0]!.path).toMatch(
+      /^document/,
+    );
+    expect(run(['llm-summary'], 'nope').exitCode).toBe(1);
+  });
+});
+
+describe('llm-dry-run', () => {
+  const document = () => ({
+    ...createEmptyDocument({ id: 'doc-00000001', name: 'Test' }),
+    room: {
+      ceilingHeight: inches(96),
+      walls: [
+        { id: 'wall-north', start: { x: 0, y: 0 }, end: { x: inches(144), y: 0 }, thickness: 72 },
+      ],
+      openings: [],
+    },
+  });
+  const addBase = (offsetIn: number) => ({
+    name: 'add_item',
+    arguments: { catalogId: 'base.standard', widthIn: 30, wall: 'A', offsetIn },
+  });
+
+  it('converts tool calls to one batch and returns the next document', () => {
+    expect(readsStdin(['llm-dry-run'])).toBe(true);
+    const result = run(
+      ['llm-dry-run'],
+      JSON.stringify({ document: document(), toolCalls: [addBase(0)], aliases: {} }),
+    );
+    expect(result.exitCode).toBe(0);
+    const output = JSON.parse(result.stdout) as {
+      ok: boolean;
+      command: Command;
+      document: { items: unknown[] };
+      changes: string[];
+    };
+    expect(output.ok).toBe(true);
+    expect(output.command.type).toBe('batch');
+    expect(output.document.items).toHaveLength(1);
+    expect(output.changes).toEqual(['Add 30" base cabinet on wall A at 0"']);
+  });
+
+  it('returns errors worded for the model', () => {
+    const result = run(
+      ['llm-dry-run'],
+      JSON.stringify({
+        document: document(),
+        toolCalls: [addBase(0), addBase(15)],
+        aliases: {},
+      }),
+    );
+    expect(result.exitCode).toBe(1);
+    const output = JSON.parse(result.stdout) as { errors: { message: string }[]; command: null };
+    expect(output.command).toBeNull();
+    expect(output.errors[0]!.message).toMatch(/^The change would cause this problem/);
+  });
+
+  it('rejects bad input', () => {
+    const missing = run(['llm-dry-run'], JSON.stringify({ document: document() }));
+    expect(missing.exitCode).toBe(1);
+    expect(missing.stdout).toContain('Expected toolCalls');
+    const invalid = run(
+      ['llm-dry-run'],
+      JSON.stringify({ document: {}, toolCalls: [], aliases: {} }),
+    );
+    expect(
+      (JSON.parse(invalid.stdout) as { errors: { toolIndex: number }[] }).errors[0]!.toolIndex,
+    ).toBe(-1);
+    expect(run(['llm-dry-run'], '{').stdout).toContain('Invalid JSON');
+  });
+});

@@ -14,6 +14,15 @@ export type DesignVersionSummary = Schemas['DesignVersionSummary'];
 export type DraftSaved = Schemas['DraftSaved'];
 export type DraftConflict = Schemas['DraftConflict'];
 export type DocumentIssue = Schemas['DocumentIssue'];
+export type Quote = Schemas['Quote'];
+export type QuoteSummary = Schemas['QuoteSummary'];
+export type QuoteCreate = Schemas['QuoteCreateRequest'];
+export type ChatProposal = Schemas['Proposal'];
+export type ChatMessage = Schemas['Message'];
+export type ChatConversation = Schemas['Conversation'];
+export type ChatUsage = Schemas['Usage'];
+export type LLMSettings = Schemas['LLMSettings'];
+export type LLMSettingsUpdate = Schemas['PatchedLLMSettingsUpdateRequest'];
 
 /** The server answered, but not with success. */
 export class ApiError extends Error {
@@ -170,6 +179,31 @@ export const api = {
     request<DesignVersion>('GET', `/api/designs/${designId}/versions/${number}/`),
   restoreVersion: (designId: string, number: number) =>
     request<Design>('POST', `/api/designs/${designId}/versions/${number}/restore/`),
+
+  listQuotes: (designId: string) =>
+    request<QuoteSummary[]>('GET', `/api/designs/${designId}/quotes/`),
+  /** Snapshots the draft as a new version and stores the quote for it. */
+  createQuote: (designId: string, body: QuoteCreate) =>
+    request<Quote>('POST', `/api/designs/${designId}/quotes/`, { body }),
+  getQuote: (id: string) => request<Quote>('GET', `/api/quotes/${id}/`),
+  deleteQuote: (id: string) => request<void>('DELETE', `/api/quotes/${id}/`),
+
+  getChat: (designId: string) => request<ChatConversation>('GET', `/api/designs/${designId}/chat/`),
+  /** Asks the assistant. Its tool calls are only a proposal: nothing is changed. */
+  sendChat: (designId: string, body: Schemas['ChatRequestRequest']) =>
+    request<ChatProposal>('POST', `/api/designs/${designId}/chat/`, { body }),
+  retryChat: (messageId: string, body: Schemas['RetryRequestRequest']) =>
+    request<ChatProposal>('POST', `/api/chat/messages/${messageId}/retry/`, { body }),
+  resolveChat: (messageId: string, status: Schemas['ResolveRequestRequest']['status']) =>
+    request<ChatMessage>('POST', `/api/chat/messages/${messageId}/resolve/`, {
+      body: { status },
+    }),
+  getChatUsage: () => request<ChatUsage>('GET', '/api/chat/usage/'),
+
+  /** Staff only. The answer never holds the key, only its last four characters. */
+  getLLMSettings: () => request<LLMSettings>('GET', '/api/llm/settings/'),
+  updateLLMSettings: (body: LLMSettingsUpdate) =>
+    request<LLMSettings>('PATCH', '/api/llm/settings/', { body }),
 };
 
 export type Api = typeof api;

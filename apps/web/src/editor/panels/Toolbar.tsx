@@ -22,7 +22,15 @@ const PLAN = 'plan';
 
 const separator = 'mx-1 h-6 w-px bg-slate-300';
 
-export function Toolbar({ onLoadDocument }: { onLoadDocument(doc: DesignDocument): void }) {
+export function Toolbar({
+  onLoadDocument,
+  materialsOpen,
+  onToggleMaterials,
+}: {
+  onLoadDocument(doc: DesignDocument): void;
+  materialsOpen: boolean;
+  onToggleMaterials(): void;
+}) {
   const store = useDesignStore();
   const doc = useDesign((state) => state.doc);
   const tool = useDesign((state) => state.tool);
@@ -155,6 +163,14 @@ export function Toolbar({ onLoadDocument }: { onLoadDocument(doc: DesignDocument
         <RadixToolbar.Separator className={separator} />
         <RadixToolbar.Button className={BUTTON} onClick={generateCountertops}>
           Generate countertops
+        </RadixToolbar.Button>
+        <RadixToolbar.Button
+          className={BUTTON}
+          aria-pressed={materialsOpen}
+          data-state={materialsOpen ? 'on' : 'off'}
+          onClick={onToggleMaterials}
+        >
+          Materials
         </RadixToolbar.Button>
         <RadixToolbar.Button
           className={BUTTON}

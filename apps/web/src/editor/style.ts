@@ -18,6 +18,11 @@ export const COLORS = {
   guide: '#c026d3',
   ghost: 'rgba(2, 132, 199, 0.22)',
   ghostError: 'rgba(220, 38, 38, 0.25)',
+  /** A pending proposal: what it adds, and what it removes. */
+  proposalAdded: 'rgba(22, 163, 74, 0.3)',
+  proposalAddedLine: '#15803d',
+  proposalRemoved: 'rgba(220, 38, 38, 0.2)',
+  proposalRemovedLine: '#b91c1c',
   error: '#dc2626',
   warning: '#d97706',
   backsplash: 'rgba(14, 165, 233, 0.08)',

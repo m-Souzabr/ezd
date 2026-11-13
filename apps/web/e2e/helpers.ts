@@ -8,6 +8,7 @@ type Hook = {
   getDoc(): DesignDocument;
   getHistoryLength(): number;
   getViewport(): { scale: number; offsetX: number; offsetY: number };
+  getPreviewDoc(): DesignDocument | null;
 };
 
 /** Sixteenths of an inch, as the document stores lengths. */
@@ -19,6 +20,8 @@ export const getDoc = (page: Page) =>
   page.evaluate(() => (window as unknown as { __ezd: Hook }).__ezd.getDoc());
 export const historyLength = (page: Page) =>
   page.evaluate(() => (window as unknown as { __ezd: Hook }).__ezd.getHistoryLength());
+export const getPreviewDoc = (page: Page) =>
+  page.evaluate(() => (window as unknown as { __ezd: Hook }).__ezd.getPreviewDoc());
 export const getViewport = (page: Page) =>
   page.evaluate(() => (window as unknown as { __ezd: Hook }).__ezd.getViewport());
 

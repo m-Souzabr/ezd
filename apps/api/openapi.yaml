@@ -111,6 +111,80 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: ''
+  /api/chat/messages/{id}/resolve/:
+    post:
+      operationId: chat_messages_resolve_create
+      description: Records what the user did with a proposal, or that it could not
+        be used.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - chat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: ''
+  /api/chat/messages/{id}/retry/:
+    post:
+      operationId: chat_messages_retry_create
+      description: Asks again after a failed attempt, with the reasons it failed.
+        Twice at most.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - chat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetryRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposal'
+          description: ''
+  /api/chat/usage/:
+    get:
+      operationId: chat_usage_retrieve
+      description: This month's assistant usage of the signed-in user, and the monthly
+        allowance.
+      tags:
+      - chat
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usage'
+          description: ''
   /api/designs/{id}/:
     get:
       operationId: designs_retrieve
@@ -176,6 +250,57 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/designs/{id}/chat/:
+    get:
+      operationId: designs_chat_retrieve
+      description: 'The chat of a design: its latest conversation, and a new message
+        to the assistant.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - designs
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+          description: ''
+    post:
+      operationId: designs_chat_create
+      description: 'Asks the assistant. Its tool calls are a proposal: nothing changes
+        until accepted.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - designs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposal'
+          description: ''
   /api/designs/{id}/draft/:
     put:
       operationId: designs_draft_update
@@ -215,6 +340,70 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InvalidDocument'
+          description: ''
+  /api/designs/{id}/quotes/:
+    get:
+      operationId: designs_quotes_list
+      description: The quotes of a design, newest first, without their lines and drawings.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - designs
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuoteSummary'
+          description: ''
+    post:
+      operationId: designs_quotes_create
+      description: Snapshots the draft as a new version of the design and stores the
+        quote for it.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - designs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaleDraft'
+          description: ''
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InconsistentQuote'
           description: ''
   /api/designs/{id}/versions/:
     get:
@@ -333,6 +522,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Health'
+          description: ''
+  /api/llm/settings/:
+    get:
+      operationId: llm_settings_retrieve
+      description: The assistant's API key and models, for the whole site. Staff only.
+      tags:
+      - llm
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LLMSettings'
+          description: ''
+    patch:
+      operationId: llm_settings_partial_update
+      description: Stores the key encrypted. The answer shows only its last four characters.
+      tags:
+      - llm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLLMSettingsUpdateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LLMSettings'
           description: ''
   /api/projects/:
     get:
@@ -495,8 +718,84 @@ paths:
               schema:
                 $ref: '#/components/schemas/InvalidDocument'
           description: ''
+  /api/quotes/{id}/:
+    get:
+      operationId: quotes_retrieve
+      description: One quote with everything needed to render its PDF, or delete it.
+        Never changed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - quotes
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+          description: ''
+    delete:
+      operationId: quotes_destroy
+      description: One quote with everything needed to render its PDF, or delete it.
+        Never changed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - quotes
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
 components:
   schemas:
+    ChatRequestRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+        summary:
+          type: string
+          minLength: 1
+        conversation_id:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - message
+      - summary
+    Conversation:
+      type: object
+      properties:
+        conversation_id:
+          type: string
+          format: uuid
+          nullable: true
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+      required:
+      - conversation_id
+      - messages
+    CurrencyEnum:
+      enum:
+      - USD
+      type: string
+      description: '* `USD` - USD'
     Design:
       type: object
       properties:
@@ -693,6 +992,64 @@ components:
       required:
       - draft_revision
       - updated_at
+    Drawings:
+      type: object
+      properties:
+        plan:
+          type: string
+        elevations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Elevation'
+      required:
+      - elevations
+      - plan
+    DrawingsRequest:
+      type: object
+      properties:
+        plan:
+          type: string
+          minLength: 1
+        elevations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElevationRequest'
+      required:
+      - elevations
+      - plan
+    Elevation:
+      type: object
+      properties:
+        wallId:
+          type: string
+          maxLength: 36
+        label:
+          type: string
+          maxLength: 20
+        image:
+          type: string
+      required:
+      - image
+      - label
+      - wallId
+    ElevationRequest:
+      type: object
+      properties:
+        wallId:
+          type: string
+          minLength: 1
+          maxLength: 36
+        label:
+          type: string
+          minLength: 1
+          maxLength: 20
+        image:
+          type: string
+          minLength: 1
+      required:
+      - image
+      - label
+      - wallId
     Health:
       type: object
       properties:
@@ -700,6 +1057,21 @@ components:
           type: string
       required:
       - status
+    InconsistentQuote:
+      type: object
+      description: The body of a 422.
+      properties:
+        detail:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+      required:
+      - detail
+      - errors
     InvalidDocument:
       type: object
       description: The body of a 422.
@@ -713,6 +1085,190 @@ components:
       required:
       - detail
       - errors
+    KeySourceEnum:
+      enum:
+      - settings
+      - environment
+      - none
+      type: string
+      description: |-
+        * `settings` - settings
+        * `environment` - environment
+        * `none` - none
+    LLMSettings:
+      type: object
+      description: What staff see. The key itself is never in it, only its last four
+        characters.
+      properties:
+        vendor:
+          type: string
+        configured:
+          type: boolean
+        key_source:
+          $ref: '#/components/schemas/KeySourceEnum'
+        api_key_last4:
+          type: string
+        models:
+          $ref: '#/components/schemas/Models'
+        default_models:
+          $ref: '#/components/schemas/Models'
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - api_key_last4
+      - configured
+      - default_models
+      - key_source
+      - models
+      - updated_at
+      - vendor
+    Line:
+      type: object
+      description: One `BomLine` of core, plus the finish by name so the PDF needs
+        no catalog.
+      properties:
+        key:
+          type: string
+          maxLength: 1000
+        catalogId:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 500
+        width:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+        depth:
+          type: integer
+          minimum: 1
+        finishId:
+          type: string
+          nullable: true
+          maxLength: 200
+        finishName:
+          type: string
+          maxLength: 200
+        options:
+          type: object
+          additionalProperties: {}
+        quantity:
+          type: integer
+          maximum: 10000000
+          minimum: 0
+        unit:
+          $ref: '#/components/schemas/UnitEnum'
+        unitPriceCents:
+          type: integer
+          maximum: 1000000000000
+          minimum: 0
+          format: int64
+        lineTotalCents:
+          type: integer
+          maximum: 1000000000000
+          minimum: 0
+          format: int64
+        itemIds:
+          type: array
+          items:
+            type: string
+            maxLength: 36
+          maxItems: 5000
+      required:
+      - catalogId
+      - depth
+      - description
+      - finishId
+      - finishName
+      - height
+      - itemIds
+      - key
+      - lineTotalCents
+      - options
+      - quantity
+      - unit
+      - unitPriceCents
+      - width
+    LineRequest:
+      type: object
+      description: One `BomLine` of core, plus the finish by name so the PDF needs
+        no catalog.
+      properties:
+        key:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        catalogId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+        width:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+        depth:
+          type: integer
+          minimum: 1
+        finishId:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 200
+        finishName:
+          type: string
+          maxLength: 200
+        options:
+          type: object
+          additionalProperties: {}
+        quantity:
+          type: integer
+          maximum: 10000000
+          minimum: 0
+        unit:
+          $ref: '#/components/schemas/UnitEnum'
+        unitPriceCents:
+          type: integer
+          maximum: 1000000000000
+          minimum: 0
+          format: int64
+        lineTotalCents:
+          type: integer
+          maximum: 1000000000000
+          minimum: 0
+          format: int64
+        itemIds:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 36
+          maxItems: 5000
+      required:
+      - catalogId
+      - depth
+      - description
+      - finishId
+      - finishName
+      - height
+      - itemIds
+      - key
+      - lineTotalCents
+      - options
+      - quantity
+      - unit
+      - unitPriceCents
+      - width
     LoginRequest:
       type: object
       properties:
@@ -729,6 +1285,80 @@ components:
       required:
       - email
       - password
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        text:
+          type: string
+          readOnly: true
+        tool_calls:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolCall'
+        question:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/MessageStatusEnum'
+          readOnly: true
+        attempt:
+          type: integer
+          readOnly: true
+        parent:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - attempt
+      - created_at
+      - id
+      - parent
+      - question
+      - role
+      - status
+      - text
+      - tool_calls
+    MessageStatusEnum:
+      enum:
+      - none
+      - proposed
+      - accepted
+      - rejected
+      - invalid
+      type: string
+      description: |-
+        * `none` - None
+        * `proposed` - Proposed
+        * `accepted` - Accepted
+        * `rejected` - Rejected
+        * `invalid` - Invalid
+    Models:
+      type: object
+      properties:
+        router:
+          type: string
+        default:
+          type: string
+        escalation:
+          type: string
+      required:
+      - default
+      - escalation
+      - router
     PasswordResetConfirmRequest:
       type: object
       properties:
@@ -766,6 +1396,24 @@ components:
           type: string
           minLength: 1
           maxLength: 200
+    PatchedLLMSettingsUpdateRequest:
+      type: object
+      description: An empty `api_key` removes the stored key; an empty model name
+        restores its default.
+      properties:
+        api_key:
+          type: string
+          writeOnly: true
+          maxLength: 500
+        router_model:
+          type: string
+          maxLength: 100
+        default_model:
+          type: string
+          maxLength: 100
+        escalation_model:
+          type: string
+          maxLength: 100
     PatchedProjectRequest:
       type: object
       properties:
@@ -805,6 +1453,197 @@ components:
           maxLength: 200
       required:
       - name
+    Proposal:
+      type: object
+      description: One assistant attempt.
+      properties:
+        conversation_id:
+          type: string
+          format: uuid
+        message_id:
+          type: string
+          format: uuid
+        text:
+          type: string
+        tool_calls:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolCall'
+        question:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+        attempt:
+          type: integer
+        retries_left:
+          type: integer
+      required:
+      - attempt
+      - conversation_id
+      - errors
+      - message_id
+      - question
+      - retries_left
+      - text
+      - tool_calls
+    Quote:
+      type: object
+      description: Everything the PDF is rendered from.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        number:
+          type: integer
+          readOnly: true
+        project_name:
+          type: string
+          readOnly: true
+        design:
+          type: string
+          format: uuid
+          readOnly: true
+        design_name:
+          type: string
+          readOnly: true
+        design_version:
+          type: integer
+          readOnly: true
+        customer_name:
+          type: string
+          readOnly: true
+        customer_email:
+          type: string
+          format: email
+          readOnly: true
+        customer_address:
+          type: string
+          readOnly: true
+        notes:
+          type: string
+          readOnly: true
+        catalog_version:
+          type: string
+          readOnly: true
+        settings:
+          allOf:
+          - $ref: '#/components/schemas/Settings'
+          readOnly: true
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/Line'
+          readOnly: true
+        totals:
+          allOf:
+          - $ref: '#/components/schemas/Totals'
+          readOnly: true
+        drawings:
+          allOf:
+          - $ref: '#/components/schemas/Drawings'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - catalog_version
+      - created_at
+      - customer_address
+      - customer_email
+      - customer_name
+      - design
+      - design_name
+      - design_version
+      - drawings
+      - id
+      - lines
+      - notes
+      - number
+      - project_name
+      - settings
+      - totals
+    QuoteCreateRequest:
+      type: object
+      properties:
+        draft_revision:
+          type: integer
+          minimum: 1
+        customer_name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        customer_email:
+          oneOf:
+          - type: string
+            format: email
+            default: ''
+          - type: string
+            maxLength: 0
+        customer_address:
+          type: string
+          default: ''
+          maxLength: 1000
+        notes:
+          type: string
+          default: ''
+          maxLength: 5000
+        catalog_version:
+          type: string
+          minLength: 1
+          maxLength: 50
+        settings:
+          $ref: '#/components/schemas/SettingsRequest'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineRequest'
+        totals:
+          $ref: '#/components/schemas/TotalsRequest'
+        drawings:
+          $ref: '#/components/schemas/DrawingsRequest'
+      required:
+      - catalog_version
+      - customer_name
+      - draft_revision
+      - drawings
+      - lines
+      - settings
+      - totals
+    QuoteSummary:
+      type: object
+      description: A quote in a list, without its lines and drawings.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        number:
+          type: integer
+          readOnly: true
+        customer_name:
+          type: string
+          readOnly: true
+        total_cents:
+          type: integer
+          readOnly: true
+        design_version:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - customer_name
+      - design_version
+      - id
+      - number
+      - total_cents
     RegisterRequest:
       type: object
       properties:
@@ -825,6 +1664,202 @@ components:
       required:
       - email
       - password
+    ResolveRequestRequest:
+      type: object
+      description: '`invalid` reports a proposal the browser could not use after the
+        last retry.'
+      properties:
+        status:
+          $ref: '#/components/schemas/ResolveRequestStatusEnum'
+      required:
+      - status
+    ResolveRequestStatusEnum:
+      enum:
+      - accepted
+      - rejected
+      - invalid
+      type: string
+      description: |-
+        * `accepted` - accepted
+        * `rejected` - rejected
+        * `invalid` - invalid
+    RetryRequestRequest:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 500
+          maxItems: 20
+        summary:
+          type: string
+          minLength: 1
+      required:
+      - errors
+      - summary
+    RoleEnum:
+      enum:
+      - user
+      - assistant
+      type: string
+      description: |-
+        * `user` - User
+        * `assistant` - Assistant
+    Settings:
+      type: object
+      properties:
+        markupBps:
+          type: integer
+          maximum: 100000
+          minimum: 0
+        discountBps:
+          type: integer
+          maximum: 10000
+          minimum: 0
+        taxBps:
+          type: integer
+          maximum: 100000
+          minimum: 0
+        currency:
+          $ref: '#/components/schemas/CurrencyEnum'
+      required:
+      - currency
+      - discountBps
+      - markupBps
+      - taxBps
+    SettingsRequest:
+      type: object
+      properties:
+        markupBps:
+          type: integer
+          maximum: 100000
+          minimum: 0
+        discountBps:
+          type: integer
+          maximum: 10000
+          minimum: 0
+        taxBps:
+          type: integer
+          maximum: 100000
+          minimum: 0
+        currency:
+          $ref: '#/components/schemas/CurrencyEnum'
+      required:
+      - currency
+      - discountBps
+      - markupBps
+      - taxBps
+    StaleDraft:
+      type: object
+      description: The body of a 409.
+      properties:
+        detail:
+          type: string
+        draft_revision:
+          type: integer
+      required:
+      - detail
+      - draft_revision
+    ToolCall:
+      type: object
+      properties:
+        name:
+          type: string
+        arguments:
+          type: object
+          additionalProperties: {}
+      required:
+      - arguments
+      - name
+    Totals:
+      type: object
+      properties:
+        subtotalCents:
+          type: integer
+          minimum: 0
+        markupCents:
+          type: integer
+          minimum: 0
+        discountCents:
+          type: integer
+          minimum: 0
+        taxableCents:
+          type: integer
+          minimum: 0
+        taxCents:
+          type: integer
+          minimum: 0
+        totalCents:
+          type: integer
+          minimum: 0
+      required:
+      - discountCents
+      - markupCents
+      - subtotalCents
+      - taxCents
+      - taxableCents
+      - totalCents
+    TotalsRequest:
+      type: object
+      properties:
+        subtotalCents:
+          type: integer
+          minimum: 0
+        markupCents:
+          type: integer
+          minimum: 0
+        discountCents:
+          type: integer
+          minimum: 0
+        taxableCents:
+          type: integer
+          minimum: 0
+        taxCents:
+          type: integer
+          minimum: 0
+        totalCents:
+          type: integer
+          minimum: 0
+      required:
+      - discountCents
+      - markupCents
+      - subtotalCents
+      - taxCents
+      - taxableCents
+      - totalCents
+    UnitEnum:
+      enum:
+      - each
+      - sqft
+      type: string
+      description: |-
+        * `each` - each
+        * `sqft` - sqft
+    Usage:
+      type: object
+      properties:
+        month:
+          type: string
+          format: date
+        input_tokens:
+          type: integer
+        output_tokens:
+          type: integer
+        requests:
+          type: integer
+        quota_tokens:
+          type: integer
+        remaining_tokens:
+          type: integer
+      required:
+      - input_tokens
+      - month
+      - output_tokens
+      - quota_tokens
+      - remaining_tokens
+      - requests
     User:
       type: object
       properties:
@@ -839,9 +1874,15 @@ components:
         name:
           type: string
           readOnly: true
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
       required:
       - email
       - id
+      - is_staff
       - name
   securitySchemes:
     cookieAuth:

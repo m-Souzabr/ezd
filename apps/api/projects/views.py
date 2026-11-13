@@ -2,7 +2,7 @@ import uuid
 from typing import Any
 
 from django.db import transaction
-from django.db.models import F, Max, QuerySet
+from django.db.models import F, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .documents import empty_document, validate_document
-from .models import Design, DesignVersion, Project
+from .models import Design, DesignVersion, Project, snapshot_draft
 from .serializers import (
     DesignCreateSerializer,
     DesignSerializer,
@@ -180,18 +180,8 @@ class DesignVersionListView(OwnedQuerysetMixin, generics.ListAPIView):
         serializer = DesignVersionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
-            # The lock makes concurrent snapshots of one design take turns, so the numbers
-            # have no gaps and no duplicates.
             design = get_object_or_404(self.owned(Design).select_for_update(of=("self",)), pk=pk)
-            last = design.versions.aggregate(last=Max("number"))["last"] or 0
-            version = DesignVersion.objects.create(
-                design=design,
-                number=last + 1,
-                label=serializer.validated_data["label"],
-                document=design.draft_document,
-                schema_version=design.schema_version,
-                created_by=request.user,
-            )
+            version = snapshot_draft(design, request.user, serializer.validated_data["label"])
         return Response(
             DesignVersionSummarySerializer(version).data, status=status.HTTP_201_CREATED
         )

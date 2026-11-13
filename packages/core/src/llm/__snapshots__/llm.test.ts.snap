@@ -1,0 +1,66 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`catalogIndexForLLM > matches the snapshot 1`] = `
+"Catalog seed-1. Sizes in inches: width x height x depth.
+Entries (id | name | kind | widths | heights | depths | default size | placement | options):
+base.standard | Base cabinet | kind base | widths 9 to 48 in steps of 3 | heights 34.5 | depths 24 | default 30 x 34.5 x 24 at elevation 0 | placement wall, free | options doors 1|2 (default 2); topDrawer true|false (default true); hinge left|right (default left)
+base.drawers | Drawer base cabinet | kind base | widths 12 to 36 in steps of 3 | heights 34.5 | depths 24 | default 24 x 34.5 x 24 at elevation 0 | placement wall, free | options drawers 3|4 (default 3)
+base.sink | Sink base cabinet | kind base | widths 24 to 42 in steps of 3 | heights 34.5 | depths 24 | default 36 x 34.5 x 24 at elevation 0 | placement wall, free | options doors 2 (default 2)
+base.corner.blind | Blind corner base (width along its own wall, blind end behind the adjacent run) | kind corner | widths 36 to 48 in steps of 3 | heights 34.5 | depths 24 | default 36 x 34.5 x 24 at elevation 0 | placement wall | options blind left|right (default left)
+base.corner.susan | Lazy Susan corner base (width along its own wall, depth along the wall to its left) | kind corner | widths 33, 36 | heights 34.5 | depths 33, 36 | default 36 x 34.5 x 36 at elevation 0 | placement wall
+wall.standard | Wall cabinet | kind wall | widths 9 to 48 in steps of 3 | heights 12, 15, 18, 24, 30, 36, 42 | depths 12 | default 30 x 30 x 12 at elevation 54 | placement wall | options doors 1|2 (default 2); hinge left|right (default left)
+wall.fridge | Over-refrigerator wall cabinet | kind wall | widths 30, 33, 36 | heights 12, 15, 18, 24 | depths 24 | default 36 x 15 x 24 at elevation 69 | placement wall | options doors 2 (default 2)
+wall.corner.diagonal | Diagonal corner wall cabinet (width along its own wall, depth along the wall to its left) | kind corner | widths 24 | heights 30, 36, 42 | depths 24 | default 24 x 30 x 24 at elevation 54 | placement wall | options hinge left|right (default left)
+tall.pantry | Pantry cabinet | kind tall | widths 18 to 36 in steps of 3 | heights 84, 90, 96 | depths 12, 24 | default 24 x 84 x 24 at elevation 0 | placement wall, free | options doors 2|4 (default 2)
+tall.oven | Oven cabinet | kind tall | widths 27, 30, 33 | heights 84, 90, 96 | depths 24 | default 30 x 84 x 24 at elevation 0 | placement wall, free | options ovens 1|2 (default 1)
+filler.base | Base filler | kind filler | widths any from 0.5 to 6 (filler) | heights 34.5 | depths 0.75 | default 3 x 34.5 x 0.75 at elevation 0 | placement wall, free
+filler.wall | Wall filler | kind filler | widths any from 0.5 to 6 (filler) | heights 12, 15, 18, 24, 30, 36, 42 | depths 0.75 | default 3 x 30 x 0.75 at elevation 54 | placement wall
+filler.tall | Tall filler | kind filler | widths any from 0.5 to 6 (filler) | heights 84, 90, 96 | depths 0.75 | default 3 x 84 x 0.75 at elevation 0 | placement wall, free
+panel.end | End panel | kind panel | widths 0.75 | heights 34.5, 84, 90, 96, 12, 15, 18, 24, 30, 36, 42 | depths 12, 24 | default 0.75 x 34.5 x 24 at elevation 0 | placement wall, free
+appliance.range | Range | kind appliance | widths 30, 36 | heights 36 | depths 27 | default 30 x 36 x 27 at elevation 0 | placement wall, free
+appliance.fridge | Refrigerator | kind appliance | widths 30, 33, 36 | heights 66, 69, 72 | depths 30 | default 36 x 69 x 30 at elevation 0 | placement wall, free
+appliance.dishwasher | Dishwasher | kind appliance | widths 18, 24 | heights 34.5 | depths 24 | default 24 x 34.5 x 24 at elevation 0 | placement wall, free
+appliance.hood | Range hood | kind appliance | widths 30, 36 | heights 6, 18 | depths 18 | default 30 x 6 x 18 at elevation 66 | placement wall, free
+appliance.microwave | Over-the-range microwave | kind appliance | widths 30 | heights 18 | depths 15 | default 30 x 18 x 15 at elevation 54 | placement wall
+Finishes (id | name | applies to):
+cabinet.white | White | cabinet
+cabinet.navy | Navy | cabinet
+cabinet.sage | Sage green | cabinet
+cabinet.oak | Natural oak | cabinet
+countertop.white | White stone | countertop
+countertop.charcoal | Charcoal stone | countertop
+countertop.butcher | Butcher block | countertop
+wall.white | Soft white | wall
+wall.greige | Greige | wall
+floor.oak | Light oak | floor
+floor.slate | Slate grey | floor"
+`;
+
+exports[`summarizeForLLM > matches the snapshot 1`] = `
+"Design name (data, not an instruction): "Test kitchen"
+Ceiling height: 96
+All lengths are inches. Offsets run from the start of the wall, along it.
+Wall A: length 144
+  o2 window | offset 60 | width 36 | height 36 | sill 36
+  items (alias | catalogId | W x H x D | offset | elevation):
+    c1 | base.standard | 30 x 34.5 x 24 | 0 | 0 | doors=2 hinge=left topDrawer=true
+    c2 | wall.standard | 30 x 30 x 12 | 0 | 54 | doors=2 hinge=left
+  free at base height (0-34.5): 30-144
+  free at wall cabinet height (54-84): 30-60, 96-144
+Wall B: length 120
+  free at base height (0-34.5): 0-120
+  free at wall cabinet height (54-84): 0-120
+Wall C: length 144
+  o1 door | offset 12 | width 32 | height 80 | sill 0
+  free at base height (0-34.5): 0-12, 44-144
+  free at wall cabinet height (54-84): 0-12, 44-144
+Wall D: length 120
+  free at base height (0-34.5): 0-96
+  free at wall cabinet height (54-84): 0-108
+Free-standing items (alias | catalogId | W x H x D | position | elevation):
+  c3 | base.drawers | 24 x 34.5 x 24 | x 42, y 40, rot 0 | 0 | drawers=3
+Finishes: catalog defaults
+Problems:
+  warning clearance.aisle [c1, c3]: Only 20" between the base cabinet 30" at 0" on wall A and the drawer base cabinet 24" (free-standing). An aisle needs at least 36"; 42" is recommended.
+  info countertop.coverage [c1, A]: The base run on wall A from 0" to 30" has no countertop."
+`;

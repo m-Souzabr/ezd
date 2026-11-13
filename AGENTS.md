@@ -52,7 +52,7 @@ ezd/
   packages/core-cli/  @ezd/core-cli  Node CLI wrapping core (validate, apply) for Python callers
   apps/web/           @ezd/web       React + Vite app: the 2D editor, and its Playwright tests in e2e/
   apps/api/           Django project (Python)
-  evals/              LLM eval cases and recorded fixtures (added in a later phase)
+  evals/              LLM eval cases, their documents and recorded responses
   scripts/            repository tooling (license check)
   .github/workflows/  CI
 ```
@@ -100,8 +100,9 @@ Run from the root with a filter, or `cd` into the package and drop the filter.
 | `@ezd/core-cli` | `pnpm --filter @ezd/core-cli lint` | `pnpm --filter @ezd/core-cli typecheck` | `pnpm --filter @ezd/core-cli test` | `pnpm --filter @ezd/core-cli build` |
 | `@ezd/web`      | `pnpm --filter @ezd/web lint`      | `pnpm --filter @ezd/web typecheck`      | `pnpm --filter @ezd/web test`      | `pnpm --filter @ezd/web build`      |
 
-- JSON Schema: `pnpm --filter @ezd/core schema` rewrites `packages/core/schema/*.json` from
-  the Zod schemas. Run it and commit the result whenever a document or command schema
+- JSON Schema: `pnpm --filter @ezd/core schema` rewrites `packages/core/schema/*` from the
+  Zod schemas, including the assistant's tools (`llm-tools.schema.json`) and catalog index
+  (`llm-catalog-index.txt`). Run it and commit the result whenever a document or command schema
   changes; CI fails if the committed files are stale.
 - Core tests run with coverage and fail below 95 percent of lines or branches.
 - Core performance tests are the `*.perf.test.ts` files. `pnpm --filter @ezd/core test` runs
@@ -118,6 +119,8 @@ Run from the root with a filter, or `cd` into the package and drop the filter.
   not part of `pnpm test`; CI runs them in the `e2e` job. They read the document through
   `window.__ezd` (`getDoc`, `getHistoryLength`, `getViewport`), which only development and
   test builds expose, and drive the canvas by mouse coordinates.
+- Run Prettier from the repository root (`pnpm format`): run from a package, it does not
+  read the root `.prettierignore` and rewrites the generated files.
 - OpenAPI: `pnpm run openapi` rewrites `apps/api/openapi.yaml` from the API and
   `apps/web/src/api/schema.d.ts` from that file. Run it and commit the result whenever an
   endpoint or a serializer changes; CI fails if the committed files are stale.
@@ -137,6 +140,9 @@ Run from the root with a filter, or `cd` into the package and drop the filter.
 | Missing migrations | `uv run python manage.py makemigrations --check --dry-run` |
 | Apply migrations   | `uv run python manage.py migrate`                          |
 | Dev server         | `uv run python manage.py runserver`                        |
+
+| Eval suite (fake) | `uv run python manage.py run_evals --client fake` |
+| Eval suite (live) | `uv run python manage.py run_evals --client live --record` |
 
 There is no Python typecheck or build step yet. pytest needs PostgreSQL running, and the
 built CLI (`pnpm --filter @ezd/core-cli build`), which the API runs to validate documents.
@@ -180,6 +186,12 @@ starts PostgreSQL only.
   floor polygon and boxes in world inches, with plan x as world x, plan y as world z and
   elevation as world y. `rotationY` is in degrees, counterclockwise seen from above, as
   Three.js turns a mesh. A box's `sourceId` is the wall, item or countertop to select.
+- **Bill of materials and pricing.** `computeBom(doc, catalog)` and `computeQuote(lines,
+settings)` (`bom/`) are the only pricing code; the browser runs them. Money is integer
+  cents and rates are integer basis points; every division goes through `divideHalfUp`, once
+  per step. A countertop quantity is hundredths of a square foot. The API's
+  `quotes/math.py` is a port used only to check stored quotes, and both are tested against
+  `packages/core/test-vectors/quote.json`: change the two together, and add a vector.
 - **Web store.** `createDesignStore(doc)` (`apps/web/src/store/`) holds one design: the
   document, its history and violations, and the UI state (selection, tool, view, viewport,
   drag ghost). Its `execute`, `undo` and `redo` are the only places that replace `doc`,
@@ -221,11 +233,39 @@ starts PostgreSQL only.
   `projects.documents.validate_document`: known `schemaVersion`, the JSON Schema from
   core, `id` equal to the design id, then `ezd-core validate-document`. Failures are a 422
   with `errors: [{ path, message }]` and nothing is stored.
+- **Quotes** are immutable. Creating one snapshots the draft as a new `DesignVersion`,
+  only if the draft is still at the `draft_revision` the browser priced (409 otherwise),
+  and the server rejects lines or totals that do not follow from each other (422). The PDF
+  is rendered in the browser from the stored quote alone (`apps/web/src/quotes/`), with an
+  embedded font and the quote's own dates, so the same quote gives the same bytes. Its
+  drawings are RGB PNGs with no alpha channel (`editor/png.ts`): a PDF embeds an alpha
+  channel asynchronously, which reorders the file. The server refuses any other PNG.
 - **Body size.** A request body over 2 MB is a 413. A view that needs more sets
   `max_body_bytes`, up to `DATA_UPLOAD_MAX_MEMORY_SIZE`, which is the most Django reads.
 - **Autosave on the server** is one `UPDATE ... WHERE id = ? AND draft_revision = ?` on
   the design's own columns. Do not add a join to that filter: Django would move the
   comparison into a subquery and two concurrent saves could both succeed.
+- **Chat assistant.** The model never changes the document. Core's `llm/` writes what it
+  reads (`summarizeForLLM`, `catalogIndexForLLM`, the tool schemas in inches) and turns its
+  tool calls into one `batch` (`proposalToCommands`); `dryRunProposal` is the check the
+  browser and the eval runner both run. A proposal that does not convert or introduces an
+  error-severity violation is sent back for a retry (two at most, the last on the
+  escalation model) and never shown. The browser keeps a valid one in the store's
+  `proposal`, the views draw it as ghosts (`editor/preview.ts`), and Accept executes it as
+  one command; any other change to the document cancels it.
+- **LLM vendors.** Everything outside a vendor module (`llm/openai_client.py`) talks to
+  the `LLMClient` protocol in `llm/client.py`. `LLM_VENDOR` picks the client
+  (`openai`, or `fake` for tests); model names are settings. Staff enter the API key on the
+  AI settings page (`/settings/ai`, `PATCH /api/llm/settings/`): it is stored encrypted
+  (`llm/secrets.py`), wins over `LLM_API_KEY`, and is never sent back or logged.
+  `chat.services.run_attempt` is the one code path for a model call, used by the chat
+  endpoints and by `run_evals`.
+- **Evals.** A case in `evals/cases.json` is `{ name, document, message, expect }`, with
+  lengths in inches; assertion types are in `chat/evals.py`. `--client fake` replays
+  `evals/recordings/fake/<case>.json` (scripted to exercise the pipeline; CI requires 100
+  percent). `--client live --record` calls the vendor and saves real responses. Reports go
+  to `evals/reports/` (not committed). The `Evals (live)` workflow runs it by hand with the
+  `LLM_API_KEY` secret.
 - **Deployment.** Railway builds `main` into two services from the repository root, each
   with its own `railway.json`: `api` (`apps/api/Dockerfile`, private, port 8000, with
   `config.settings.prod`) and `web` (`apps/web/Dockerfile`: Caddy serves the build and proxies

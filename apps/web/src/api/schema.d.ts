@@ -106,6 +106,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/chat/messages/{id}/resolve/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Records what the user did with a proposal, or that it could not be used. */
+        post: operations["chat_messages_resolve_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chat/messages/{id}/retry/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Asks again after a failed attempt, with the reasons it failed. Twice at most. */
+        post: operations["chat_messages_retry_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chat/usage/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description This month's assistant usage of the signed-in user, and the monthly allowance. */
+        get: operations["chat_usage_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/designs/{id}/": {
         parameters: {
             query?: never;
@@ -125,6 +176,24 @@ export interface paths {
         patch: operations["designs_partial_update"];
         trace?: never;
     };
+    "/api/designs/{id}/chat/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The chat of a design: its latest conversation, and a new message to the assistant. */
+        get: operations["designs_chat_retrieve"];
+        put?: never;
+        /** @description Asks the assistant. Its tool calls are a proposal: nothing changes until accepted. */
+        post: operations["designs_chat_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/designs/{id}/draft/": {
         parameters: {
             query?: never;
@@ -136,6 +205,24 @@ export interface paths {
         /** @description Autosave. Stores `document` only if the draft is still at `base_revision`. */
         put: operations["designs_draft_update"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/designs/{id}/quotes/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The quotes of a design, newest first, without their lines and drawings. */
+        get: operations["designs_quotes_list"];
+        put?: never;
+        /** @description Snapshots the draft as a new version of the design and stores the quote for it. */
+        post: operations["designs_quotes_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -211,6 +298,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/llm/settings/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The assistant's API key and models, for the whole site. Staff only. */
+        get: operations["llm_settings_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Stores the key encrypted. The answer shows only its last four characters. */
+        patch: operations["llm_settings_partial_update"];
+        trace?: never;
+    };
     "/api/projects/": {
         parameters: {
             query?: never;
@@ -266,10 +371,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/quotes/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One quote with everything needed to render its PDF, or delete it. Never changed. */
+        get: operations["quotes_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description One quote with everything needed to render its PDF, or delete it. Never changed. */
+        delete: operations["quotes_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ChatRequestRequest: {
+            message: string;
+            summary: string;
+            /** Format: uuid */
+            conversation_id?: string | null;
+        };
+        Conversation: {
+            /** Format: uuid */
+            conversation_id: string | null;
+            messages: components["schemas"]["Message"][];
+        };
+        /**
+         * @description * `USD` - USD
+         * @enum {string}
+         */
+        CurrencyEnum: "USD";
         Design: {
             /** Format: uuid */
             readonly id: string;
@@ -352,18 +491,131 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        Drawings: {
+            plan: string;
+            elevations: components["schemas"]["Elevation"][];
+        };
+        DrawingsRequest: {
+            plan: string;
+            elevations: components["schemas"]["ElevationRequest"][];
+        };
+        Elevation: {
+            wallId: string;
+            label: string;
+            image: string;
+        };
+        ElevationRequest: {
+            wallId: string;
+            label: string;
+            image: string;
+        };
         Health: {
             status: string;
+        };
+        /** @description The body of a 422. */
+        InconsistentQuote: {
+            detail: string;
+            errors: {
+                [key: string]: string;
+            }[];
         };
         /** @description The body of a 422. */
         InvalidDocument: {
             detail: string;
             errors: components["schemas"]["DocumentIssue"][];
         };
+        /**
+         * @description * `settings` - settings
+         *     * `environment` - environment
+         *     * `none` - none
+         * @enum {string}
+         */
+        KeySourceEnum: "settings" | "environment" | "none";
+        /** @description What staff see. The key itself is never in it, only its last four characters. */
+        LLMSettings: {
+            vendor: string;
+            configured: boolean;
+            key_source: components["schemas"]["KeySourceEnum"];
+            api_key_last4: string;
+            models: components["schemas"]["Models"];
+            default_models: components["schemas"]["Models"];
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        /** @description One `BomLine` of core, plus the finish by name so the PDF needs no catalog. */
+        Line: {
+            key: string;
+            catalogId: string;
+            description: string;
+            width: number;
+            height: number;
+            depth: number;
+            finishId: string | null;
+            finishName: string;
+            options: {
+                [key: string]: unknown;
+            };
+            quantity: number;
+            unit: components["schemas"]["UnitEnum"];
+            /** Format: int64 */
+            unitPriceCents: number;
+            /** Format: int64 */
+            lineTotalCents: number;
+            itemIds: string[];
+        };
+        /** @description One `BomLine` of core, plus the finish by name so the PDF needs no catalog. */
+        LineRequest: {
+            key: string;
+            catalogId: string;
+            description: string;
+            width: number;
+            height: number;
+            depth: number;
+            finishId: string | null;
+            finishName: string;
+            options: {
+                [key: string]: unknown;
+            };
+            quantity: number;
+            unit: components["schemas"]["UnitEnum"];
+            /** Format: int64 */
+            unitPriceCents: number;
+            /** Format: int64 */
+            lineTotalCents: number;
+            itemIds: string[];
+        };
         LoginRequest: {
             /** Format: email */
             email: string;
             password: string;
+        };
+        Message: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly role: components["schemas"]["RoleEnum"];
+            readonly text: string;
+            tool_calls: components["schemas"]["ToolCall"][];
+            readonly question: string;
+            readonly status: components["schemas"]["MessageStatusEnum"];
+            readonly attempt: number;
+            /** Format: uuid */
+            readonly parent: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `none` - None
+         *     * `proposed` - Proposed
+         *     * `accepted` - Accepted
+         *     * `rejected` - Rejected
+         *     * `invalid` - Invalid
+         * @enum {string}
+         */
+        MessageStatusEnum: "none" | "proposed" | "accepted" | "rejected" | "invalid";
+        Models: {
+            router: string;
+            default: string;
+            escalation: string;
         };
         PasswordResetConfirmRequest: {
             uid: string;
@@ -376,6 +628,13 @@ export interface components {
         };
         PatchedDesignRequest: {
             name?: string;
+        };
+        /** @description An empty `api_key` removes the stored key; an empty model name restores its default. */
+        PatchedLLMSettingsUpdateRequest: {
+            api_key?: string;
+            router_model?: string;
+            default_model?: string;
+            escalation_model?: string;
         };
         PatchedProjectRequest: {
             name?: string;
@@ -392,12 +651,148 @@ export interface components {
         ProjectRequest: {
             name: string;
         };
+        /** @description One assistant attempt. */
+        Proposal: {
+            /** Format: uuid */
+            conversation_id: string;
+            /** Format: uuid */
+            message_id: string;
+            text: string;
+            tool_calls: components["schemas"]["ToolCall"][];
+            question: string;
+            errors: string[];
+            attempt: number;
+            retries_left: number;
+        };
+        /** @description Everything the PDF is rendered from. */
+        Quote: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly number: number;
+            readonly project_name: string;
+            /** Format: uuid */
+            readonly design: string;
+            readonly design_name: string;
+            readonly design_version: number;
+            readonly customer_name: string;
+            /** Format: email */
+            readonly customer_email: string;
+            readonly customer_address: string;
+            readonly notes: string;
+            readonly catalog_version: string;
+            readonly settings: components["schemas"]["Settings"];
+            readonly lines: components["schemas"]["Line"][];
+            readonly totals: components["schemas"]["Totals"];
+            readonly drawings: components["schemas"]["Drawings"];
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        QuoteCreateRequest: {
+            draft_revision: number;
+            customer_name: string;
+            customer_email?: string;
+            /** @default  */
+            customer_address: string;
+            /** @default  */
+            notes: string;
+            catalog_version: string;
+            settings: components["schemas"]["SettingsRequest"];
+            lines: components["schemas"]["LineRequest"][];
+            totals: components["schemas"]["TotalsRequest"];
+            drawings: components["schemas"]["DrawingsRequest"];
+        };
+        /** @description A quote in a list, without its lines and drawings. */
+        QuoteSummary: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly number: number;
+            readonly customer_name: string;
+            readonly total_cents: number;
+            readonly design_version: number;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
         RegisterRequest: {
             /** Format: email */
             email: string;
             password: string;
             /** @default  */
             name: string;
+        };
+        /** @description `invalid` reports a proposal the browser could not use after the last retry. */
+        ResolveRequestRequest: {
+            status: components["schemas"]["ResolveRequestStatusEnum"];
+        };
+        /**
+         * @description * `accepted` - accepted
+         *     * `rejected` - rejected
+         *     * `invalid` - invalid
+         * @enum {string}
+         */
+        ResolveRequestStatusEnum: "accepted" | "rejected" | "invalid";
+        RetryRequestRequest: {
+            errors: string[];
+            summary: string;
+        };
+        /**
+         * @description * `user` - User
+         *     * `assistant` - Assistant
+         * @enum {string}
+         */
+        RoleEnum: "user" | "assistant";
+        Settings: {
+            markupBps: number;
+            discountBps: number;
+            taxBps: number;
+            currency: components["schemas"]["CurrencyEnum"];
+        };
+        SettingsRequest: {
+            markupBps: number;
+            discountBps: number;
+            taxBps: number;
+            currency: components["schemas"]["CurrencyEnum"];
+        };
+        /** @description The body of a 409. */
+        StaleDraft: {
+            detail: string;
+            draft_revision: number;
+        };
+        ToolCall: {
+            name: string;
+            arguments: {
+                [key: string]: unknown;
+            };
+        };
+        Totals: {
+            subtotalCents: number;
+            markupCents: number;
+            discountCents: number;
+            taxableCents: number;
+            taxCents: number;
+            totalCents: number;
+        };
+        TotalsRequest: {
+            subtotalCents: number;
+            markupCents: number;
+            discountCents: number;
+            taxableCents: number;
+            taxCents: number;
+            totalCents: number;
+        };
+        /**
+         * @description * `each` - each
+         *     * `sqft` - sqft
+         * @enum {string}
+         */
+        UnitEnum: "each" | "sqft";
+        Usage: {
+            /** Format: date */
+            month: string;
+            input_tokens: number;
+            output_tokens: number;
+            requests: number;
+            quota_tokens: number;
+            remaining_tokens: number;
         };
         User: {
             readonly id: number;
@@ -407,6 +802,11 @@ export interface components {
              */
             readonly email: string;
             readonly name: string;
+            /**
+             * Staff status
+             * @description Designates whether the user can log into this admin site.
+             */
+            readonly is_staff: boolean;
         };
     };
     responses: never;
@@ -544,6 +944,75 @@ export interface operations {
             };
         };
     };
+    chat_messages_resolve_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
+                };
+            };
+        };
+    };
+    chat_messages_retry_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetryRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+        };
+    };
+    chat_usage_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Usage"];
+                };
+            };
+        };
+    };
     designs_retrieve: {
         parameters: {
             query?: never;
@@ -610,6 +1079,52 @@ export interface operations {
             };
         };
     };
+    designs_chat_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conversation"];
+                };
+            };
+        };
+    };
+    designs_chat_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+        };
+    };
     designs_draft_update: {
         parameters: {
             query?: never;
@@ -647,6 +1162,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvalidDocument"];
+                };
+            };
+        };
+    };
+    designs_quotes_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuoteSummary"][];
+                };
+            };
+        };
+    };
+    designs_quotes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quote"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleDraft"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InconsistentQuote"];
                 };
             };
         };
@@ -756,6 +1333,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    llm_settings_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMSettings"];
+                };
+            };
+        };
+    };
+    llm_settings_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedLLMSettingsUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMSettings"];
                 };
             };
         };
@@ -919,6 +1538,47 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["InvalidDocument"];
                 };
+            };
+        };
+    };
+    quotes_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quote"];
+                };
+            };
+        };
+    };
+    quotes_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

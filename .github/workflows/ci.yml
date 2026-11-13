@@ -132,6 +132,13 @@ jobs:
         if: ${{ !cancelled() }}
       - run: uv run pytest
         if: ${{ !cancelled() }}
+      # The assistant's eval suite, on the recorded responses: no vendor, no key.
+      - name: Eval suite (FakeClient)
+        if: ${{ !cancelled() }}
+        run: uv run python manage.py run_evals --client fake --min-accuracy 1 --out ../../evals/reports/ci
+      - name: Eval report
+        if: ${{ !cancelled() }}
+        run: cat ../../evals/reports/ci/report.md >> "$GITHUB_STEP_SUMMARY"
       - name: OpenAPI file and TypeScript types match the API
         if: ${{ !cancelled() }}
         working-directory: .

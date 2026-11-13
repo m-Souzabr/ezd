@@ -13,8 +13,16 @@ const kitchen = () => room(144, 120, seedItem('item-000001', 'base.standard', A,
 function setup(doc: DesignDocument = kitchen()) {
   const store = storeFor(doc);
   const onLoadDocument = vi.fn();
-  renderWithStore(<Toolbar onLoadDocument={onLoadDocument} />, store);
-  return { store, onLoadDocument };
+  const onToggleMaterials = vi.fn();
+  renderWithStore(
+    <Toolbar
+      onLoadDocument={onLoadDocument}
+      materialsOpen={false}
+      onToggleMaterials={onToggleMaterials}
+    />,
+    store,
+  );
+  return { store, onLoadDocument, onToggleMaterials };
 }
 
 const importFile = (text: string) =>
@@ -23,6 +31,14 @@ const importFile = (text: string) =>
   });
 
 describe('Toolbar', () => {
+  it('opens the materials panel', () => {
+    const { onToggleMaterials } = setup();
+    const materials = screen.getByRole('button', { name: 'Materials' });
+    expect(materials).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(materials);
+    expect(onToggleMaterials).toHaveBeenCalledTimes(1);
+  });
+
   it('switches tools', () => {
     const { store } = setup();
     expect(screen.getByRole('radio', { name: 'Select' })).toBeChecked();

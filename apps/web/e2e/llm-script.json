@@ -1,0 +1,16 @@
+{
+  "Add a 30 inch base cabinet on wall A": [
+    {
+      "tool_calls": [{ "name": "classify_request", "arguments": { "category": "simple_edit" } }]
+    },
+    {
+      "text": "Adding a 30 inch base cabinet at the start of wall A.",
+      "tool_calls": [
+        {
+          "name": "add_item",
+          "arguments": { "catalogId": "base.standard", "widthIn": 30, "wall": "A", "offsetIn": 0 }
+        }
+      ]
+    }
+  ]
+}
