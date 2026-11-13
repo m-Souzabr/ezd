@@ -1,5 +1,6 @@
-// Fails on a TODO or FIXME that does not link an issue, such as `TODO(#42)` or a GitHub
-// issue URL on the same line. Reads the files git tracks.
+// Fails on a TODO or FIXME marker (`TODO:`, `TODO(...)`) that does not link an issue, such as
+// `TODO(#42):` or a GitHub issue URL on the same line. Mentions of the words in prose do not
+// count. Reads the files git tracks.
 import { spawnSync } from 'node:child_process';
 
 const result = spawnSync(
@@ -7,7 +8,8 @@ const result = spawnSync(
   [
     'grep',
     '-nIE',
-    '\\b(TODO|FIXME)\\b',
+    // POSIX classes only: macOS's git grep has no \\b or \\s.
+    '(^|[^A-Za-z])(TODO|FIXME)[[:space:]]*[:(]',
     '--',
     '.',
     ':!scripts/check-todos.mjs',
