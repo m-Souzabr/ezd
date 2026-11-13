@@ -172,3 +172,15 @@ def test_model_calls_have_their_own_throttle(client: APIClient, design: Design) 
         # Counted before the body is read, so an invalid request uses up the allowance too.
         assert client.post(f"/api/designs/{design.id}/chat/", {}).status_code == 400
         assert client.post(f"/api/designs/{design.id}/chat/", {}).status_code == 429
+
+
+@pytest.mark.django_db
+def test_uploads_have_their_own_throttle(client: APIClient, project: Project) -> None:
+    rates = {**settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"], "upload": "1/min"}
+    with override_settings(
+        REST_FRAMEWORK={**settings.REST_FRAMEWORK, "DEFAULT_THROTTLE_RATES": rates}
+    ):
+        url = f"/api/projects/{project.id}/photos/"
+        assert client.get(url).status_code == 200
+        assert client.post(url, {}, format="multipart").status_code == 400
+        assert client.post(url, {}, format="multipart").status_code == 429

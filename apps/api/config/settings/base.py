@@ -111,6 +111,7 @@ REST_FRAMEWORK = {
         "login_email": env.str("API_THROTTLE_LOGIN_EMAIL", default="5/min"),
         "auth_ip": env.str("API_THROTTLE_AUTH_IP", default="20/min"),
         "llm": env.str("API_THROTTLE_LLM", default="20/min"),
+        "upload": env.str("API_THROTTLE_UPLOAD", default="30/min"),
     },
     # How many proxies sit in front of the API, to find the client address for throttling.
     "NUM_PROXIES": env.int("DJANGO_NUM_PROXIES", default=0),

@@ -38,7 +38,7 @@ export default [
     },
   },
   {
-    files: ['e2e/**/*.ts', 'playwright.config.ts', 'scripts/**/*.mjs'],
+    files: ['e2e/**/*.ts', 'perf/**/*.ts', 'playwright*.config.ts', 'scripts/**/*.mjs'],
     languageOptions: { globals: globals.node },
   },
 ];
