@@ -5,6 +5,8 @@ import { BrowserRouter } from 'react-router';
 
 import { ApiError } from './api/client';
 import { App } from './App';
+import { ErrorBoundary } from './ErrorBoundary';
+import { reportError } from './lib/reportError';
 import './index.css';
 
 const root = document.getElementById('root');
@@ -20,12 +22,19 @@ const queryClient = new QueryClient({
   },
 });
 
+window.addEventListener('error', (event) => reportError(event.error, { where: 'window' }));
+window.addEventListener('unhandledrejection', (event) =>
+  reportError(event.reason, { where: 'promise' }),
+);
+
 createRoot(root).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );

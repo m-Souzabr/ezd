@@ -1,6 +1,7 @@
-import { createContext, type ReactNode, useContext } from 'react';
+import { createContext, type ReactNode, useContext, useEffect } from 'react';
 import { useStore } from 'zustand';
 
+import { registerRecoverySource } from '../lib/recovery';
 import type { DesignStore, DesignStoreApi } from './designStore';
 
 const DesignStoreContext = createContext<DesignStoreApi | null>(null);
@@ -12,6 +13,8 @@ export function DesignStoreProvider({
   store: DesignStoreApi;
   children: ReactNode;
 }) {
+  // The error boundary offers this design for download if the editor crashes.
+  useEffect(() => registerRecoverySource(() => store.getState().doc), [store]);
   return <DesignStoreContext.Provider value={store}>{children}</DesignStoreContext.Provider>;
 }
 

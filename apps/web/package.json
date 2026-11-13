@@ -12,7 +12,8 @@
     "test": "vitest run",
     "e2e": "playwright test",
     "build": "vite build",
-    "openapi": "openapi-typescript ../api/openapi.yaml -o src/api/schema.d.ts"
+    "openapi": "openapi-typescript ../api/openapi.yaml -o src/api/schema.d.ts",
+    "bundle-size": "node scripts/check-bundle.mjs"
   },
   "dependencies": {
     "@ezd/core": "workspace:*",

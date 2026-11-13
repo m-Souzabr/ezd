@@ -108,6 +108,7 @@ REST_FRAMEWORK = {
     # How many proxies sit in front of the API, to find the client address for throttling.
     "NUM_PROXIES": env.int("DJANGO_NUM_PROXIES", default=0),
     "EXCEPTION_HANDLER": "config.api.exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "config.pagination.HeaderLimitOffsetPagination",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
@@ -218,6 +219,9 @@ LLM_PRICES = {
     "gpt-5.4-mini": {"input": 0.75, "cached_input": 0.075, "output": 4.50},
     "gpt-5.5": {"input": 5.00, "cached_input": 0.50, "output": 30.00},
 }
+
+# A dotted path to `fn(error, context)` that sends unexpected errors to a tracker, or empty.
+ERROR_REPORTER = env.str("ERROR_REPORTER", default="")
 
 LOGGING = {
     "version": 1,
