@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router';
 
 import { api, ApiError, type DesignVersionSummary } from '../api/client';
 import { versionsKey } from '../api/keys';
+import { useCatalog } from '../catalog/useCatalog';
 import { useConfig } from '../config/useConfig';
 import { ChatPanel } from '../editor/chat/ChatPanel';
 import { Editor } from '../editor/Editor';
@@ -43,6 +44,7 @@ type Origin = 'server' | 'unsaved';
 function useDesignSession(designId: string) {
   const repository = useMemo(() => createServerRepository(designId), [designId]);
   const backup = useMemo(() => createBackupStore(designId), [designId]);
+  const catalog = useCatalog();
   const [session, setSession] = useState<Session | null>(null);
   /** The session whose autosave is running, to stop it when another replaces it. */
   const running = useRef<Session | null>(null);
@@ -52,7 +54,7 @@ function useDesignSession(designId: string) {
 
   const open = useCallback(
     (doc: DesignDocument, origin: Origin, notice?: string) => {
-      const store = createDesignStore(doc);
+      const store = createDesignStore(doc, catalog);
       if (notice) store.getState().notify(notice);
       const previous = running.current;
       previous?.autosave.stop({ flush: false });
@@ -65,7 +67,7 @@ function useDesignSession(designId: string) {
       running.current = { store, autosave, generation: (previous?.generation ?? 0) + 1 };
       setSession(running.current);
     },
-    [repository, backup],
+    [repository, backup, catalog],
   );
 
   useEffect(() => {

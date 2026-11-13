@@ -4,2656 +4,3344 @@
  */
 
 export interface paths {
-    "/api/admin/audit/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["admin_audit_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/api/admin/audit/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/config/draft/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description The configuration being edited. Without a saved draft it is the published one. */
-        get: operations["admin_config_draft_retrieve"];
-        /** @description Saves the draft if `revision` is the one the editor loaded, else 409. */
-        put: operations["admin_config_draft_update"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['admin_audit_list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/catalog/draft/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/config/publish/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Makes the draft the new published version, which is never changed again. */
-        post: operations["admin_config_publish_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description The catalog being edited. Without a saved draft it is the published one. */
+    get: operations['admin_catalog_draft_retrieve'];
+    /**
+     * @description Saves the draft if `revision` is the one the editor loaded, else 409.
+     *
+     *     A draft may break the catalog's rules (it is work in progress) but it must be a
+     *     catalog: publishing is what checks the rules.
+     */
+    put: operations['admin_catalog_draft_update'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/catalog/entries/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/config/versions/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["admin_config_versions_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Adds an entry to the draft. */
+    post: operations['admin_catalog_entries_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/catalog/entries/{entry_id}/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/config/versions/{number}/rollback/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Publishes a copy of an old version as a new one. The old rows stay as they were. */
-        post: operations["admin_config_versions_rollback_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** @description Replaces the given fields of an entry of the draft. */
+    patch: operations['admin_catalog_entries_partial_update'];
+    trace?: never;
+  };
+  '/api/admin/catalog/entries/{entry_id}/restore/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/roles/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description The roles and the permission codes each one holds. Read-only. */
-        get: operations["admin_roles_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description The shared part of every granular change: load the draft, change it, save, audit. */
+    post: operations['admin_catalog_entries_restore_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/catalog/entries/{entry_id}/retire/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/users/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Every account, for staff. Searchable, filterable and sortable. */
-        get: operations["admin_users_list"];
-        put?: never;
-        /** @description Creates an account with no password and emails its owner a link to choose one. */
-        post: operations["admin_users_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description The shared part of every granular change: load the draft, change it, save, audit. */
+    post: operations['admin_catalog_entries_retire_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/catalog/finishes/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/users/{id}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["admin_users_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** @description Changes name, email, active, staff, superuser or roles. */
-        patch: operations["admin_users_partial_update"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Adds a finish to the draft. */
+    post: operations['admin_catalog_finishes_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/catalog/finishes/{finish_id}/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/users/{id}/reset-password/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Emails the account's owner a link to choose a new password. */
-        post: operations["admin_users_reset_password_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** @description Replaces the given fields of a finish of the draft. */
+    patch: operations['admin_catalog_finishes_partial_update'];
+    trace?: never;
+  };
+  '/api/admin/catalog/finishes/{finish_id}/restore/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/auth/login/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Starts a session. */
-        post: operations["auth_login_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description The shared part of every granular change: load the draft, change it, save, audit. */
+    post: operations['admin_catalog_finishes_restore_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/catalog/finishes/{finish_id}/retire/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/auth/logout/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Ends the session. */
-        post: operations["auth_logout_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description The shared part of every granular change: load the draft, change it, save, audit. */
+    post: operations['admin_catalog_finishes_retire_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/catalog/publish/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/auth/me/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description The signed-in user. Sets the CSRF cookie either way, also on a 401. */
-        get: operations["auth_me_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Checks every rule, then makes the draft the next published version, for good. */
+    post: operations['admin_catalog_publish_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/catalog/validate/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/auth/password-reset/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Emails a reset link. Answers the same whether or not the account exists. */
-        post: operations["auth_password_reset_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Every problem with a catalog (the draft unless given one), as publishing finds them. */
+    post: operations['admin_catalog_validate_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/catalog/versions/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/auth/password-reset/confirm/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Sets a new password with the uid and token from the reset link. */
-        post: operations["auth_password_reset_confirm_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['admin_catalog_versions_list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/catalog/versions/{version}/rollback/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/auth/register/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Creates an account and signs it in, unless registration is closed. */
-        post: operations["auth_register_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Publishes a copy of an old version as a new one. The old rows stay as they were. */
+    post: operations['admin_catalog_versions_rollback_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/config/draft/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/chat/messages/{id}/resolve/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Records what the user did with a proposal, or that it could not be used. */
-        post: operations["chat_messages_resolve_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description The configuration being edited. Without a saved draft it is the published one. */
+    get: operations['admin_config_draft_retrieve'];
+    /** @description Saves the draft if `revision` is the one the editor loaded, else 409. */
+    put: operations['admin_config_draft_update'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/config/publish/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/chat/messages/{id}/retry/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Asks again after a failed attempt, with the reasons it failed. Twice at most. */
-        post: operations["chat_messages_retry_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Makes the draft the new published version, which is never changed again. */
+    post: operations['admin_config_publish_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/config/versions/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/chat/usage/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description This month's assistant usage of the signed-in user, and the monthly allowance. */
-        get: operations["chat_usage_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['admin_config_versions_list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/config/versions/{number}/rollback/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/config/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description The published configuration. Anyone may read it: the editor at `/` needs no session. */
-        get: operations["config_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Publishes a copy of an old version as a new one. The old rows stay as they were. */
+    post: operations['admin_config_versions_rollback_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/roles/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/designs/{id}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Read with the draft document, rename, or delete with every snapshot. */
-        get: operations["designs_retrieve"];
-        put?: never;
-        post?: never;
-        /** @description Read with the draft document, rename, or delete with every snapshot. */
-        delete: operations["designs_destroy"];
-        options?: never;
-        head?: never;
-        /** @description Read with the draft document, rename, or delete with every snapshot. */
-        patch: operations["designs_partial_update"];
-        trace?: never;
+    /** @description The roles and the permission codes each one holds. Read-only. */
+    get: operations['admin_roles_list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/users/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/designs/{id}/chat/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description The chat of a design: its latest conversation, and a new message to the assistant. */
-        get: operations["designs_chat_retrieve"];
-        put?: never;
-        /** @description Asks the assistant. Its tool calls are a proposal: nothing changes until accepted. */
-        post: operations["designs_chat_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description Every account, for staff. Searchable, filterable and sortable. */
+    get: operations['admin_users_list'];
+    put?: never;
+    /** @description Creates an account with no password and emails its owner a link to choose one. */
+    post: operations['admin_users_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/users/{id}/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/designs/{id}/draft/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** @description Autosave. Stores `document` only if the draft is still at `base_revision`. */
-        put: operations["designs_draft_update"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['admin_users_retrieve'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** @description Changes name, email, active, staff, superuser or roles. */
+    patch: operations['admin_users_partial_update'];
+    trace?: never;
+  };
+  '/api/admin/users/{id}/reset-password/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/designs/{id}/quotes/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description The quotes of a design, newest first, without their lines and drawings. */
-        get: operations["designs_quotes_list"];
-        put?: never;
-        /** @description Snapshots the draft as a new version of the design and stores the quote for it. */
-        post: operations["designs_quotes_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Emails the account's owner a link to choose a new password. */
+    post: operations['admin_users_reset_password_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/login/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/designs/{id}/versions/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description The snapshots of a design, newest first, without their documents. */
-        get: operations["designs_versions_list"];
-        put?: never;
-        /** @description Snapshots the current draft as the next version of the design. */
-        post: operations["designs_versions_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Starts a session. */
+    post: operations['auth_login_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/logout/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/designs/{id}/versions/{number}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description One snapshot with its document. */
-        get: operations["designs_versions_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Ends the session. */
+    post: operations['auth_logout_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/me/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/designs/{id}/versions/{number}/restore/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Copies the snapshot into the draft, as a new revision. The snapshot is kept. */
-        post: operations["designs_versions_restore_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description The signed-in user. Sets the CSRF cookie either way, also on a 401. */
+    get: operations['auth_me_retrieve'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/password-reset/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/health/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Liveness probe. Does not touch the database. */
-        get: operations["health_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Emails a reset link. Answers the same whether or not the account exists. */
+    post: operations['auth_password_reset_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/password-reset/confirm/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/llm/settings/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description The assistant's API key and models, for the whole site. Staff only. */
-        get: operations["llm_settings_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** @description Stores the key encrypted. The answer shows only its last four characters. */
-        patch: operations["llm_settings_partial_update"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Sets a new password with the uid and token from the reset link. */
+    post: operations['auth_password_reset_confirm_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/register/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/photo-drafts/{id}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["photo_drafts_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** @description Saves the user's corrections. Only a `ready` draft can change. */
-        patch: operations["photo_drafts_partial_update"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Creates an account and signs it in, unless registration is closed. */
+    post: operations['auth_register_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/catalog/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/photo-drafts/{id}/confirm/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Creates the design and its version 1 from the confirmed draft. Once only. */
-        post: operations["photo_drafts_confirm_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description The published catalog. Anyone may read it: the editor at `/` needs no session. */
+    get: operations['catalog_retrieve'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/catalog/{version}/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/photo-drafts/{id}/discard/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Marks the draft discarded. A confirmed draft cannot be discarded. */
-        post: operations["photo_drafts_discard_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description One published version, for a design or quote that was made with an older catalog. */
+    get: operations['catalog_version_retrieve'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/chat/messages/{id}/resolve/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/photos/{id}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Read, or delete with its file and drafts. Designs made from it are kept. */
-        get: operations["photos_retrieve"];
-        put?: never;
-        post?: never;
-        /** @description Read, or delete with its file and drafts. Designs made from it are kept. */
-        delete: operations["photos_destroy"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Records what the user did with a proposal, or that it could not be used. */
+    post: operations['chat_messages_resolve_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/chat/messages/{id}/retry/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/photos/{id}/analyze/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Runs the vision model on the photo and stores a new draft: `ready` or `failed`. */
-        post: operations["photos_analyze_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Asks again after a failed attempt, with the reasons it failed. Twice at most. */
+    post: operations['chat_messages_retry_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/chat/usage/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/photos/{id}/file/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description The photo itself, as a JPEG. Only its owner can read it. */
-        get: operations["photos_file_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description This month's assistant usage of the signed-in user, and the monthly allowance. */
+    get: operations['chat_usage_retrieve'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/config/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/projects/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description The user's projects that are not archived, newest first. */
-        get: operations["projects_list"];
-        put?: never;
-        /** @description The user's projects that are not archived, newest first. */
-        post: operations["projects_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description The published configuration. Anyone may read it: the editor at `/` needs no session. */
+    get: operations['config_retrieve'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/designs/{id}/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/projects/{id}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Read, rename, or archive. An archived project and its designs are no longer found. */
-        get: operations["projects_retrieve"];
-        put?: never;
-        post?: never;
-        /** @description Read, rename, or archive. An archived project and its designs are no longer found. */
-        delete: operations["projects_destroy"];
-        options?: never;
-        head?: never;
-        /** @description Read, rename, or archive. An archived project and its designs are no longer found. */
-        patch: operations["projects_partial_update"];
-        trace?: never;
+    /** @description Read with the draft document, rename, or delete with every snapshot. */
+    get: operations['designs_retrieve'];
+    put?: never;
+    post?: never;
+    /** @description Read with the draft document, rename, or delete with every snapshot. */
+    delete: operations['designs_destroy'];
+    options?: never;
+    head?: never;
+    /** @description Read with the draft document, rename, or delete with every snapshot. */
+    patch: operations['designs_partial_update'];
+    trace?: never;
+  };
+  '/api/designs/{id}/chat/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/projects/{id}/designs/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description The designs of a project, without their documents. */
-        get: operations["projects_designs_list"];
-        put?: never;
-        /** @description Creates a design from `document`, or an empty one. */
-        post: operations["projects_designs_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description The chat of a design: its latest conversation, and a new message to the assistant. */
+    get: operations['designs_chat_retrieve'];
+    put?: never;
+    /** @description Asks the assistant. Its tool calls are a proposal: nothing changes until accepted. */
+    post: operations['designs_chat_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/designs/{id}/draft/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/projects/{id}/photos/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description The photos of a project, newest first, with the state of their newest analysis. */
-        get: operations["projects_photos_list"];
-        put?: never;
-        /** @description Uploads a JPEG, PNG or WebP photo. It is stored re-encoded, with no metadata. */
-        post: operations["projects_photos_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    /** @description Autosave. Stores `document` only if the draft is still at `base_revision`. */
+    put: operations['designs_draft_update'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/designs/{id}/quotes/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/quotes/{id}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description One quote with everything needed to render its PDF, or delete it. Never changed. */
-        get: operations["quotes_retrieve"];
-        put?: never;
-        post?: never;
-        /** @description One quote with everything needed to render its PDF, or delete it. Never changed. */
-        delete: operations["quotes_destroy"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description The quotes of a design, newest first, without their lines and drawings. */
+    get: operations['designs_quotes_list'];
+    put?: never;
+    /** @description Snapshots the draft as a new version of the design and stores the quote for it. */
+    post: operations['designs_quotes_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/designs/{id}/versions/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/ready/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Readiness probe: the API can reach its database. */
-        get: operations["ready_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description The snapshots of a design, newest first, without their documents. */
+    get: operations['designs_versions_list'];
+    put?: never;
+    /** @description Snapshots the current draft as the next version of the design. */
+    post: operations['designs_versions_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/designs/{id}/versions/{number}/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    /** @description One snapshot with its document. */
+    get: operations['designs_versions_retrieve'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/designs/{id}/versions/{number}/restore/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Copies the snapshot into the draft, as a new revision. The snapshot is kept. */
+    post: operations['designs_versions_restore_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/health/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Liveness probe. Does not touch the database. */
+    get: operations['health_retrieve'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/llm/settings/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description The assistant's API key and models, for the whole site. Staff only. */
+    get: operations['llm_settings_retrieve'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** @description Stores the key encrypted. The answer shows only its last four characters. */
+    patch: operations['llm_settings_partial_update'];
+    trace?: never;
+  };
+  '/api/photo-drafts/{id}/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['photo_drafts_retrieve'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** @description Saves the user's corrections. Only a `ready` draft can change. */
+    patch: operations['photo_drafts_partial_update'];
+    trace?: never;
+  };
+  '/api/photo-drafts/{id}/confirm/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Creates the design and its version 1 from the confirmed draft. Once only. */
+    post: operations['photo_drafts_confirm_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/photo-drafts/{id}/discard/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Marks the draft discarded. A confirmed draft cannot be discarded. */
+    post: operations['photo_drafts_discard_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/photos/{id}/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Read, or delete with its file and drafts. Designs made from it are kept. */
+    get: operations['photos_retrieve'];
+    put?: never;
+    post?: never;
+    /** @description Read, or delete with its file and drafts. Designs made from it are kept. */
+    delete: operations['photos_destroy'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/photos/{id}/analyze/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Runs the vision model on the photo and stores a new draft: `ready` or `failed`. */
+    post: operations['photos_analyze_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/photos/{id}/file/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description The photo itself, as a JPEG. Only its owner can read it. */
+    get: operations['photos_file_retrieve'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/projects/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description The user's projects that are not archived, newest first. */
+    get: operations['projects_list'];
+    put?: never;
+    /** @description The user's projects that are not archived, newest first. */
+    post: operations['projects_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/projects/{id}/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Read, rename, or archive. An archived project and its designs are no longer found. */
+    get: operations['projects_retrieve'];
+    put?: never;
+    post?: never;
+    /** @description Read, rename, or archive. An archived project and its designs are no longer found. */
+    delete: operations['projects_destroy'];
+    options?: never;
+    head?: never;
+    /** @description Read, rename, or archive. An archived project and its designs are no longer found. */
+    patch: operations['projects_partial_update'];
+    trace?: never;
+  };
+  '/api/projects/{id}/designs/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description The designs of a project, without their documents. */
+    get: operations['projects_designs_list'];
+    put?: never;
+    /** @description Creates a design from `document`, or an empty one. */
+    post: operations['projects_designs_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/projects/{id}/photos/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description The photos of a project, newest first, with the state of their newest analysis. */
+    get: operations['projects_photos_list'];
+    put?: never;
+    /** @description Uploads a JPEG, PNG or WebP photo. It is stored re-encoded, with no metadata. */
+    post: operations['projects_photos_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/quotes/{id}/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description One quote with everything needed to render its PDF, or delete it. Never changed. */
+    get: operations['quotes_retrieve'];
+    put?: never;
+    post?: never;
+    /** @description One quote with everything needed to render its PDF, or delete it. Never changed. */
+    delete: operations['quotes_destroy'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/ready/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Readiness probe: the API can reach its database. */
+    get: operations['ready_retrieve'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        AdminUser: {
-            readonly id: number;
-            /**
-             * Email address
-             * Format: email
-             */
-            readonly email: string;
-            readonly name: string;
-            /**
-             * Active
-             * @description Designates whether this user should be treated as active. Unselect this instead of deleting accounts.
-             */
-            readonly is_active: boolean;
-            /**
-             * Staff status
-             * @description Designates whether the user can log into this admin site.
-             */
-            readonly is_staff: boolean;
-            /**
-             * Superuser status
-             * @description Designates that this user has all permissions without explicitly assigning them.
-             */
-            readonly is_superuser: boolean;
-            readonly roles: string[];
-            /** Format: date-time */
-            readonly last_login: string | null;
-            /** Format: date-time */
-            readonly date_joined: string;
-            readonly active_projects: number;
-            readonly chat_tokens_this_month: number;
-        };
-        AdminUserCreateRequest: {
-            /** Format: email */
-            email: string;
-            /** @default  */
-            name: string;
-            /** @default false */
-            is_staff: boolean;
-            roles?: string[];
-        };
-        /** @description The published configuration, as the web app reads it. */
-        AppConfig: {
-            version: number | null;
-            config: unknown;
-        };
-        AuditEntry: {
-            readonly id: number;
-            readonly actor: number | null;
-            readonly actor_email: string;
-            readonly action: string;
-            readonly object_type: string;
-            readonly object_id: string;
-            readonly before: unknown;
-            readonly after: unknown;
-            /** Format: date-time */
-            readonly created_at: string;
-        };
-        ChatRequestRequest: {
-            message: string;
-            summary: string;
-            /** Format: uuid */
-            conversation_id?: string | null;
-        };
-        ConfigDraft: {
-            revision: number;
-            app_config: unknown;
-            based_on: number | null;
-            /** Format: date-time */
-            updated_at: string | null;
-        };
-        ConfigDraftUpdateRequest: {
-            revision: number;
-            app_config: unknown;
-        };
-        ConfigPublishRequest: {
-            revision: number;
-            /** @default  */
-            note: string;
-        };
-        ConfigRollbackRequest: {
-            /** @default  */
-            note: string;
-        };
-        ConfigVersion: {
-            number: number;
-            status: components["schemas"]["ConfigVersionStatusEnum"];
-            note: string;
-            created_by: string;
-            /** Format: date-time */
-            created_at: string;
-        };
-        /**
-         * @description * `published` - published
-         *     * `superseded` - superseded
-         * @enum {string}
-         */
-        ConfigVersionStatusEnum: "published" | "superseded";
-        Conversation: {
-            /** Format: uuid */
-            conversation_id: string | null;
-            messages: components["schemas"]["Message"][];
-        };
-        /**
-         * @description * `USD` - USD
-         * @enum {string}
-         */
-        CurrencyEnum: "USD";
-        Design: {
-            /** Format: uuid */
-            readonly id: string;
-            /** Format: uuid */
-            readonly project: string;
-            name: string;
-            readonly draft_document: {
-                [key: string]: unknown;
-            };
-            readonly draft_revision: number;
-            readonly schema_version: number;
-            /** Format: uuid */
-            readonly source_photo: string | null;
-            /** Format: date-time */
-            readonly created_at: string;
-            /** Format: date-time */
-            readonly updated_at: string;
-        };
-        DesignCreateRequest: {
-            name?: string;
-            document?: {
-                [key: string]: unknown;
-            };
-        };
-        /** @description A design in a list, without its document. */
-        DesignSummary: {
-            /** Format: uuid */
-            readonly id: string;
-            /** Format: uuid */
-            readonly project: string;
-            readonly name: string;
-            readonly draft_revision: number;
-            /** Format: date-time */
-            readonly created_at: string;
-            /** Format: date-time */
-            readonly updated_at: string;
-        };
-        DesignVersion: {
-            /** Format: uuid */
-            readonly id: string;
-            readonly number: number;
-            readonly label: string;
-            readonly document: {
-                [key: string]: unknown;
-            };
-            readonly schema_version: number;
-            /** Format: date-time */
-            readonly created_at: string;
-        };
-        DesignVersionCreateRequest: {
-            /** @default  */
-            label: string;
-        };
-        /** @description A snapshot in a list, without its document. */
-        DesignVersionSummary: {
-            /** Format: uuid */
-            readonly id: string;
-            readonly number: number;
-            readonly label: string;
-            readonly schema_version: number;
-            /** Format: date-time */
-            readonly created_at: string;
-        };
-        DocumentIssue: {
-            path: string;
-            message: string;
-        };
-        DraftConflict: {
-            draft_revision: number;
-            /** Format: date-time */
-            updated_at: string;
-            detail: string;
-        };
-        DraftSaveRequest: {
-            document: {
-                [key: string]: unknown;
-            };
-            base_revision: number;
-        };
-        DraftSaved: {
-            draft_revision: number;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        Drawings: {
-            plan: string;
-            elevations: components["schemas"]["Elevation"][];
-        };
-        DrawingsRequest: {
-            plan: string;
-            elevations: components["schemas"]["ElevationRequest"][];
-        };
-        Elevation: {
-            wallId: string;
-            label: string;
-            image: string;
-        };
-        ElevationRequest: {
-            wallId: string;
-            label: string;
-            image: string;
-        };
-        Health: {
-            status: string;
-        };
-        /** @description The body of a 422. */
-        InconsistentQuote: {
-            detail: string;
-            errors: {
-                [key: string]: string;
-            }[];
-        };
-        /** @description The body of a 422. */
-        InvalidDocument: {
-            detail: string;
-            errors: components["schemas"]["DocumentIssue"][];
-        };
-        /**
-         * @description * `settings` - settings
-         *     * `environment` - environment
-         *     * `none` - none
-         * @enum {string}
-         */
-        KeySourceEnum: "settings" | "environment" | "none";
-        /** @description What staff see. The key itself is never in it, only its last four characters. */
-        LLMSettings: {
-            vendor: string;
-            configured: boolean;
-            key_source: components["schemas"]["KeySourceEnum"];
-            api_key_last4: string;
-            models: components["schemas"]["Models"];
-            default_models: components["schemas"]["Models"];
-            /** Format: date-time */
-            updated_at: string | null;
-        };
-        /** @description One `BomLine` of core, plus the finish by name so the PDF needs no catalog. */
-        Line: {
-            key: string;
-            catalogId: string;
-            description: string;
-            width: number;
-            height: number;
-            depth: number;
-            finishId: string | null;
-            finishName: string;
-            options: {
-                [key: string]: unknown;
-            };
-            quantity: number;
-            unit: components["schemas"]["UnitEnum"];
-            /** Format: int64 */
-            unitPriceCents: number;
-            /** Format: int64 */
-            lineTotalCents: number;
-            itemIds: string[];
-        };
-        /** @description One `BomLine` of core, plus the finish by name so the PDF needs no catalog. */
-        LineRequest: {
-            key: string;
-            catalogId: string;
-            description: string;
-            width: number;
-            height: number;
-            depth: number;
-            finishId: string | null;
-            finishName: string;
-            options: {
-                [key: string]: unknown;
-            };
-            quantity: number;
-            unit: components["schemas"]["UnitEnum"];
-            /** Format: int64 */
-            unitPriceCents: number;
-            /** Format: int64 */
-            lineTotalCents: number;
-            itemIds: string[];
-        };
-        LoginRequest: {
-            /** Format: email */
-            email: string;
-            password: string;
-        };
-        Message: {
-            /** Format: uuid */
-            readonly id: string;
-            readonly role: components["schemas"]["RoleEnum"];
-            readonly text: string;
-            tool_calls: components["schemas"]["ToolCall"][];
-            readonly question: string;
-            readonly status: components["schemas"]["MessageStatusEnum"];
-            readonly attempt: number;
-            /** Format: uuid */
-            readonly parent: string | null;
-            /** Format: date-time */
-            readonly created_at: string;
-        };
-        /**
-         * @description * `none` - None
-         *     * `proposed` - Proposed
-         *     * `accepted` - Accepted
-         *     * `rejected` - Rejected
-         *     * `invalid` - Invalid
-         * @enum {string}
-         */
-        MessageStatusEnum: "none" | "proposed" | "accepted" | "rejected" | "invalid";
-        Models: {
-            router: string;
-            default: string;
-            escalation: string;
-        };
-        NotReady: {
-            status: string;
-        };
-        PaginatedAdminUserList: components["schemas"]["AdminUser"][];
-        PaginatedAuditEntryList: components["schemas"]["AuditEntry"][];
-        PaginatedDesignSummaryList: components["schemas"]["DesignSummary"][];
-        PaginatedDesignVersionSummaryList: components["schemas"]["DesignVersionSummary"][];
-        PaginatedPhotoList: components["schemas"]["Photo"][];
-        PaginatedProjectList: components["schemas"]["Project"][];
-        PaginatedQuoteSummaryList: components["schemas"]["QuoteSummary"][];
-        PasswordResetConfirmRequest: {
-            uid: string;
-            token: string;
-            password: string;
-        };
-        PasswordResetRequest: {
-            /** Format: email */
-            email: string;
-        };
-        PatchedAdminUserUpdateRequest: {
-            /** Format: email */
-            email?: string;
-            name?: string;
-            is_active?: boolean;
-            is_staff?: boolean;
-            is_superuser?: boolean;
-            roles?: string[];
-        };
-        PatchedDesignRequest: {
-            name?: string;
-        };
-        /** @description An empty `api_key` removes the stored key; an empty model name restores its default. */
-        PatchedLLMSettingsUpdateRequest: {
-            api_key?: string;
-            router_model?: string;
-            default_model?: string;
-            escalation_model?: string;
-        };
-        PatchedPhotoDraftUpdateRequest: {
-            draft?: {
-                [key: string]: unknown;
-            };
-        };
-        PatchedProjectRequest: {
-            name?: string;
-        };
-        Photo: {
-            /** Format: uuid */
-            readonly id: string;
-            /** Format: uuid */
-            readonly project: string;
-            readonly width: number;
-            readonly height: number;
-            readonly bytes: number;
-            readonly latest_draft: components["schemas"]["PhotoDraftSummary"] | null;
-            /** Format: date-time */
-            readonly created_at: string;
-        };
-        PhotoDraft: {
-            /** Format: uuid */
-            readonly id: string;
-            /** Format: uuid */
-            readonly photo: string;
-            readonly status: components["schemas"]["PhotoDraftStatusEnum"];
-            readonly draft: {
-                [key: string]: unknown;
-            } | null;
-            readonly error: string;
-            /** Format: uuid */
-            readonly design: string | null;
-            readonly model: string;
-            /** Format: date-time */
-            readonly created_at: string;
-            /** Format: date-time */
-            readonly updated_at: string;
-        };
-        PhotoDraftConfirmRequest: {
-            document: {
-                [key: string]: unknown;
-            };
-            name?: string;
-        };
-        /**
-         * @description * `analyzing` - Analyzing
-         *     * `ready` - Ready
-         *     * `failed` - Failed
-         *     * `confirmed` - Confirmed
-         *     * `discarded` - Discarded
-         * @enum {string}
-         */
-        PhotoDraftStatusEnum: "analyzing" | "ready" | "failed" | "confirmed" | "discarded";
-        PhotoDraftSummary: {
-            /** Format: uuid */
-            readonly id: string;
-            readonly status: components["schemas"]["PhotoDraftStatusEnum"];
-            /** Format: uuid */
-            readonly design: string | null;
-            /** Format: date-time */
-            readonly created_at: string;
-        };
-        PhotoUploadRequest: {
-            /** Format: binary */
-            file: string;
-        };
-        Project: {
-            /** Format: uuid */
-            readonly id: string;
-            name: string;
-            /** Format: date-time */
-            readonly created_at: string;
-            /** Format: date-time */
-            readonly updated_at: string;
-        };
-        ProjectRequest: {
-            name: string;
-        };
-        /** @description One assistant attempt. */
-        Proposal: {
-            /** Format: uuid */
-            conversation_id: string;
-            /** Format: uuid */
-            message_id: string;
-            text: string;
-            tool_calls: components["schemas"]["ToolCall"][];
-            question: string;
-            errors: string[];
-            attempt: number;
-            retries_left: number;
-        };
-        /** @description Everything the PDF is rendered from. */
-        Quote: {
-            /** Format: uuid */
-            readonly id: string;
-            readonly number: number;
-            readonly project_name: string;
-            /** Format: uuid */
-            readonly design: string;
-            readonly design_name: string;
-            readonly design_version: number;
-            readonly customer_name: string;
-            /** Format: email */
-            readonly customer_email: string;
-            readonly customer_address: string;
-            readonly notes: string;
-            readonly catalog_version: string;
-            readonly settings: components["schemas"]["Settings"];
-            readonly lines: components["schemas"]["Line"][];
-            readonly totals: components["schemas"]["Totals"];
-            readonly drawings: components["schemas"]["Drawings"];
-            /** Format: date-time */
-            readonly created_at: string;
-        };
-        QuoteCreateRequest: {
-            draft_revision: number;
-            customer_name: string;
-            customer_email?: string;
-            /** @default  */
-            customer_address: string;
-            /** @default  */
-            notes: string;
-            catalog_version: string;
-            settings: components["schemas"]["SettingsRequest"];
-            lines: components["schemas"]["LineRequest"][];
-            totals: components["schemas"]["TotalsRequest"];
-            drawings: components["schemas"]["DrawingsRequest"];
-        };
-        /** @description A quote in a list, without its lines and drawings. */
-        QuoteSummary: {
-            /** Format: uuid */
-            readonly id: string;
-            readonly number: number;
-            readonly customer_name: string;
-            readonly total_cents: number;
-            readonly design_version: number;
-            /** Format: date-time */
-            readonly created_at: string;
-        };
-        Ready: {
-            status: string;
-        };
-        RegisterRequest: {
-            /** Format: email */
-            email: string;
-            password: string;
-            /** @default  */
-            name: string;
-        };
-        /** @description `invalid` reports a proposal the browser could not use after the last retry. */
-        ResolveRequestRequest: {
-            status: components["schemas"]["ResolveRequestStatusEnum"];
-        };
-        /**
-         * @description * `accepted` - accepted
-         *     * `rejected` - rejected
-         *     * `invalid` - invalid
-         * @enum {string}
-         */
-        ResolveRequestStatusEnum: "accepted" | "rejected" | "invalid";
-        RetryRequestRequest: {
-            errors: string[];
-            summary: string;
-        };
-        Role: {
-            name: string;
-            permissions: string[];
-        };
-        /**
-         * @description * `user` - User
-         *     * `assistant` - Assistant
-         * @enum {string}
-         */
-        RoleEnum: "user" | "assistant";
-        Settings: {
-            markupBps: number;
-            discountBps: number;
-            taxBps: number;
-            currency: components["schemas"]["CurrencyEnum"];
-        };
-        SettingsRequest: {
-            markupBps: number;
-            discountBps: number;
-            taxBps: number;
-            currency: components["schemas"]["CurrencyEnum"];
-        };
-        /** @description The body of a 409. */
-        StaleDraft: {
-            detail: string;
-            draft_revision: number;
-        };
-        ToolCall: {
-            name: string;
-            arguments: {
-                [key: string]: unknown;
-            };
-        };
-        Totals: {
-            subtotalCents: number;
-            markupCents: number;
-            discountCents: number;
-            taxableCents: number;
-            taxCents: number;
-            totalCents: number;
-        };
-        TotalsRequest: {
-            subtotalCents: number;
-            markupCents: number;
-            discountCents: number;
-            taxableCents: number;
-            taxCents: number;
-            totalCents: number;
-        };
-        /**
-         * @description * `each` - each
-         *     * `sqft` - sqft
-         * @enum {string}
-         */
-        UnitEnum: "each" | "sqft";
-        Usage: {
-            /** Format: date */
-            month: string;
-            input_tokens: number;
-            output_tokens: number;
-            requests: number;
-            quota_tokens: number;
-            remaining_tokens: number;
-        };
-        User: {
-            readonly id: number;
-            /**
-             * Email address
-             * Format: email
-             */
-            readonly email: string;
-            readonly name: string;
-            /**
-             * Staff status
-             * @description Designates whether the user can log into this admin site.
-             */
-            readonly is_staff: boolean;
-            /**
-             * Superuser status
-             * @description Designates that this user has all permissions without explicitly assigning them.
-             */
-            readonly is_superuser: boolean;
-            /** @description The Control Panel codes the user holds; the web app only uses them to hide things. */
-            readonly permissions: string[];
-        };
+  schemas: {
+    AdminUser: {
+      readonly id: number;
+      /**
+       * Email address
+       * Format: email
+       */
+      readonly email: string;
+      readonly name: string;
+      /**
+       * Active
+       * @description Designates whether this user should be treated as active. Unselect this instead of deleting accounts.
+       */
+      readonly is_active: boolean;
+      /**
+       * Staff status
+       * @description Designates whether the user can log into this admin site.
+       */
+      readonly is_staff: boolean;
+      /**
+       * Superuser status
+       * @description Designates that this user has all permissions without explicitly assigning them.
+       */
+      readonly is_superuser: boolean;
+      readonly roles: string[];
+      /** Format: date-time */
+      readonly last_login: string | null;
+      /** Format: date-time */
+      readonly date_joined: string;
+      readonly active_projects: number;
+      readonly chat_tokens_this_month: number;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    AdminUserCreateRequest: {
+      /** Format: email */
+      email: string;
+      /** @default  */
+      name: string;
+      /** @default false */
+      is_staff: boolean;
+      roles?: string[];
+    };
+    /** @description The published configuration, as the web app reads it. */
+    AppConfig: {
+      version: number | null;
+      config: unknown;
+    };
+    AuditEntry: {
+      readonly id: number;
+      readonly actor: number | null;
+      readonly actor_email: string;
+      readonly action: string;
+      readonly object_type: string;
+      readonly object_id: string;
+      readonly before: unknown;
+      readonly after: unknown;
+      /** Format: date-time */
+      readonly created_at: string;
+    };
+    /** @description A published catalog, as the web app and the server read it. */
+    Catalog: {
+      version: string;
+      catalog: unknown;
+    };
+    CatalogDraft: {
+      revision: number;
+      catalog: unknown;
+      based_on: string | null;
+      /** Format: date-time */
+      updated_at: string | null;
+    };
+    CatalogDraftUpdateRequest: {
+      revision: number;
+      catalog: unknown;
+    };
+    CatalogEntryCreateRequest: {
+      revision: number;
+      entry: unknown;
+    };
+    CatalogFinishCreateRequest: {
+      revision: number;
+      finish: unknown;
+    };
+    CatalogProblem: {
+      path: string;
+      message: string;
+    };
+    CatalogPublishRequest: {
+      revision: number;
+      /** @default  */
+      note: string;
+    };
+    CatalogRevisionRequest: {
+      revision: number;
+    };
+    CatalogRollbackRequest: {
+      /** @default  */
+      note: string;
+    };
+    CatalogValidateRequest: {
+      catalog?: unknown;
+    };
+    CatalogValidation: {
+      ok: boolean;
+      problems: components['schemas']['CatalogProblem'][];
+    };
+    CatalogVersion: {
+      number: number;
+      version: string;
+      current: boolean;
+      note: string;
+      created_by: string;
+      /** Format: date-time */
+      created_at: string;
+    };
+    ChatRequestRequest: {
+      message: string;
+      summary: string;
+      /** Format: uuid */
+      conversation_id?: string | null;
+    };
+    ConfigDraft: {
+      revision: number;
+      app_config: unknown;
+      based_on: number | null;
+      /** Format: date-time */
+      updated_at: string | null;
+    };
+    ConfigDraftUpdateRequest: {
+      revision: number;
+      app_config: unknown;
+    };
+    ConfigPublishRequest: {
+      revision: number;
+      /** @default  */
+      note: string;
+    };
+    ConfigRollbackRequest: {
+      /** @default  */
+      note: string;
+    };
+    ConfigVersion: {
+      number: number;
+      status: components['schemas']['ConfigVersionStatusEnum'];
+      note: string;
+      created_by: string;
+      /** Format: date-time */
+      created_at: string;
+    };
+    /**
+     * @description * `published` - published
+     *     * `superseded` - superseded
+     * @enum {string}
+     */
+    ConfigVersionStatusEnum: 'published' | 'superseded';
+    Conversation: {
+      /** Format: uuid */
+      conversation_id: string | null;
+      messages: components['schemas']['Message'][];
+    };
+    /**
+     * @description * `USD` - USD
+     * @enum {string}
+     */
+    CurrencyEnum: 'USD';
+    Design: {
+      /** Format: uuid */
+      readonly id: string;
+      /** Format: uuid */
+      readonly project: string;
+      name: string;
+      readonly draft_document: {
+        [key: string]: unknown;
+      };
+      readonly draft_revision: number;
+      readonly schema_version: number;
+      /** Format: uuid */
+      readonly source_photo: string | null;
+      /** Format: date-time */
+      readonly created_at: string;
+      /** Format: date-time */
+      readonly updated_at: string;
+    };
+    DesignCreateRequest: {
+      name?: string;
+      document?: {
+        [key: string]: unknown;
+      };
+    };
+    /** @description A design in a list, without its document. */
+    DesignSummary: {
+      /** Format: uuid */
+      readonly id: string;
+      /** Format: uuid */
+      readonly project: string;
+      readonly name: string;
+      readonly draft_revision: number;
+      /** Format: date-time */
+      readonly created_at: string;
+      /** Format: date-time */
+      readonly updated_at: string;
+    };
+    DesignVersion: {
+      /** Format: uuid */
+      readonly id: string;
+      readonly number: number;
+      readonly label: string;
+      readonly document: {
+        [key: string]: unknown;
+      };
+      readonly schema_version: number;
+      /** Format: date-time */
+      readonly created_at: string;
+    };
+    DesignVersionCreateRequest: {
+      /** @default  */
+      label: string;
+    };
+    /** @description A snapshot in a list, without its document. */
+    DesignVersionSummary: {
+      /** Format: uuid */
+      readonly id: string;
+      readonly number: number;
+      readonly label: string;
+      readonly schema_version: number;
+      /** Format: date-time */
+      readonly created_at: string;
+    };
+    DocumentIssue: {
+      path: string;
+      message: string;
+    };
+    DraftConflict: {
+      draft_revision: number;
+      /** Format: date-time */
+      updated_at: string;
+      detail: string;
+    };
+    DraftSaveRequest: {
+      document: {
+        [key: string]: unknown;
+      };
+      base_revision: number;
+    };
+    DraftSaved: {
+      draft_revision: number;
+      /** Format: date-time */
+      updated_at: string;
+    };
+    Drawings: {
+      plan: string;
+      elevations: components['schemas']['Elevation'][];
+    };
+    DrawingsRequest: {
+      plan: string;
+      elevations: components['schemas']['ElevationRequest'][];
+    };
+    Elevation: {
+      wallId: string;
+      label: string;
+      image: string;
+    };
+    ElevationRequest: {
+      wallId: string;
+      label: string;
+      image: string;
+    };
+    Health: {
+      status: string;
+    };
+    /** @description The body of a 422. */
+    InconsistentQuote: {
+      detail: string;
+      errors: {
+        [key: string]: string;
+      }[];
+    };
+    /** @description The body of a 422. */
+    InvalidDocument: {
+      detail: string;
+      errors: components['schemas']['DocumentIssue'][];
+    };
+    /**
+     * @description * `settings` - settings
+     *     * `environment` - environment
+     *     * `none` - none
+     * @enum {string}
+     */
+    KeySourceEnum: 'settings' | 'environment' | 'none';
+    /** @description What staff see. The key itself is never in it, only its last four characters. */
+    LLMSettings: {
+      vendor: string;
+      configured: boolean;
+      key_source: components['schemas']['KeySourceEnum'];
+      api_key_last4: string;
+      models: components['schemas']['Models'];
+      default_models: components['schemas']['Models'];
+      /** Format: date-time */
+      updated_at: string | null;
+    };
+    /** @description One `BomLine` of core, plus the finish by name so the PDF needs no catalog. */
+    Line: {
+      key: string;
+      catalogId: string;
+      description: string;
+      width: number;
+      height: number;
+      depth: number;
+      finishId: string | null;
+      finishName: string;
+      options: {
+        [key: string]: unknown;
+      };
+      quantity: number;
+      unit: components['schemas']['UnitEnum'];
+      /** Format: int64 */
+      unitPriceCents: number;
+      /** Format: int64 */
+      lineTotalCents: number;
+      itemIds: string[];
+    };
+    /** @description One `BomLine` of core, plus the finish by name so the PDF needs no catalog. */
+    LineRequest: {
+      key: string;
+      catalogId: string;
+      description: string;
+      width: number;
+      height: number;
+      depth: number;
+      finishId: string | null;
+      finishName: string;
+      options: {
+        [key: string]: unknown;
+      };
+      quantity: number;
+      unit: components['schemas']['UnitEnum'];
+      /** Format: int64 */
+      unitPriceCents: number;
+      /** Format: int64 */
+      lineTotalCents: number;
+      itemIds: string[];
+    };
+    LoginRequest: {
+      /** Format: email */
+      email: string;
+      password: string;
+    };
+    Message: {
+      /** Format: uuid */
+      readonly id: string;
+      readonly role: components['schemas']['RoleEnum'];
+      readonly text: string;
+      tool_calls: components['schemas']['ToolCall'][];
+      readonly question: string;
+      readonly status: components['schemas']['MessageStatusEnum'];
+      readonly attempt: number;
+      /** Format: uuid */
+      readonly parent: string | null;
+      /** Format: date-time */
+      readonly created_at: string;
+    };
+    /**
+     * @description * `none` - None
+     *     * `proposed` - Proposed
+     *     * `accepted` - Accepted
+     *     * `rejected` - Rejected
+     *     * `invalid` - Invalid
+     * @enum {string}
+     */
+    MessageStatusEnum: 'none' | 'proposed' | 'accepted' | 'rejected' | 'invalid';
+    Models: {
+      router: string;
+      default: string;
+      escalation: string;
+    };
+    NotReady: {
+      status: string;
+    };
+    PaginatedAdminUserList: components['schemas']['AdminUser'][];
+    PaginatedAuditEntryList: components['schemas']['AuditEntry'][];
+    PaginatedDesignSummaryList: components['schemas']['DesignSummary'][];
+    PaginatedDesignVersionSummaryList: components['schemas']['DesignVersionSummary'][];
+    PaginatedPhotoList: components['schemas']['Photo'][];
+    PaginatedProjectList: components['schemas']['Project'][];
+    PaginatedQuoteSummaryList: components['schemas']['QuoteSummary'][];
+    PasswordResetConfirmRequest: {
+      uid: string;
+      token: string;
+      password: string;
+    };
+    PasswordResetRequest: {
+      /** Format: email */
+      email: string;
+    };
+    PatchedAdminUserUpdateRequest: {
+      /** Format: email */
+      email?: string;
+      name?: string;
+      is_active?: boolean;
+      is_staff?: boolean;
+      is_superuser?: boolean;
+      roles?: string[];
+    };
+    PatchedCatalogEntryChangeRequest: {
+      revision?: number;
+      changes?: unknown;
+    };
+    PatchedDesignRequest: {
+      name?: string;
+    };
+    /** @description An empty `api_key` removes the stored key; an empty model name restores its default. */
+    PatchedLLMSettingsUpdateRequest: {
+      api_key?: string;
+      router_model?: string;
+      default_model?: string;
+      escalation_model?: string;
+    };
+    PatchedPhotoDraftUpdateRequest: {
+      draft?: {
+        [key: string]: unknown;
+      };
+    };
+    PatchedProjectRequest: {
+      name?: string;
+    };
+    Photo: {
+      /** Format: uuid */
+      readonly id: string;
+      /** Format: uuid */
+      readonly project: string;
+      readonly width: number;
+      readonly height: number;
+      readonly bytes: number;
+      readonly latest_draft: components['schemas']['PhotoDraftSummary'] | null;
+      /** Format: date-time */
+      readonly created_at: string;
+    };
+    PhotoDraft: {
+      /** Format: uuid */
+      readonly id: string;
+      /** Format: uuid */
+      readonly photo: string;
+      readonly status: components['schemas']['PhotoDraftStatusEnum'];
+      readonly draft: {
+        [key: string]: unknown;
+      } | null;
+      readonly error: string;
+      /** Format: uuid */
+      readonly design: string | null;
+      readonly model: string;
+      /** Format: date-time */
+      readonly created_at: string;
+      /** Format: date-time */
+      readonly updated_at: string;
+    };
+    PhotoDraftConfirmRequest: {
+      document: {
+        [key: string]: unknown;
+      };
+      name?: string;
+    };
+    /**
+     * @description * `analyzing` - Analyzing
+     *     * `ready` - Ready
+     *     * `failed` - Failed
+     *     * `confirmed` - Confirmed
+     *     * `discarded` - Discarded
+     * @enum {string}
+     */
+    PhotoDraftStatusEnum: 'analyzing' | 'ready' | 'failed' | 'confirmed' | 'discarded';
+    PhotoDraftSummary: {
+      /** Format: uuid */
+      readonly id: string;
+      readonly status: components['schemas']['PhotoDraftStatusEnum'];
+      /** Format: uuid */
+      readonly design: string | null;
+      /** Format: date-time */
+      readonly created_at: string;
+    };
+    PhotoUploadRequest: {
+      /** Format: binary */
+      file: string;
+    };
+    Project: {
+      /** Format: uuid */
+      readonly id: string;
+      name: string;
+      /** Format: date-time */
+      readonly created_at: string;
+      /** Format: date-time */
+      readonly updated_at: string;
+    };
+    ProjectRequest: {
+      name: string;
+    };
+    /** @description One assistant attempt. */
+    Proposal: {
+      /** Format: uuid */
+      conversation_id: string;
+      /** Format: uuid */
+      message_id: string;
+      text: string;
+      tool_calls: components['schemas']['ToolCall'][];
+      question: string;
+      errors: string[];
+      attempt: number;
+      retries_left: number;
+    };
+    /** @description Everything the PDF is rendered from. */
+    Quote: {
+      /** Format: uuid */
+      readonly id: string;
+      readonly number: number;
+      readonly project_name: string;
+      /** Format: uuid */
+      readonly design: string;
+      readonly design_name: string;
+      readonly design_version: number;
+      readonly customer_name: string;
+      /** Format: email */
+      readonly customer_email: string;
+      readonly customer_address: string;
+      readonly notes: string;
+      readonly catalog_version: string;
+      readonly settings: components['schemas']['Settings'];
+      readonly lines: components['schemas']['Line'][];
+      readonly totals: components['schemas']['Totals'];
+      readonly drawings: components['schemas']['Drawings'];
+      /** Format: date-time */
+      readonly created_at: string;
+    };
+    QuoteCreateRequest: {
+      draft_revision: number;
+      customer_name: string;
+      customer_email?: string;
+      /** @default  */
+      customer_address: string;
+      /** @default  */
+      notes: string;
+      catalog_version: string;
+      settings: components['schemas']['SettingsRequest'];
+      lines: components['schemas']['LineRequest'][];
+      totals: components['schemas']['TotalsRequest'];
+      drawings: components['schemas']['DrawingsRequest'];
+    };
+    /** @description A quote in a list, without its lines and drawings. */
+    QuoteSummary: {
+      /** Format: uuid */
+      readonly id: string;
+      readonly number: number;
+      readonly customer_name: string;
+      readonly total_cents: number;
+      readonly design_version: number;
+      /** Format: date-time */
+      readonly created_at: string;
+    };
+    Ready: {
+      status: string;
+    };
+    RegisterRequest: {
+      /** Format: email */
+      email: string;
+      password: string;
+      /** @default  */
+      name: string;
+    };
+    /** @description `invalid` reports a proposal the browser could not use after the last retry. */
+    ResolveRequestRequest: {
+      status: components['schemas']['ResolveRequestStatusEnum'];
+    };
+    /**
+     * @description * `accepted` - accepted
+     *     * `rejected` - rejected
+     *     * `invalid` - invalid
+     * @enum {string}
+     */
+    ResolveRequestStatusEnum: 'accepted' | 'rejected' | 'invalid';
+    RetryRequestRequest: {
+      errors: string[];
+      summary: string;
+    };
+    Role: {
+      name: string;
+      permissions: string[];
+    };
+    /**
+     * @description * `user` - User
+     *     * `assistant` - Assistant
+     * @enum {string}
+     */
+    RoleEnum: 'user' | 'assistant';
+    Settings: {
+      markupBps: number;
+      discountBps: number;
+      taxBps: number;
+      currency: components['schemas']['CurrencyEnum'];
+    };
+    SettingsRequest: {
+      markupBps: number;
+      discountBps: number;
+      taxBps: number;
+      currency: components['schemas']['CurrencyEnum'];
+    };
+    /** @description The body of a 409. */
+    StaleDraft: {
+      detail: string;
+      draft_revision: number;
+    };
+    ToolCall: {
+      name: string;
+      arguments: {
+        [key: string]: unknown;
+      };
+    };
+    Totals: {
+      subtotalCents: number;
+      markupCents: number;
+      discountCents: number;
+      taxableCents: number;
+      taxCents: number;
+      totalCents: number;
+    };
+    TotalsRequest: {
+      subtotalCents: number;
+      markupCents: number;
+      discountCents: number;
+      taxableCents: number;
+      taxCents: number;
+      totalCents: number;
+    };
+    /**
+     * @description * `each` - each
+     *     * `sqft` - sqft
+     * @enum {string}
+     */
+    UnitEnum: 'each' | 'sqft';
+    Usage: {
+      /** Format: date */
+      month: string;
+      input_tokens: number;
+      output_tokens: number;
+      requests: number;
+      quota_tokens: number;
+      remaining_tokens: number;
+    };
+    User: {
+      readonly id: number;
+      /**
+       * Email address
+       * Format: email
+       */
+      readonly email: string;
+      readonly name: string;
+      /**
+       * Staff status
+       * @description Designates whether the user can log into this admin site.
+       */
+      readonly is_staff: boolean;
+      /**
+       * Superuser status
+       * @description Designates that this user has all permissions without explicitly assigning them.
+       */
+      readonly is_superuser: boolean;
+      /** @description The Control Panel codes the user holds; the web app only uses them to hide things. */
+      readonly permissions: string[];
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    admin_audit_list: {
-        parameters: {
-            query?: {
-                /** @description An action, or the start of one. */
-                action?: string;
-                /** @description An actor's id or part of their email. */
-                actor?: string;
-                /** @description Number of results to return per page. */
-                limit?: number;
-                /** @description The initial index from which to return the results. */
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedAuditEntryList"];
-                };
-            };
-        };
+  admin_audit_list: {
+    parameters: {
+      query?: {
+        /** @description An action, or the start of one. */
+        action?: string;
+        /** @description An actor's id or part of their email. */
+        actor?: string;
+        /** @description Number of results to return per page. */
+        limit?: number;
+        /** @description The initial index from which to return the results. */
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    admin_config_draft_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConfigDraft"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['PaginatedAuditEntryList'];
         };
+      };
     };
-    admin_config_draft_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConfigDraftUpdateRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConfigDraft"];
-                };
-            };
-        };
+  };
+  admin_catalog_draft_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    admin_config_publish_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConfigPublishRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['CatalogDraft'];
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConfigVersion"];
-                };
-            };
-        };
+      };
     };
-    admin_config_versions_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConfigVersion"][];
-                };
-            };
-        };
+  };
+  admin_catalog_draft_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    admin_config_versions_rollback_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                number: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["ConfigRollbackRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConfigVersion"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatalogDraftUpdateRequest'];
+      };
     };
-    admin_roles_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Role"][];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['CatalogDraft'];
         };
+      };
     };
-    admin_users_list: {
-        parameters: {
-            query?: {
-                is_active?: boolean;
-                is_staff?: boolean;
-                /** @description Number of results to return per page. */
-                limit?: number;
-                /** @description The initial index from which to return the results. */
-                offset?: number;
-                /** @description The name of a role. */
-                role?: string;
-                /** @description Part of the email or name. */
-                search?: string;
-                /** @description A column, with `-` for descending. */
-                sort?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedAdminUserList"];
-                };
-            };
-        };
+  };
+  admin_catalog_entries_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    admin_users_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AdminUserCreateRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AdminUser"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatalogEntryCreateRequest'];
+      };
     };
-    admin_users_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AdminUser"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['CatalogDraft'];
         };
+      };
     };
-    admin_users_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedAdminUserUpdateRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AdminUser"];
-                };
-            };
-        };
+  };
+  admin_catalog_entries_partial_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        entry_id: string;
+      };
+      cookie?: never;
     };
-    admin_users_reset_password_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['PatchedCatalogEntryChangeRequest'];
+      };
     };
-    auth_login_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['CatalogDraft'];
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["User"];
-                };
-            };
-        };
+      };
     };
-    auth_logout_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  admin_catalog_entries_restore_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        entry_id: string;
+      };
+      cookie?: never;
     };
-    auth_me_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["User"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatalogRevisionRequest'];
+      };
     };
-    auth_password_reset_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PasswordResetRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['CatalogDraft'];
         };
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+      };
     };
-    auth_password_reset_confirm_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PasswordResetConfirmRequest"];
-            };
-        };
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  admin_catalog_entries_retire_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        entry_id: string;
+      };
+      cookie?: never;
     };
-    auth_register_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RegisterRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["User"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatalogRevisionRequest'];
+      };
     };
-    chat_messages_resolve_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveRequestRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['CatalogDraft'];
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Message"];
-                };
-            };
-        };
+      };
     };
-    chat_messages_retry_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RetryRequestRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Proposal"];
-                };
-            };
-        };
+  };
+  admin_catalog_finishes_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    chat_usage_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Usage"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatalogFinishCreateRequest'];
+      };
     };
-    config_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AppConfig"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['CatalogDraft'];
         };
+      };
     };
-    designs_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Design"];
-                };
-            };
-        };
+  };
+  admin_catalog_finishes_partial_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        finish_id: string;
+      };
+      cookie?: never;
     };
-    designs_destroy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['PatchedCatalogEntryChangeRequest'];
+      };
     };
-    designs_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedDesignRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['CatalogDraft'];
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Design"];
-                };
-            };
-        };
+      };
     };
-    designs_chat_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Conversation"];
-                };
-            };
-        };
+  };
+  admin_catalog_finishes_restore_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        finish_id: string;
+      };
+      cookie?: never;
     };
-    designs_chat_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChatRequestRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Proposal"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatalogRevisionRequest'];
+      };
     };
-    designs_draft_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DraftSaveRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['CatalogDraft'];
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DraftSaved"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DraftConflict"];
-                };
-            };
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InvalidDocument"];
-                };
-            };
-        };
+      };
     };
-    designs_quotes_list: {
-        parameters: {
-            query?: {
-                /** @description Number of results to return per page. */
-                limit?: number;
-                /** @description The initial index from which to return the results. */
-                offset?: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedQuoteSummaryList"];
-                };
-            };
-        };
+  };
+  admin_catalog_finishes_retire_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        finish_id: string;
+      };
+      cookie?: never;
     };
-    designs_quotes_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["QuoteCreateRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Quote"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StaleDraft"];
-                };
-            };
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InconsistentQuote"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatalogRevisionRequest'];
+      };
     };
-    designs_versions_list: {
-        parameters: {
-            query?: {
-                /** @description Number of results to return per page. */
-                limit?: number;
-                /** @description The initial index from which to return the results. */
-                offset?: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedDesignVersionSummaryList"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['CatalogDraft'];
         };
+      };
     };
-    designs_versions_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["DesignVersionCreateRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DesignVersionSummary"];
-                };
-            };
-        };
+  };
+  admin_catalog_publish_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    designs_versions_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                number: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DesignVersion"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatalogPublishRequest'];
+      };
     };
-    designs_versions_restore_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                number: number;
-            };
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Design"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['CatalogVersion'];
         };
+      };
     };
-    health_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Health"];
-                };
-            };
-        };
+  };
+  admin_catalog_validate_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    llm_settings_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LLMSettings"];
-                };
-            };
-        };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['CatalogValidateRequest'];
+      };
     };
-    llm_settings_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedLLMSettingsUpdateRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['CatalogValidation'];
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LLMSettings"];
-                };
-            };
-        };
+      };
     };
-    photo_drafts_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PhotoDraft"];
-                };
-            };
-        };
+  };
+  admin_catalog_versions_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    photo_drafts_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedPhotoDraftUpdateRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['CatalogVersion'][];
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PhotoDraft"];
-                };
-            };
-        };
+      };
     };
-    photo_drafts_confirm_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PhotoDraftConfirmRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Design"];
-                };
-            };
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InvalidDocument"];
-                };
-            };
-        };
+  };
+  admin_catalog_versions_rollback_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        version: string;
+      };
+      cookie?: never;
     };
-    photo_drafts_discard_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PhotoDraft"];
-                };
-            };
-        };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['CatalogRollbackRequest'];
+      };
     };
-    photos_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Photo"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['CatalogVersion'];
         };
+      };
     };
-    photos_destroy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  admin_config_draft_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    photos_analyze_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PhotoDraft"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ConfigDraft'];
         };
+      };
     };
-    photos_file_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "image/jpeg": string;
-                };
-            };
-        };
+  };
+  admin_config_draft_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    projects_list: {
-        parameters: {
-            query?: {
-                /** @description Number of results to return per page. */
-                limit?: number;
-                /** @description The initial index from which to return the results. */
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedProjectList"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConfigDraftUpdateRequest'];
+      };
     };
-    projects_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProjectRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['ConfigDraft'];
         };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Project"];
-                };
-            };
-        };
+      };
     };
-    projects_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Project"];
-                };
-            };
-        };
+  };
+  admin_config_publish_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    projects_destroy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConfigPublishRequest'];
+      };
     };
-    projects_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedProjectRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['ConfigVersion'];
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Project"];
-                };
-            };
-        };
+      };
     };
-    projects_designs_list: {
-        parameters: {
-            query?: {
-                /** @description Number of results to return per page. */
-                limit?: number;
-                /** @description The initial index from which to return the results. */
-                offset?: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedDesignSummaryList"];
-                };
-            };
-        };
+  };
+  admin_config_versions_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    projects_designs_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["DesignCreateRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['ConfigVersion'][];
         };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Design"];
-                };
-            };
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InvalidDocument"];
-                };
-            };
-        };
+      };
     };
-    projects_photos_list: {
-        parameters: {
-            query?: {
-                /** @description Number of results to return per page. */
-                limit?: number;
-                /** @description The initial index from which to return the results. */
-                offset?: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedPhotoList"];
-                };
-            };
-        };
+  };
+  admin_config_versions_rollback_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
     };
-    projects_photos_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["PhotoUploadRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Photo"];
-                };
-            };
-        };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['ConfigRollbackRequest'];
+      };
     };
-    quotes_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Quote"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ConfigVersion'];
         };
+      };
     };
-    quotes_destroy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  admin_roles_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    ready_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Ready"];
-                };
-            };
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NotReady"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['Role'][];
         };
+      };
     };
+  };
+  admin_users_list: {
+    parameters: {
+      query?: {
+        is_active?: boolean;
+        is_staff?: boolean;
+        /** @description Number of results to return per page. */
+        limit?: number;
+        /** @description The initial index from which to return the results. */
+        offset?: number;
+        /** @description The name of a role. */
+        role?: string;
+        /** @description Part of the email or name. */
+        search?: string;
+        /** @description A column, with `-` for descending. */
+        sort?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaginatedAdminUserList'];
+        };
+      };
+    };
+  };
+  admin_users_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AdminUserCreateRequest'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminUser'];
+        };
+      };
+    };
+  };
+  admin_users_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminUser'];
+        };
+      };
+    };
+  };
+  admin_users_partial_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['PatchedAdminUserUpdateRequest'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminUser'];
+        };
+      };
+    };
+  };
+  admin_users_reset_password_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  auth_login_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LoginRequest'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['User'];
+        };
+      };
+    };
+  };
+  auth_logout_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  auth_me_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['User'];
+        };
+      };
+    };
+  };
+  auth_password_reset_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasswordResetRequest'];
+      };
+    };
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  auth_password_reset_confirm_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasswordResetConfirmRequest'];
+      };
+    };
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  auth_register_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegisterRequest'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['User'];
+        };
+      };
+    };
+  };
+  catalog_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Catalog'];
+        };
+      };
+    };
+  };
+  catalog_version_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        version: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Catalog'];
+        };
+      };
+    };
+  };
+  chat_messages_resolve_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ResolveRequestRequest'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Message'];
+        };
+      };
+    };
+  };
+  chat_messages_retry_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RetryRequestRequest'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Proposal'];
+        };
+      };
+    };
+  };
+  chat_usage_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Usage'];
+        };
+      };
+    };
+  };
+  config_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AppConfig'];
+        };
+      };
+    };
+  };
+  designs_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Design'];
+        };
+      };
+    };
+  };
+  designs_destroy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  designs_partial_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['PatchedDesignRequest'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Design'];
+        };
+      };
+    };
+  };
+  designs_chat_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Conversation'];
+        };
+      };
+    };
+  };
+  designs_chat_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChatRequestRequest'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Proposal'];
+        };
+      };
+    };
+  };
+  designs_draft_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DraftSaveRequest'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DraftSaved'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DraftConflict'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InvalidDocument'];
+        };
+      };
+    };
+  };
+  designs_quotes_list: {
+    parameters: {
+      query?: {
+        /** @description Number of results to return per page. */
+        limit?: number;
+        /** @description The initial index from which to return the results. */
+        offset?: number;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaginatedQuoteSummaryList'];
+        };
+      };
+    };
+  };
+  designs_quotes_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['QuoteCreateRequest'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Quote'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StaleDraft'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InconsistentQuote'];
+        };
+      };
+    };
+  };
+  designs_versions_list: {
+    parameters: {
+      query?: {
+        /** @description Number of results to return per page. */
+        limit?: number;
+        /** @description The initial index from which to return the results. */
+        offset?: number;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaginatedDesignVersionSummaryList'];
+        };
+      };
+    };
+  };
+  designs_versions_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['DesignVersionCreateRequest'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DesignVersionSummary'];
+        };
+      };
+    };
+  };
+  designs_versions_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DesignVersion'];
+        };
+      };
+    };
+  };
+  designs_versions_restore_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Design'];
+        };
+      };
+    };
+  };
+  health_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Health'];
+        };
+      };
+    };
+  };
+  llm_settings_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LLMSettings'];
+        };
+      };
+    };
+  };
+  llm_settings_partial_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['PatchedLLMSettingsUpdateRequest'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LLMSettings'];
+        };
+      };
+    };
+  };
+  photo_drafts_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PhotoDraft'];
+        };
+      };
+    };
+  };
+  photo_drafts_partial_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['PatchedPhotoDraftUpdateRequest'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PhotoDraft'];
+        };
+      };
+    };
+  };
+  photo_drafts_confirm_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PhotoDraftConfirmRequest'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Design'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InvalidDocument'];
+        };
+      };
+    };
+  };
+  photo_drafts_discard_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PhotoDraft'];
+        };
+      };
+    };
+  };
+  photos_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Photo'];
+        };
+      };
+    };
+  };
+  photos_destroy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  photos_analyze_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PhotoDraft'];
+        };
+      };
+    };
+  };
+  photos_file_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'image/jpeg': string;
+        };
+      };
+    };
+  };
+  projects_list: {
+    parameters: {
+      query?: {
+        /** @description Number of results to return per page. */
+        limit?: number;
+        /** @description The initial index from which to return the results. */
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaginatedProjectList'];
+        };
+      };
+    };
+  };
+  projects_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProjectRequest'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Project'];
+        };
+      };
+    };
+  };
+  projects_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Project'];
+        };
+      };
+    };
+  };
+  projects_destroy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  projects_partial_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['PatchedProjectRequest'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Project'];
+        };
+      };
+    };
+  };
+  projects_designs_list: {
+    parameters: {
+      query?: {
+        /** @description Number of results to return per page. */
+        limit?: number;
+        /** @description The initial index from which to return the results. */
+        offset?: number;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaginatedDesignSummaryList'];
+        };
+      };
+    };
+  };
+  projects_designs_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['DesignCreateRequest'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Design'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InvalidDocument'];
+        };
+      };
+    };
+  };
+  projects_photos_list: {
+    parameters: {
+      query?: {
+        /** @description Number of results to return per page. */
+        limit?: number;
+        /** @description The initial index from which to return the results. */
+        offset?: number;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaginatedPhotoList'];
+        };
+      };
+    };
+  };
+  projects_photos_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['PhotoUploadRequest'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Photo'];
+        };
+      };
+    };
+  };
+  quotes_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Quote'];
+        };
+      };
+    };
+  };
+  quotes_destroy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ready_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Ready'];
+        };
+      };
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['NotReady'];
+        };
+      };
+    };
+  };
 }

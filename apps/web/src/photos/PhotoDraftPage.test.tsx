@@ -188,14 +188,14 @@ describe('the correction screen', () => {
 
 describe('buildDocument', () => {
   it('refuses a draft with problems and builds one without', () => {
-    const unconfirmed = buildDocument(draft(), 'Kitchen');
+    const unconfirmed = buildDocument(draft(), 'Kitchen', SEED_CATALOG);
     expect(unconfirmed.ok).toBe(false);
     const ready = draft();
     ready.walls = ready.walls.map((wall) => ({
       ...wall,
       length: { ...wall.length, estimated: false },
     }));
-    const built = buildDocument(ready, 'Kitchen');
+    const built = buildDocument(ready, 'Kitchen', SEED_CATALOG);
     expect(built.ok && built.value.room.walls).toHaveLength(2);
     expect(built.ok && built.value.items[0]!.width).toBe(30 * IN);
   });

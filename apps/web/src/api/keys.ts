@@ -34,6 +34,12 @@ export const adminRolesKey = ['admin', 'roles'] as const;
 /** The audit log for one set of filters. */
 export const adminAuditKey = (params: object) => ['admin', 'audit', params] as const;
 
+/** The draft of the catalog being edited (staff only). */
+export const catalogDraftKey = ['admin', 'catalog', 'draft'] as const;
+
+/** The published versions of the catalog (staff only). */
+export const catalogVersionsKey = ['admin', 'catalog', 'versions'] as const;
+
 /** The draft of the app configuration being edited (staff only). */
 export const configDraftKey = ['admin', 'config', 'draft'] as const;
 

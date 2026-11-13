@@ -84,7 +84,10 @@ function ItemProperties({ item }: { item: Item }) {
   const widths = entry ? allowedWidths(entry) : [];
   const square = entry?.corner === 'l' || entry?.corner === 'diagonal';
   const { placement } = item;
-  const finishes = catalog.finishes.filter((finish) => finish.target === 'cabinet');
+  // A retired finish is not offered, but one the item already has stays in the list.
+  const finishes = catalog.finishes.filter(
+    (finish) => finish.target === 'cabinet' && (!finish.retired || finish.id === item.finishId),
+  );
 
   return (
     <div className="flex flex-col gap-3 p-3">
@@ -251,7 +254,10 @@ function CountertopProperties({ countertop }: { countertop: Countertop }) {
   const doc = useDesign((state) => state.doc);
   const catalog = useDesign((state) => state.catalog);
   const run = useRun();
-  const finishes = catalog.finishes.filter((finish) => finish.target === 'countertop');
+  const finishes = catalog.finishes.filter(
+    (finish) =>
+      finish.target === 'countertop' && (!finish.retired || finish.id === countertop.finishId),
+  );
   return (
     <div className="flex flex-col gap-3 p-3">
       <p className="text-sm font-semibold text-slate-900">
