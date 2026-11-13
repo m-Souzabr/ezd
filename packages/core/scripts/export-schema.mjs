@@ -32,6 +32,10 @@ for (const [name, schema] of Object.entries(files)) {
   console.log(`wrote schema/${name}`);
 }
 
+// The seed catalog as data: the first published catalog, and the fallback when none is.
+writeFileSync(join(outDir, 'catalog.seed.json'), `${JSON.stringify(SEED_CATALOG, null, 2)}\n`);
+console.log('wrote schema/catalog.seed.json');
+
 // The catalog as the model reads it: part of the prompt prefix the server sends unchanged.
 writeFileSync(join(outDir, 'llm-catalog-index.txt'), `${catalogIndexForLLM(SEED_CATALOG)}\n`);
 console.log('wrote schema/llm-catalog-index.txt');

@@ -1,5 +1,7 @@
 import {
   type Catalog,
+  catalogIndexForLLM,
+  CatalogSchema,
   type Command,
   type CommandError,
   VERSION as CORE_VERSION,
@@ -8,6 +10,7 @@ import {
   draftProblems,
   DraftRoomSchema,
   type Issue,
+  llmToolsJsonSchema,
   normalizeDraft,
   parseCatalog,
   parseDocument,
@@ -19,6 +22,7 @@ import {
   type ToolCall,
   validate,
   validateAppConfig,
+  validateCatalog,
   validateCommand,
   type Violation,
 } from '@ezd/core';
@@ -69,6 +73,14 @@ The catalog the commands check against is the seed catalog unless one is given: 
 normalize-draft, as { draft, catalog }), or --catalog <file> for any of them. The stdin
 one wins. A catalog that is not valid is an error, not a fallback.
 
+  validate-catalog   read a catalog as JSON on stdin and print
+                     { ok, catalog, problems, errors }: errors are what stops it from
+                     being stored (it is not a catalog at all), problems are the rules it
+                     breaks, which stop it from being published; exits 0 when there is
+                     neither
+  llm-tools          read a catalog as JSON on stdin and print { ok, tools, index,
+                     errors }: the assistant's tool schemas and catalog index for it
+
 Options:
   --catalog <file>  read the catalog from this JSON file
   -V, --version     print the CLI and core versions
@@ -85,6 +97,8 @@ export const readsStdin = (argv: readonly string[]): boolean =>
     'normalize-draft',
     'draft-problems',
     'validate-config',
+    'validate-catalog',
+    'llm-tools',
   ].includes(argv[0] ?? '');
 
 function validateDocument(stdin: string): CliResult {
@@ -370,6 +384,40 @@ function validateConfigInput(stdin: string): CliResult {
   return printed(true, { config: checked.value, errors: [] });
 }
 
+function readJson(stdin: string): { ok: true; value: unknown } | { ok: false; errors: Issue[] } {
+  try {
+    return { ok: true, value: JSON.parse(stdin) };
+  } catch (error) {
+    return {
+      ok: false,
+      errors: [{ path: '', message: `Invalid JSON: ${(error as Error).message}` }],
+    };
+  }
+}
+
+function validateCatalogInput(stdin: string): CliResult {
+  const read = readJson(stdin);
+  if (!read.ok) return printed(false, { catalog: null, problems: [], errors: read.errors });
+  const parsed = CatalogSchema.safeParse(read.value);
+  if (!parsed.success) {
+    return printed(false, { catalog: null, problems: [], errors: toIssues(parsed.error) });
+  }
+  const problems = validateCatalog(parsed.data);
+  return printed(problems.length === 0, { catalog: parsed.data, problems, errors: [] });
+}
+
+function llmToolsInput(stdin: string): CliResult {
+  const read = readJson(stdin);
+  if (!read.ok) return printed(false, { tools: null, index: '', errors: read.errors });
+  const resolved = resolveCatalog(read.value, {});
+  if (!resolved.ok) return printed(false, { tools: null, index: '', errors: resolved.errors });
+  return printed(true, {
+    tools: llmToolsJsonSchema(resolved.catalog),
+    index: catalogIndexForLLM(resolved.catalog),
+    errors: [],
+  });
+}
+
 /** Runs the CLI for the given arguments (without `node` and the script path). */
 export function run(argv: readonly string[], stdin = '', options: RunOptions = {}): CliResult {
   const [first] = argv;
@@ -381,6 +429,8 @@ export function run(argv: readonly string[], stdin = '', options: RunOptions = {
   if (first === 'normalize-draft') return normalizeDraftInput(stdin, options);
   if (first === 'draft-problems') return draftProblemsInput(stdin);
   if (first === 'validate-config') return validateConfigInput(stdin);
+  if (first === 'validate-catalog') return validateCatalogInput(stdin);
+  if (first === 'llm-tools') return llmToolsInput(stdin);
   if (first === '--version' || first === '-V') {
     return {
       exitCode: 0,

@@ -498,3 +498,52 @@ describe('the catalog', () => {
     expect(bad.exitCode).toBe(1);
   });
 });
+
+describe('validate-catalog and llm-tools', () => {
+  const seed = () => JSON.parse(JSON.stringify(SEED_CATALOG)) as Catalog;
+  type Out = {
+    ok: boolean;
+    problems: { path: string }[];
+    errors: { path: string }[];
+    tools: { tools: { name: string }[]; catalogVersion: string } | null;
+    index: string;
+  };
+  const out = (stdout: string) => JSON.parse(stdout) as Out;
+
+  it('accepts a valid catalog, and separates what stops storing from what stops publishing', () => {
+    expect(readsStdin(['validate-catalog'])).toBe(true);
+    expect(readsStdin(['llm-tools'])).toBe(true);
+    const good = run(['validate-catalog'], JSON.stringify(seed()));
+    expect(good.exitCode).toBe(0);
+    expect(out(good.stdout)).toMatchObject({ ok: true, problems: [], errors: [] });
+
+    const broken = seed();
+    broken.entries[0]!.price.baseCents = -1;
+    const rule = run(['validate-catalog'], JSON.stringify(broken));
+    expect(rule.exitCode).toBe(1);
+    expect(out(rule.stdout).problems[0]!.path).toBe('entries.0.price.baseCents');
+    expect(out(rule.stdout).errors).toEqual([]);
+
+    const shape = run(['validate-catalog'], JSON.stringify({ version: 'x' }));
+    expect(shape.exitCode).toBe(1);
+    expect(out(shape.stdout).errors.length).toBeGreaterThan(0);
+    expect(out(run(['validate-catalog'], '{').stdout).errors[0]).toMatchObject({ path: '' });
+  });
+
+  it('prints the tool schemas and index of the catalog it is given', () => {
+    const catalog = seed();
+    catalog.version = 'custom-9';
+    getEntry(catalog, 'base.drawers')!.retired = true;
+    const result = out(run(['llm-tools'], JSON.stringify(catalog)).stdout);
+    expect(result.ok).toBe(true);
+    expect(result.tools!.catalogVersion).toBe('custom-9');
+    expect(result.index).toContain('Catalog custom-9');
+    expect(result.index).not.toContain('base.drawers');
+    expect(JSON.stringify(result.tools)).not.toContain('base.drawers');
+
+    const bad = run(['llm-tools'], JSON.stringify({ ...catalog, entries: [] }));
+    expect(bad.exitCode).toBe(1);
+    expect(out(bad.stdout).errors[0]!.path).toBe('catalog.entries');
+    expect(run(['llm-tools'], '{').exitCode).toBe(1);
+  });
+});
