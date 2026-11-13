@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.conf import settings
 from django.db import models
 
@@ -82,3 +84,57 @@ class ConfigVersion(models.Model):
 
     def __str__(self) -> str:
         return f"Config {self.number or 'draft'} ({self.status})"
+
+
+class CatalogVersion(models.Model):
+    """One version of the cabinet catalog the Control Panel edits.
+
+    A published row is never changed or deleted: a stored quote names the `version` it was
+    priced with, and that version must still be there to check it against. At most one row
+    is the draft. The current catalog is the published row with the greatest `number`;
+    rolling back publishes a copy of an old one as a new row.
+    """
+
+    class Status(models.TextChoices):
+        DRAFT = "draft"
+        PUBLISHED = "published"
+
+    # Null while a draft: both are given when it is published.
+    number = models.PositiveIntegerField(null=True, blank=True, unique=True)
+    # What `catalog.version` says, and what a quote's `catalog_version` refers to.
+    version = models.CharField(max_length=50, null=True, blank=True, unique=True)
+    status = models.CharField(max_length=10, choices=Status.choices)
+    catalog = models.JSONField(default=dict)
+    # Counts the saves of a draft, so a stale save can be refused.
+    revision = models.PositiveIntegerField(default=1)
+    note = models.CharField(max_length=200, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-id",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["status"],
+                condition=models.Q(status="draft"),
+                name="one_catalog_draft",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"Catalog {self.version or 'draft'} ({self.status})"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if self.pk and not self._state.adding:
+            stored = CatalogVersion.objects.filter(pk=self.pk).values_list("status", flat=True)
+            if stored.first() == self.Status.PUBLISHED:
+                raise ValueError("A published catalog version never changes.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        if self.status == self.Status.PUBLISHED:
+            raise ValueError("A published catalog version is never deleted.")
+        return super().delete(*args, **kwargs)

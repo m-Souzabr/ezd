@@ -247,6 +247,12 @@ export function validateCatalog(catalog: Catalog): CatalogProblem[] {
     }
   });
 
+  for (const target of ['cabinet', 'countertop', 'wall', 'floor'] as const) {
+    if (!catalog.finishes.some((finish) => finish.target === target && !finish.retired)) {
+      bad('finishes', `Keep at least one ${target} finish that is not retired.`);
+    }
+  }
+
   for (const id of REQUIRED_CATALOG_IDS) {
     const entry = catalog.entries.find((candidate) => candidate.id === id);
     if (!entry) bad('entries', `The entry "${id}" is required by the app and is missing.`);

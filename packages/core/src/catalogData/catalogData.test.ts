@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   activeEntries,
+  activeFinishes,
   type Catalog,
   type CatalogEntry,
   CatalogSchema,
@@ -367,6 +368,34 @@ describe('retired entries', () => {
     );
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error[0]?.message).toMatch(/retired/);
+  });
+});
+
+describe('retired finishes', () => {
+  const retired = clone();
+  retired.finishes.find((finish) => finish.id === 'cabinet.navy')!.retired = true;
+  const doc = kitchen([on('base.standard', 'wall-north', 0)]);
+
+  it('are left out of the tools and index, and refused when proposed', () => {
+    expect(validateCatalog(retired)).toEqual([]);
+    expect(activeFinishes(retired).some((finish) => finish.id === 'cabinet.navy')).toBe(false);
+    expect(catalogIndexForLLM(retired)).not.toContain('cabinet.navy');
+    expect(JSON.stringify(llmToolDefinitions(retired))).not.toContain('cabinet.navy');
+    for (const call of [
+      { name: 'set_finish', arguments: { target: 'cabinet', finishId: 'cabinet.navy' } },
+      { name: 'update_item', arguments: { item: 'c1', finishId: 'cabinet.navy' } },
+    ]) {
+      const result = proposalToCommands([call], { c1: doc.items[0]!.id }, doc, retired);
+      expect(result.ok).toBe(false);
+    }
+  });
+
+  it('cannot leave a target without a finish', () => {
+    const none = clone();
+    for (const finish of none.finishes) {
+      if (finish.target === 'floor') finish.retired = true;
+    }
+    expect(messages(none)).toMatch(/at least one floor finish/);
   });
 });
 

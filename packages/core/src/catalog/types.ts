@@ -40,6 +40,10 @@ export type Catalog = z.infer<typeof CatalogSchema>;
 export const activeEntries = (catalog: Catalog): CatalogEntry[] =>
   catalog.entries.filter((entry) => !entry.retired);
 
+/** Finishes that can be chosen: every one that is not retired. */
+export const activeFinishes = (catalog: Catalog): Finish[] =>
+  catalog.finishes.filter((finish) => !finish.retired);
+
 export const getEntry = (catalog: Catalog, id: string): CatalogEntry | undefined =>
   catalog.entries.find((entry) => entry.id === id);
 

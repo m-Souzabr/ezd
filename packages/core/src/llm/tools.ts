@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import {
   activeEntries,
+  activeFinishes,
   allowedOptionValues,
   allowedWidths,
   type Catalog,
@@ -213,8 +214,8 @@ function addItemVariant(entry: CatalogEntry) {
  */
 export function llmToolSchemas(catalog: Catalog): Record<ToolName, z.ZodType> {
   const [first, ...rest] = activeEntries(catalog).map(addItemVariant);
-  const finishIds = catalog.finishes.map((finish) => finish.id);
-  const cabinetFinishIds = catalog.finishes
+  const finishIds = activeFinishes(catalog).map((finish) => finish.id);
+  const cabinetFinishIds = activeFinishes(catalog)
     .filter((finish) => finish.target === 'cabinet')
     .map((finish) => finish.id);
   const widest = Math.max(...catalog.entries.flatMap((entry) => allowedWidths(entry).slice(-1)));

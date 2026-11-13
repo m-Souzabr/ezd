@@ -1,5 +1,6 @@
 import {
   activeEntries,
+  activeFinishes,
   allowedOptionValues,
   type Catalog,
   type CatalogEntry,
@@ -49,6 +50,6 @@ export function catalogIndexForLLM(catalog: Catalog): string {
     'Entries (id | name | kind | widths | heights | depths | default size | placement | options):',
     ...activeEntries(catalog).map(entryLine),
     'Finishes (id | name | applies to):',
-    ...catalog.finishes.map((finish) => `${finish.id} | ${finish.name} | ${finish.target}`),
+    ...activeFinishes(catalog).map((finish) => `${finish.id} | ${finish.name} | ${finish.target}`),
   ].join('\n');
 }

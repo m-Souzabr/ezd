@@ -83,6 +83,8 @@ export const FinishSchema = z
     multiplierBps: z.number().int().optional(),
     /** Countertop finishes only: the price of one square foot. */
     pricePerSqftCents: z.number().int().optional(),
+    /** Like an entry's: kept so a design that uses it still prices, but no longer offered. */
+    retired: z.boolean().optional(),
   })
   .meta({ id: 'Finish' });
 
