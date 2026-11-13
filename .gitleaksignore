@@ -1,3 +1,5 @@
 # Test fixtures, not secrets: a fake API key and base64 of placeholder text in apps/api/tests/test_llm.py.
 8d92daec7f9a5a86a08bd70abdddab666bf84668:apps/api/tests/test_llm.py:generic-api-key:24
 8d92daec7f9a5a86a08bd70abdddab666bf84668:apps/api/tests/test_llm.py:generic-api-key:55
+# A localStorage key name, not a secret: apps/web/src/config/ConfigProvider.tsx (renamed in the next commit).
+4e030b2180d67495c06c7c5692defb62463163bf:apps/web/src/config/ConfigProvider.tsx:generic-api-key:21
