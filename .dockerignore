@@ -1,4 +1,4 @@
-# For apps/api/Dockerfile, which is built from the repository root.
+# For apps/api/Dockerfile and apps/web/Dockerfile, which are built from the repository root.
 .git
 **/node_modules
 **/dist
@@ -8,4 +8,3 @@
 **/.ruff_cache
 **/.env
 **/coverage
-apps/web
