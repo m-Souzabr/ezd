@@ -560,12 +560,20 @@ function VersionHistory() {
 
 type Loaded = { revision: number; config: AppConfig; basedOn: number | null };
 
-function Editor({ loaded }: { loaded: Loaded }) {
+function Editor({
+  loaded,
+  notice,
+  onPublished,
+}: {
+  loaded: Loaded;
+  notice: string | null;
+  onPublished: (message: string) => void;
+}) {
   const queryClient = useQueryClient();
   const [config, setConfig] = useState(loaded.config);
   const [saved, setSaved] = useState(loaded.config);
   const [revision, setRevision] = useState(loaded.revision);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(notice);
   const [publishing, setPublishing] = useState(false);
   const errors = useMemo(() => errorMap(config), [config]);
   const dirty = JSON.stringify(config) !== JSON.stringify(saved);
@@ -590,7 +598,10 @@ function Editor({ loaded }: { loaded: Loaded }) {
     },
     onSuccess: async (version) => {
       setPublishing(false);
-      setMessage(`Published as version ${version.number}.`);
+      // The refetched draft remounts this editor, so the page keeps the message.
+      const published = `Published as version ${version.number}.`;
+      setMessage(published);
+      onPublished(published);
       setRevision(0);
       setSaved(config);
       await queryClient.invalidateQueries({ queryKey: configVersionsKey });
@@ -668,6 +679,7 @@ function Editor({ loaded }: { loaded: Loaded }) {
  * published. The form is checked by core as you type; the server checks it again.
  */
 export function AppSettingsPage() {
+  const [notice, setNotice] = useState<string | null>(null);
   const draft = useQuery({ queryKey: configDraftKey, queryFn: api.getConfigDraft });
   const loaded = useMemo<Loaded | null>(() => {
     if (!draft.data) return null;
@@ -682,7 +694,12 @@ export function AppSettingsPage() {
     <RequirePermission permission="config.app.edit" fallback={<NoAccess />}>
       <h1 className="mb-4 text-xl font-semibold">App settings</h1>
       {loaded ? (
-        <Editor key={`${loaded.revision}-${loaded.basedOn}`} loaded={loaded} />
+        <Editor
+          key={`${loaded.revision}-${loaded.basedOn}`}
+          loaded={loaded}
+          notice={notice}
+          onPublished={setNotice}
+        />
       ) : draft.error ? (
         <p role="alert" className="text-sm text-red-700">
           {errorMessage(draft.error)}
