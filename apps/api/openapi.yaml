@@ -557,6 +557,197 @@ paths:
               schema:
                 $ref: '#/components/schemas/LLMSettings'
           description: ''
+  /api/photo-drafts/{id}/:
+    get:
+      operationId: photo_drafts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - photo-drafts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoDraft'
+          description: ''
+    patch:
+      operationId: photo_drafts_partial_update
+      description: Saves the user's corrections. Only a `ready` draft can change.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - photo-drafts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPhotoDraftUpdateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoDraft'
+          description: ''
+  /api/photo-drafts/{id}/confirm/:
+    post:
+      operationId: photo_drafts_confirm_create
+      description: Creates the design and its version 1 from the confirmed draft.
+        Once only.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - photo-drafts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhotoDraftConfirmRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Design'
+          description: ''
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidDocument'
+          description: ''
+  /api/photo-drafts/{id}/discard/:
+    post:
+      operationId: photo_drafts_discard_create
+      description: Marks the draft discarded. A confirmed draft cannot be discarded.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - photo-drafts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoDraft'
+          description: ''
+  /api/photos/{id}/:
+    get:
+      operationId: photos_retrieve
+      description: Read, or delete with its file and drafts. Designs made from it
+        are kept.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - photos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+          description: ''
+    delete:
+      operationId: photos_destroy
+      description: Read, or delete with its file and drafts. Designs made from it
+        are kept.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - photos
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/photos/{id}/analyze/:
+    post:
+      operationId: photos_analyze_create
+      description: 'Runs the vision model on the photo and stores a new draft: `ready`
+        or `failed`.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - photos
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoDraft'
+          description: ''
+  /api/photos/{id}/file/:
+    get:
+      operationId: photos_file_retrieve
+      description: The photo itself, as a JPEG. Only its owner can read it.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - photos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/projects/:
     get:
       operationId: projects_list
@@ -718,6 +909,59 @@ paths:
               schema:
                 $ref: '#/components/schemas/InvalidDocument'
           description: ''
+  /api/projects/{id}/photos/:
+    get:
+      operationId: projects_photos_list
+      description: The photos of a project, newest first, with the state of their
+        newest analysis.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Photo'
+          description: ''
+    post:
+      operationId: projects_photos_create
+      description: Uploads a JPEG, PNG or WebP photo. It is stored re-encoded, with
+        no metadata.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - projects
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PhotoUploadRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+          description: ''
   /api/quotes/{id}/:
     get:
       operationId: quotes_retrieve
@@ -820,6 +1064,11 @@ components:
         schema_version:
           type: integer
           readOnly: true
+        source_photo:
+          type: string
+          format: uuid
+          nullable: true
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -836,6 +1085,7 @@ components:
       - name
       - project
       - schema_version
+      - source_photo
       - updated_at
     DesignCreateRequest:
       type: object
@@ -1414,6 +1664,12 @@ components:
         escalation_model:
           type: string
           maxLength: 100
+    PatchedPhotoDraftUpdateRequest:
+      type: object
+      properties:
+        draft:
+          type: object
+          additionalProperties: {}
     PatchedProjectRequest:
       type: object
       properties:
@@ -1421,6 +1677,151 @@ components:
           type: string
           minLength: 1
           maxLength: 200
+    Photo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project:
+          type: string
+          format: uuid
+          readOnly: true
+        width:
+          type: integer
+          readOnly: true
+        height:
+          type: integer
+          readOnly: true
+        bytes:
+          type: integer
+          readOnly: true
+        latest_draft:
+          allOf:
+          - $ref: '#/components/schemas/PhotoDraftSummary'
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - bytes
+      - created_at
+      - height
+      - id
+      - latest_draft
+      - project
+      - width
+    PhotoDraft:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        photo:
+          type: string
+          format: uuid
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PhotoDraftStatusEnum'
+          readOnly: true
+        draft:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+          nullable: true
+        error:
+          type: string
+          readOnly: true
+        design:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        model:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - design
+      - draft
+      - error
+      - id
+      - model
+      - photo
+      - status
+      - updated_at
+    PhotoDraftConfirmRequest:
+      type: object
+      properties:
+        document:
+          type: object
+          additionalProperties: {}
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - document
+    PhotoDraftStatusEnum:
+      enum:
+      - analyzing
+      - ready
+      - failed
+      - confirmed
+      - discarded
+      type: string
+      description: |-
+        * `analyzing` - Analyzing
+        * `ready` - Ready
+        * `failed` - Failed
+        * `confirmed` - Confirmed
+        * `discarded` - Discarded
+    PhotoDraftSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PhotoDraftStatusEnum'
+          readOnly: true
+        design:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - design
+      - id
+      - status
+    PhotoUploadRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+      required:
+      - file
     Project:
       type: object
       properties:

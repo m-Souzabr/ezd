@@ -12,4 +12,5 @@ urlpatterns = [
     path("api/", include("quotes.urls")),
     path("api/", include("chat.urls")),
     path("api/", include("llm.urls")),
+    path("api/", include("photos.urls")),
 ]

@@ -4,11 +4,13 @@ import {
   VERSION as CORE_VERSION,
   type DesignDocument,
   dryRunProposal,
+  draftProblems,
   DraftRoomSchema,
   type Issue,
   normalizeDraft,
   parseDocument,
   type ProposalError,
+  RoomDraftSchema,
   SEED_CATALOG,
   summarizeForLLM,
   toIssues,
@@ -47,6 +49,9 @@ Commands:
                      against the draft schema and print { ok, draft, errors }: the
                      draft with lengths in sixteenths, cabinets snapped to the seed
                      catalog and every length marked as an estimate
+  draft-problems     read a stored room draft as JSON on stdin and print
+                     { ok, problems, errors }: what still stops it from being
+                     confirmed; exits 0 when it can be confirmed
 
 Options:
   -V, --version  print the CLI and core versions
@@ -55,9 +60,14 @@ Options:
 
 /** Whether the CLI must read stdin before calling `run` with these arguments. */
 export const readsStdin = (argv: readonly string[]): boolean =>
-  ['validate-document', 'validate', 'llm-summary', 'llm-dry-run', 'normalize-draft'].includes(
-    argv[0] ?? '',
-  );
+  [
+    'validate-document',
+    'validate',
+    'llm-summary',
+    'llm-dry-run',
+    'normalize-draft',
+    'draft-problems',
+  ].includes(argv[0] ?? '');
 
 function validateDocument(stdin: string): CliResult {
   let errors: Issue[];
@@ -259,6 +269,20 @@ function normalizeDraftInput(stdin: string): CliResult {
   return printed(true, { draft: normalizeDraft(parsed.data, SEED_CATALOG), errors: [] });
 }
 
+function draftProblemsInput(stdin: string): CliResult {
+  let input: unknown;
+  try {
+    input = JSON.parse(stdin);
+  } catch (error) {
+    const errors = [{ path: '', message: `Invalid JSON: ${(error as Error).message}` }];
+    return printed(false, { problems: [], errors });
+  }
+  const parsed = RoomDraftSchema.safeParse(input);
+  if (!parsed.success) return printed(false, { problems: [], errors: toIssues(parsed.error) });
+  const problems = draftProblems(parsed.data);
+  return printed(problems.length === 0, { problems, errors: [] });
+}
+
 /** Runs the CLI for the given arguments (without `node` and the script path). */
 export function run(argv: readonly string[], stdin = ''): CliResult {
   const [first] = argv;
@@ -268,6 +292,7 @@ export function run(argv: readonly string[], stdin = ''): CliResult {
   if (first === 'llm-summary') return llmSummary(stdin);
   if (first === 'llm-dry-run') return llmDryRun(stdin);
   if (first === 'normalize-draft') return normalizeDraftInput(stdin);
+  if (first === 'draft-problems') return draftProblemsInput(stdin);
   if (first === '--version' || first === '-V') {
     return {
       exitCode: 0,

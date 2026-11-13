@@ -30,7 +30,8 @@
     },
     "python": {
       "psycopg": "LGPL-3.0-only. The PostgreSQL driver required by #2; used unmodified as a dynamically imported library, which LGPL permits.",
-      "psycopg-binary": "LGPL-3.0-only. Prebuilt wheels for psycopg; same reasoning."
+      "psycopg-binary": "LGPL-3.0-only. Prebuilt wheels for psycopg; same reasoning.",
+      "pillow": "MIT-CMU, the HPND variant that Pillow (the PIL fork) uses: permissive, OSI-approved, no copyleft. Decodes, re-encodes and strips the metadata of uploaded photos (#11); no permissive alternative exists. Needs the repository owner's approval."
     }
   }
 }

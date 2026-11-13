@@ -31,6 +31,13 @@ def _clear_throttles() -> None:
 
 
 @pytest.fixture(autouse=True)
+def _media_root(settings: Any, tmp_path: Path) -> Path:
+    """Uploaded photos go to a directory of the test's own."""
+    settings.MEDIA_ROOT = str(tmp_path / "media")
+    return tmp_path / "media"
+
+
+@pytest.fixture(autouse=True)
 def fake_llm() -> FakeClient:
     """The assistant's client in every test: answers only what a test scripts."""
     client = FakeClient()

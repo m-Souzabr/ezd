@@ -29,7 +29,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DESIGN_DOCUMENT_SCHEMA_PATH=/opt/ezd/design-document.schema.json \
     EZD_CORE_CLI=node,/opt/ezd/cli.js \
     LLM_TOOLS_SCHEMA_PATH=/opt/ezd/llm-tools.schema.json \
-    LLM_CATALOG_INDEX_PATH=/opt/ezd/llm-catalog-index.txt
+    LLM_CATALOG_INDEX_PATH=/opt/ezd/llm-catalog-index.txt \
+    DRAFT_ROOM_SCHEMA_PATH=/opt/ezd/draft-room.schema.json \
+    ROOM_DRAFT_SCHEMA_PATH=/opt/ezd/room-draft.schema.json \
+    MEDIA_ROOT=/app/media
 
 WORKDIR /app
 COPY apps/api/pyproject.toml apps/api/uv.lock apps/api/.python-version ./
@@ -39,8 +42,11 @@ COPY --from=core /repo/packages/core-cli/dist/cli.js /opt/ezd/cli.js
 COPY packages/core/schema/design-document.schema.json /opt/ezd/design-document.schema.json
 COPY packages/core/schema/llm-tools.schema.json /opt/ezd/llm-tools.schema.json
 COPY packages/core/schema/llm-catalog-index.txt /opt/ezd/llm-catalog-index.txt
+COPY packages/core/schema/draft-room.schema.json /opt/ezd/draft-room.schema.json
+COPY packages/core/schema/room-draft.schema.json /opt/ezd/room-draft.schema.json
 
-RUN useradd --system --no-create-home ezd
+# Uploaded photos, unless STORAGE_BACKEND is s3. Mount a volume here to keep them.
+RUN useradd --system --no-create-home ezd && mkdir -p /app/media && chown ezd /app/media
 USER ezd
 EXPOSE 8000
 # Migrations run at start so `docker compose up` gives a working API.

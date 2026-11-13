@@ -20,6 +20,8 @@ __pycache__/
 .ruff_cache/
 *.egg-info/
 staticfiles/
+# Uploaded photos in development
+apps/api/media/
 
 # Env files (keep the examples)
 .env

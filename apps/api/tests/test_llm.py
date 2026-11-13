@@ -14,11 +14,32 @@ from rest_framework.test import APIClient
 from accounts.models import User
 from chat.services import AttemptInput, run_attempt
 from llm import config, secrets
-from llm.client import LLMUnavailable, ProposeRequest, ProposeResponse, ToolCall
+from llm.client import (
+    LLMUnavailable,
+    PhotoRequest,
+    PhotoResponse,
+    ProposeRequest,
+    ProposeResponse,
+    ToolCall,
+)
 from llm.config import LLMNotConfigured, Models
-from llm.fake import FakeClient, ScriptedFakeClient, response_from_json, response_to_json
+from llm.fake import (
+    PHOTO_SCRIPT_KEY,
+    FakeClient,
+    ScriptedFakeClient,
+    photo_response_from_json,
+    photo_response_to_json,
+    response_from_json,
+    response_to_json,
+)
 from llm.models import LLMSettings
-from llm.openai_client import OpenAIClient, _parse, build_request
+from llm.openai_client import (
+    OpenAIClient,
+    _parse,
+    build_photo_request,
+    build_request,
+    strict_schema,
+)
 from llm.prompt import check_tool_calls, tools
 
 KEY = "sk-test-0123456789abcdefWXYZ"
@@ -321,3 +342,106 @@ def test_the_scripted_fake_answers_by_message(tmp_path: Any, settings: Any) -> N
     assert result.tool_calls == [{"name": "generate_countertops", "arguments": {}}]
     other = run_attempt(client, MODELS, AttemptInput(message="Hello", summary="", category="x"))
     assert other.text == "(No scripted answer for this message.)"
+
+
+# --- photos ------------------------------------------------------------------------------
+
+PHOTO_SCHEMA = {
+    "title": "Draft",
+    "type": "object",
+    "properties": {"title": {"type": "string", "maxLength": 20}, "notes": {"type": "string"}},
+    "required": ["title", "notes"],
+    "additionalProperties": False,
+}
+
+
+def _photo_request(model: str = "vision") -> PhotoRequest:
+    return PhotoRequest(
+        system="Describe it.",
+        image=b"\xff\xd8jpeg",
+        media_type="image/jpeg",
+        schema=PHOTO_SCHEMA,
+        schema_name="draft_room",
+        model=model,
+        max_output_tokens=100,
+    )
+
+
+def test_strict_schema_drops_unsupported_keywords_but_not_property_names() -> None:
+    assert strict_schema(PHOTO_SCHEMA) == {
+        "type": "object",
+        "properties": {"title": {"type": "string"}, "notes": {"type": "string"}},
+        "required": ["title", "notes"],
+        "additionalProperties": False,
+    }
+    assert strict_schema([{"minLength": 1, "type": "string"}]) == [{"type": "string"}]
+
+
+def test_a_photo_is_sent_as_an_image_with_strict_structured_output() -> None:
+    kwargs = build_photo_request(_photo_request())
+    image, text = kwargs["input"][1]["content"]
+    assert image == {
+        "type": "input_image",
+        "image_url": "data:image/jpeg;base64,/9hqcGVn",
+        "detail": "high",
+    }
+    assert text["type"] == "input_text"
+    assert kwargs["text"]["format"]["strict"] is True
+    assert kwargs["text"]["format"]["name"] == "draft_room"
+    assert "maxLength" not in json.dumps(kwargs["text"]["format"]["schema"])
+    assert kwargs["store"] is False
+
+
+def test_a_photo_answer_is_read_from_the_output_text(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = OpenAIClient(api_key=KEY, timeout_seconds=1)
+    response = SimpleNamespace(
+        output_text='{"title": "x"}',
+        usage=SimpleNamespace(input_tokens=900, output_tokens=50, input_tokens_details=None),
+        status="completed",
+        incomplete_details=None,
+        model="vision-2026",
+    )
+    monkeypatch.setattr(client._client.responses, "create", lambda **kwargs: response)
+    answer = client.analyze_photo(_photo_request())
+    assert (answer.text, answer.model, answer.usage.input_tokens) == (
+        '{"title": "x"}',
+        "vision-2026",
+        900,
+    )
+
+
+def test_a_photo_call_maps_vendor_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = OpenAIClient(api_key=KEY, timeout_seconds=1)
+
+    def fail(**kwargs: Any) -> None:
+        raise openai.NotFoundError(
+            "no model", response=httpx.Response(404, request=_HTTP), body=None
+        )
+
+    monkeypatch.setattr(client._client.responses, "create", fail)
+    with pytest.raises(LLMUnavailable, match="model vision is not available"):
+        client.analyze_photo(_photo_request())
+
+
+def test_photo_recordings_round_trip_and_the_fake_answers_in_order() -> None:
+    data = {
+        "draft": {"shape": "galley"},
+        "stop_reason": "completed",
+        "usage": {"input_tokens": 1, "output_tokens": 2, "cached_tokens": 0},
+        "model": "m",
+    }
+    assert photo_response_to_json(photo_response_from_json(data)) == data
+    raw = photo_response_to_json(PhotoResponse(text="{oops", stop_reason="completed"))
+    assert raw["draft"] == "{oops"
+
+    fake = FakeClient(photo_responses=[PhotoResponse(text="{}", stop_reason="completed")])
+    assert fake.analyze_photo(_photo_request("asked")).model == "asked"
+    with pytest.raises(AssertionError, match="no photo response left"):
+        fake.analyze_photo(_photo_request())
+
+
+def test_the_scripted_fake_answers_every_photo_alike() -> None:
+    scripted = ScriptedFakeClient({PHOTO_SCRIPT_KEY: [{"draft": {"shape": "galley"}}]})
+    answer = scripted.analyze_photo(_photo_request("v"))
+    assert (json.loads(answer.text), answer.model) == ({"shape": "galley"}, "v")
+    assert ScriptedFakeClient({}).analyze_photo(_photo_request()).text == ""
