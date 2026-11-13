@@ -266,6 +266,11 @@ settings)` (`bom/`) are the only pricing code; the browser runs them. Money is i
   percent). `--client live --record` calls the vendor and saves real responses. Reports go
   to `evals/reports/` (not committed). The `Evals (live)` workflow runs it by hand with the
   `LLM_API_KEY` secret.
+- **Deployment.** Railway builds `main` into two services from the repository root, each
+  with its own `railway.json`: `api` (`apps/api/Dockerfile`, private, port 8000, with
+  `config.settings.prod`) and `web` (`apps/web/Dockerfile`: Caddy serves the build and proxies
+  `/api` to `API_UPSTREAM`, so the browser sees one origin). Django sits behind the host's
+  edge and Caddy, so `DJANGO_NUM_PROXIES=2`, and Caddy tells it the request was https.
 - **Relative imports in `packages/core` and `packages/core-cli`** carry a `.js` extension
   (`./units.js`), so the emitted ESM runs in Node unchanged.
 - **Django settings** are `config.settings.dev` (default for `manage.py`),
