@@ -133,6 +133,9 @@ export function proposalToCommands(
         if (!entry) {
           return err(`The catalog has no entry "${args.catalogId}". Use an id from the catalog.`);
         }
+        if (entry.retired) {
+          return err(`The catalog entry "${entry.id}" is retired. Use an id from the catalog.`);
+        }
         const placement = placementOf(current, args);
         if (!placement.ok) return placement;
         const defaults = Object.fromEntries(entry.options.map((def) => [def.key, def.default]));

@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 
 import {
   appConfigJsonSchema,
+  catalogJsonSchema,
   catalogIndexForLLM,
   commandsJsonSchema,
   designDocumentJsonSchema,
@@ -20,10 +21,11 @@ mkdirSync(outDir, { recursive: true });
 const files = {
   'design-document.schema.json': designDocumentJsonSchema(),
   'commands.schema.json': commandsJsonSchema(),
-  'llm-tools.schema.json': llmToolsJsonSchema(),
+  'llm-tools.schema.json': llmToolsJsonSchema(SEED_CATALOG),
   'draft-room.schema.json': draftRoomJsonSchema(),
   'room-draft.schema.json': roomDraftJsonSchema(),
   'app-config.schema.json': appConfigJsonSchema(),
+  'catalog.schema.json': catalogJsonSchema(),
 };
 for (const [name, schema] of Object.entries(files)) {
   writeFileSync(join(outDir, name), `${JSON.stringify(schema, null, 2)}\n`);

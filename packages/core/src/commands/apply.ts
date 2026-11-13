@@ -29,7 +29,8 @@ export type CommandError = {
 export type CommandContext = {
   /**
    * When given, `item.add`, `item.resize` and `item.setOptions` fail with
-   * `INVALID_ARGUMENT` unless the resulting item satisfies its catalog entry.
+   * `INVALID_ARGUMENT` unless the resulting item satisfies its catalog entry. `item.add`
+   * also refuses a retired entry; an item already in the document keeps one.
    */
   catalog?: Catalog;
 };
@@ -271,9 +272,13 @@ function checkPlacement(doc: DesignDocument, placement: Item['placement']) {
 }
 
 /** Checks an item against the catalog, when the caller gave one. */
-function checkCatalog(item: Item, context: CommandContext): Result<Item, CommandError> {
+function checkCatalog(
+  item: Item,
+  context: CommandContext,
+  adding = false,
+): Result<Item, CommandError> {
   if (!context.catalog) return ok(item);
-  const constraintErrors = checkItemAgainstCatalog(item, context.catalog);
+  const constraintErrors = checkItemAgainstCatalog(item, context.catalog, { adding });
   if (constraintErrors.length === 0) return ok(item);
   return err({
     code: 'INVALID_ARGUMENT',
@@ -291,7 +296,7 @@ function itemAdd(
   if (!index.ok) return index;
   const checked = checkPlacement(doc, cmd.item.placement);
   if (!checked.ok) return checked;
-  const allowed = checkCatalog(cmd.item, context);
+  const allowed = checkCatalog(cmd.item, context, true);
   if (!allowed.ok) return allowed;
   return ok({
     doc: withItems(doc, insertAt(doc.items, index.value, cmd.item)),

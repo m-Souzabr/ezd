@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import {
+  activeEntries,
   allowedOptionValues,
   allowedWidths,
   type Catalog,
@@ -211,7 +212,7 @@ function addItemVariant(entry: CatalogEntry) {
  * variant per catalog entry, chosen by `catalogId`.
  */
 export function llmToolSchemas(catalog: Catalog): Record<ToolName, z.ZodType> {
-  const [first, ...rest] = catalog.entries.map(addItemVariant);
+  const [first, ...rest] = activeEntries(catalog).map(addItemVariant);
   const finishIds = catalog.finishes.map((finish) => finish.id);
   const cabinetFinishIds = catalog.finishes
     .filter((finish) => finish.target === 'cabinet')
