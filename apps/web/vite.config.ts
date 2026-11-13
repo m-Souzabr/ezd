@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defaultClientConditions, defaultServerConditions, loadEnv } from 'vite';
@@ -9,7 +10,10 @@ const { EZD_API_URL = 'http://localhost:8000' } = loadEnv('development', '.', 'E
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   // Resolve @ezd/core to its TypeScript source so dev, test and build need no prior core build.
-  resolve: { conditions: ['@ezd/source', ...defaultClientConditions] },
+  resolve: {
+    conditions: ['@ezd/source', ...defaultClientConditions],
+    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+  },
   ssr: { resolve: { conditions: ['@ezd/source', ...defaultServerConditions] } },
   server: {
     proxy: {

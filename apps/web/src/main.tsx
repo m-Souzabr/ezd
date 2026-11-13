@@ -5,11 +5,12 @@ import { BrowserRouter } from 'react-router';
 
 import { ApiError } from './api/client';
 import { App } from './App';
+import { ThemeProvider } from '@/components/theme-provider';
 import { CatalogProvider } from './catalog/CatalogProvider';
 import { ConfigProvider } from './config/ConfigProvider';
 import { ErrorBoundary } from './ErrorBoundary';
 import { reportError } from './lib/reportError';
-import './index.css';
+import './styles/globals.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing #root element');
@@ -32,15 +33,17 @@ window.addEventListener('unhandledrejection', (event) =>
 createRoot(root).render(
   <StrictMode>
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ConfigProvider>
-          <CatalogProvider>
-            <BrowserRouter>
-              <App />
-            </BrowserRouter>
-          </CatalogProvider>
-        </ConfigProvider>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <ConfigProvider>
+            <CatalogProvider>
+              <BrowserRouter>
+                <App />
+              </BrowserRouter>
+            </CatalogProvider>
+          </ConfigProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   </StrictMode>,
 );
