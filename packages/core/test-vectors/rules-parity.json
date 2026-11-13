@@ -1,0 +1,792 @@
+{
+  "document": {
+    "schemaVersion": 1,
+    "id": "doc-00000001",
+    "name": "Test kitchen",
+    "room": {
+      "ceilingHeight": 1536,
+      "walls": [
+        {
+          "id": "wall-north",
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 2304,
+            "y": 0
+          },
+          "thickness": 72
+        },
+        {
+          "id": "wall-east",
+          "start": {
+            "x": 2304,
+            "y": 0
+          },
+          "end": {
+            "x": 2304,
+            "y": 1920
+          },
+          "thickness": 72
+        },
+        {
+          "id": "wall-south",
+          "start": {
+            "x": 2304,
+            "y": 1920
+          },
+          "end": {
+            "x": 0,
+            "y": 1920
+          },
+          "thickness": 72
+        },
+        {
+          "id": "wall-west",
+          "start": {
+            "x": 0,
+            "y": 1920
+          },
+          "end": {
+            "x": 0,
+            "y": 0
+          },
+          "thickness": 72
+        }
+      ],
+      "openings": [
+        {
+          "id": "opening-00",
+          "wallId": "wall-south",
+          "kind": "door",
+          "offset": 1600,
+          "width": 480,
+          "height": 1280,
+          "sillHeight": 0,
+          "swing": "in-left"
+        }
+      ]
+    },
+    "items": [
+      {
+        "id": "item-0000",
+        "catalogId": "base.standard",
+        "kind": "base",
+        "width": 480,
+        "height": 552,
+        "depth": 384,
+        "elevation": 0,
+        "placement": {
+          "type": "wall",
+          "wallId": "wall-north",
+          "offset": 0
+        },
+        "options": {
+          "doors": 2,
+          "topDrawer": true,
+          "hinge": "left"
+        }
+      },
+      {
+        "id": "item-0001",
+        "catalogId": "base.standard",
+        "kind": "base",
+        "width": 480,
+        "height": 552,
+        "depth": 384,
+        "elevation": 0,
+        "placement": {
+          "type": "wall",
+          "wallId": "wall-north",
+          "offset": 512
+        },
+        "options": {
+          "doors": 2,
+          "topDrawer": true,
+          "hinge": "left"
+        }
+      },
+      {
+        "id": "item-0002",
+        "catalogId": "base.standard",
+        "kind": "base",
+        "width": 384,
+        "height": 552,
+        "depth": 384,
+        "elevation": 0,
+        "placement": {
+          "type": "wall",
+          "wallId": "wall-north",
+          "offset": 1056
+        },
+        "options": {
+          "doors": 2,
+          "topDrawer": true,
+          "hinge": "left"
+        }
+      },
+      {
+        "id": "item-0003",
+        "catalogId": "base.standard",
+        "kind": "base",
+        "width": 480,
+        "height": 552,
+        "depth": 384,
+        "elevation": 0,
+        "placement": {
+          "type": "free",
+          "x": 640,
+          "y": 864,
+          "rotation": 0
+        },
+        "options": {
+          "doors": 2,
+          "topDrawer": true,
+          "hinge": "left"
+        }
+      },
+      {
+        "id": "item-0004",
+        "catalogId": "appliance.range",
+        "kind": "appliance",
+        "width": 480,
+        "height": 576,
+        "depth": 432,
+        "elevation": 0,
+        "placement": {
+          "type": "wall",
+          "wallId": "wall-east",
+          "offset": 480
+        },
+        "options": {}
+      },
+      {
+        "id": "item-0005",
+        "catalogId": "wall.standard",
+        "kind": "wall",
+        "width": 480,
+        "height": 480,
+        "depth": 192,
+        "elevation": 864,
+        "placement": {
+          "type": "wall",
+          "wallId": "wall-east",
+          "offset": 480
+        },
+        "options": {
+          "doors": 2,
+          "hinge": "left"
+        }
+      },
+      {
+        "id": "item-0006",
+        "catalogId": "appliance.dishwasher",
+        "kind": "appliance",
+        "width": 384,
+        "height": 552,
+        "depth": 384,
+        "elevation": 0,
+        "placement": {
+          "type": "wall",
+          "wallId": "wall-south",
+          "offset": 0
+        },
+        "options": {}
+      },
+      {
+        "id": "item-0007",
+        "catalogId": "base.sink",
+        "kind": "base",
+        "width": 576,
+        "height": 552,
+        "depth": 384,
+        "elevation": 0,
+        "placement": {
+          "type": "wall",
+          "wallId": "wall-south",
+          "offset": 1152
+        },
+        "options": {
+          "doors": 2
+        }
+      },
+      {
+        "id": "item-0008",
+        "catalogId": "appliance.fridge",
+        "kind": "appliance",
+        "width": 576,
+        "height": 1104,
+        "depth": 480,
+        "elevation": 0,
+        "placement": {
+          "type": "wall",
+          "wallId": "wall-west",
+          "offset": 0
+        },
+        "options": {}
+      },
+      {
+        "id": "item-0009",
+        "catalogId": "wall.standard",
+        "kind": "wall",
+        "width": 480,
+        "height": 480,
+        "depth": 192,
+        "elevation": 960,
+        "placement": {
+          "type": "wall",
+          "wallId": "wall-north",
+          "offset": 1600
+        },
+        "options": {
+          "doors": 2,
+          "hinge": "left"
+        }
+      },
+      {
+        "id": "item-0010",
+        "catalogId": "wall.standard",
+        "kind": "wall",
+        "width": 480,
+        "height": 480,
+        "depth": 192,
+        "elevation": 864,
+        "placement": {
+          "type": "wall",
+          "wallId": "wall-north",
+          "offset": 2080
+        },
+        "options": {
+          "doors": 2,
+          "hinge": "left"
+        }
+      }
+    ],
+    "countertops": [],
+    "finishes": {}
+  },
+  "rules": {
+    "rules": {
+      "clearance.aisle": {
+        "severity": "info"
+      },
+      "wall.alignment": {
+        "severity": "error"
+      },
+      "room.open": {
+        "enabled": false
+      },
+      "item.blocks-door": {
+        "severity": "warning"
+      }
+    },
+    "thresholds": {
+      "minAisle": 480,
+      "rangeOverheadClearance": 288,
+      "dishwasherSinkDistance": 768,
+      "minCabinetGap": 192,
+      "maxFillerGap": 64
+    }
+  },
+  "expected": [
+    {
+      "ruleId": "item.outside-wall",
+      "severity": "error",
+      "itemIds": ["item-0010"],
+      "message": "Wall cabinet 30\" at 130\" on wall A ends at 160\", past the end of wall A (144\" long).",
+      "fix": [
+        {
+          "type": "item.move",
+          "id": "item-0010",
+          "placement": {
+            "type": "wall",
+            "wallId": "wall-north",
+            "offset": 1824
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "wall.alignment",
+      "severity": "error",
+      "itemIds": ["item-0010"],
+      "message": "Wall cabinets on wall A have tops at 84\" and 90\". Align them at 90\".",
+      "fix": [
+        {
+          "type": "item.move",
+          "id": "item-0010",
+          "placement": {
+            "type": "wall",
+            "wallId": "wall-north",
+            "offset": 2080
+          },
+          "elevation": 960
+        }
+      ]
+    },
+    {
+      "ruleId": "appliance.fridge-door",
+      "severity": "warning",
+      "itemIds": ["item-0008", "wall-south"],
+      "message": "Refrigerator 36\" at 0\" on wall D is 0\" from wall C. Leave at least 3\" on the hinge side so the door opens fully."
+    },
+    {
+      "ruleId": "clearance.door-swing",
+      "severity": "warning",
+      "itemIds": ["item-0008", "opening-00"],
+      "message": "Refrigerator 36\" at 0\" on wall D is in the swing of the door at 100\" on wall C."
+    },
+    {
+      "ruleId": "gap.needs-filler",
+      "severity": "warning",
+      "itemIds": ["item-0000", "item-0001"],
+      "message": "Base cabinet 30\" at 0\" on wall A is 2\" from the base cabinet 30\" at 32\" on wall A. Add a 2\" filler.",
+      "fix": [
+        {
+          "type": "item.add",
+          "item": {
+            "id": "filler-01",
+            "catalogId": "filler.base",
+            "kind": "filler",
+            "width": 32,
+            "height": 552,
+            "depth": 12,
+            "elevation": 0,
+            "placement": {
+              "type": "wall",
+              "wallId": "wall-north",
+              "offset": 480
+            },
+            "options": {}
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "gap.needs-filler",
+      "severity": "warning",
+      "itemIds": ["item-0001", "item-0002"],
+      "message": "Base cabinet 30\" at 32\" on wall A is 4\" from the base cabinet 24\" at 66\" on wall A. Add a 4\" filler.",
+      "fix": [
+        {
+          "type": "item.add",
+          "item": {
+            "id": "filler-02",
+            "catalogId": "filler.base",
+            "kind": "filler",
+            "width": 64,
+            "height": 552,
+            "depth": 12,
+            "elevation": 0,
+            "placement": {
+              "type": "wall",
+              "wallId": "wall-north",
+              "offset": 992
+            },
+            "options": {}
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "gap.needs-filler",
+      "severity": "warning",
+      "itemIds": ["item-0007", "item-0008"],
+      "message": "Sink base cabinet 36\" at 72\" on wall C is 6\" from the refrigerator 36\" at 0\" on wall D. Close the gap, or widen it to at least 12\" to fit a cabinet."
+    },
+    {
+      "ruleId": "item.blocks-door",
+      "severity": "warning",
+      "itemIds": ["item-0007", "opening-00"],
+      "message": "Sink base cabinet 36\" at 72\" on wall C overlaps the door at 100\"."
+    },
+    {
+      "ruleId": "clearance.aisle",
+      "severity": "info",
+      "itemIds": ["item-0003", "item-0007"],
+      "message": "Only 18\" between the base cabinet 30\" (free-standing) and the sink base cabinet 36\" at 72\" on wall C. An aisle needs at least 30\"; 42\" is recommended."
+    },
+    {
+      "ruleId": "clearance.aisle",
+      "severity": "info",
+      "itemIds": ["item-0003", "item-0008"],
+      "message": "Only 11 11/16\" between the base cabinet 30\" (free-standing) and the refrigerator 36\" at 0\" on wall D. An aisle needs at least 30\"; 42\" is recommended."
+    },
+    {
+      "ruleId": "countertop.coverage",
+      "severity": "info",
+      "itemIds": ["item-0000", "wall-north"],
+      "message": "The base run on wall A from 0\" to 30\" has no countertop.",
+      "fix": [
+        {
+          "type": "countertop.add",
+          "countertop": {
+            "id": "countertop-01",
+            "wallId": "wall-north",
+            "startOffset": 0,
+            "endOffset": 480,
+            "depth": 408,
+            "thickness": 24,
+            "elevation": 552
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "countertop.coverage",
+      "severity": "info",
+      "itemIds": ["item-0001", "wall-north"],
+      "message": "The base run on wall A from 32\" to 62\" has no countertop.",
+      "fix": [
+        {
+          "type": "countertop.add",
+          "countertop": {
+            "id": "countertop-02",
+            "wallId": "wall-north",
+            "startOffset": 512,
+            "endOffset": 992,
+            "depth": 408,
+            "thickness": 24,
+            "elevation": 552
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "countertop.coverage",
+      "severity": "info",
+      "itemIds": ["item-0002", "wall-north"],
+      "message": "The base run on wall A from 66\" to 90\" has no countertop.",
+      "fix": [
+        {
+          "type": "countertop.add",
+          "countertop": {
+            "id": "countertop-03",
+            "wallId": "wall-north",
+            "startOffset": 1056,
+            "endOffset": 1440,
+            "depth": 408,
+            "thickness": 24,
+            "elevation": 552
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "countertop.coverage",
+      "severity": "info",
+      "itemIds": ["item-0006", "wall-south"],
+      "message": "The base run on wall C from 0\" to 24\" has no countertop.",
+      "fix": [
+        {
+          "type": "countertop.add",
+          "countertop": {
+            "id": "countertop-04",
+            "wallId": "wall-south",
+            "startOffset": 0,
+            "endOffset": 384,
+            "depth": 408,
+            "thickness": 24,
+            "elevation": 552
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "countertop.coverage",
+      "severity": "info",
+      "itemIds": ["item-0007", "wall-south"],
+      "message": "The base run on wall C from 72\" to 108\" has no countertop.",
+      "fix": [
+        {
+          "type": "countertop.add",
+          "countertop": {
+            "id": "countertop-05",
+            "wallId": "wall-south",
+            "startOffset": 1152,
+            "endOffset": 1728,
+            "depth": 408,
+            "thickness": 24,
+            "elevation": 552
+          }
+        }
+      ]
+    }
+  ],
+  "expectedDefaults": [
+    {
+      "ruleId": "item.blocks-door",
+      "severity": "error",
+      "itemIds": ["item-0007", "opening-00"],
+      "message": "Sink base cabinet 36\" at 72\" on wall C overlaps the door at 100\"."
+    },
+    {
+      "ruleId": "item.outside-wall",
+      "severity": "error",
+      "itemIds": ["item-0010"],
+      "message": "Wall cabinet 30\" at 130\" on wall A ends at 160\", past the end of wall A (144\" long).",
+      "fix": [
+        {
+          "type": "item.move",
+          "id": "item-0010",
+          "placement": {
+            "type": "wall",
+            "wallId": "wall-north",
+            "offset": 1824
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "appliance.dishwasher-sink",
+      "severity": "warning",
+      "itemIds": ["item-0006"],
+      "message": "Dishwasher 24\" at 0\" on wall C is not within 36\" of a sink base cabinet."
+    },
+    {
+      "ruleId": "appliance.fridge-door",
+      "severity": "warning",
+      "itemIds": ["item-0008", "wall-south"],
+      "message": "Refrigerator 36\" at 0\" on wall D is 0\" from wall C. Leave at least 3\" on the hinge side so the door opens fully."
+    },
+    {
+      "ruleId": "appliance.range-overhead",
+      "severity": "warning",
+      "itemIds": ["item-0005", "item-0004"],
+      "message": "Wall cabinet 30\" at 30\" on wall B is only 18\" above the range 30\" at 30\" on wall B. Leave at least 30\" above a range, unless it is a hood."
+    },
+    {
+      "ruleId": "clearance.aisle",
+      "severity": "warning",
+      "itemIds": ["item-0000", "item-0003"],
+      "message": "Only 31 5/8\" between the base cabinet 30\" at 0\" on wall A and the base cabinet 30\" (free-standing). An aisle needs at least 36\"; 42\" is recommended."
+    },
+    {
+      "ruleId": "clearance.aisle",
+      "severity": "warning",
+      "itemIds": ["item-0001", "item-0003"],
+      "message": "Only 30\" between the base cabinet 30\" at 32\" on wall A and the base cabinet 30\" (free-standing). An aisle needs at least 36\"; 42\" is recommended."
+    },
+    {
+      "ruleId": "clearance.aisle",
+      "severity": "warning",
+      "itemIds": ["item-0002", "item-0003"],
+      "message": "Only 30\" between the base cabinet 24\" at 66\" on wall A and the base cabinet 30\" (free-standing). An aisle needs at least 36\"; 42\" is recommended."
+    },
+    {
+      "ruleId": "clearance.aisle",
+      "severity": "warning",
+      "itemIds": ["item-0003", "item-0007"],
+      "message": "Only 18\" between the base cabinet 30\" (free-standing) and the sink base cabinet 36\" at 72\" on wall C. An aisle needs at least 36\"; 42\" is recommended."
+    },
+    {
+      "ruleId": "clearance.aisle",
+      "severity": "warning",
+      "itemIds": ["item-0003", "item-0008"],
+      "message": "Only 11 11/16\" between the base cabinet 30\" (free-standing) and the refrigerator 36\" at 0\" on wall D. An aisle needs at least 36\"; 42\" is recommended."
+    },
+    {
+      "ruleId": "clearance.door-swing",
+      "severity": "warning",
+      "itemIds": ["item-0008", "opening-00"],
+      "message": "Refrigerator 36\" at 0\" on wall D is in the swing of the door at 100\" on wall C."
+    },
+    {
+      "ruleId": "gap.needs-filler",
+      "severity": "warning",
+      "itemIds": ["item-0000", "item-0001"],
+      "message": "Base cabinet 30\" at 0\" on wall A is 2\" from the base cabinet 30\" at 32\" on wall A. Add a 2\" filler.",
+      "fix": [
+        {
+          "type": "item.add",
+          "item": {
+            "id": "filler-01",
+            "catalogId": "filler.base",
+            "kind": "filler",
+            "width": 32,
+            "height": 552,
+            "depth": 12,
+            "elevation": 0,
+            "placement": {
+              "type": "wall",
+              "wallId": "wall-north",
+              "offset": 480
+            },
+            "options": {}
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "gap.needs-filler",
+      "severity": "warning",
+      "itemIds": ["item-0001", "item-0002"],
+      "message": "Base cabinet 30\" at 32\" on wall A is 4\" from the base cabinet 24\" at 66\" on wall A. Add a 4\" filler.",
+      "fix": [
+        {
+          "type": "item.add",
+          "item": {
+            "id": "filler-02",
+            "catalogId": "filler.base",
+            "kind": "filler",
+            "width": 64,
+            "height": 552,
+            "depth": 12,
+            "elevation": 0,
+            "placement": {
+              "type": "wall",
+              "wallId": "wall-north",
+              "offset": 992
+            },
+            "options": {}
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "gap.needs-filler",
+      "severity": "warning",
+      "itemIds": ["item-0007", "item-0008"],
+      "message": "Sink base cabinet 36\" at 72\" on wall C is 6\" from the refrigerator 36\" at 0\" on wall D. Add a 6\" filler.",
+      "fix": [
+        {
+          "type": "item.add",
+          "item": {
+            "id": "filler-03",
+            "catalogId": "filler.base",
+            "kind": "filler",
+            "width": 96,
+            "height": 552,
+            "depth": 12,
+            "elevation": 0,
+            "placement": {
+              "type": "wall",
+              "wallId": "wall-south",
+              "offset": 1728
+            },
+            "options": {}
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "countertop.coverage",
+      "severity": "info",
+      "itemIds": ["item-0000", "wall-north"],
+      "message": "The base run on wall A from 0\" to 30\" has no countertop.",
+      "fix": [
+        {
+          "type": "countertop.add",
+          "countertop": {
+            "id": "countertop-01",
+            "wallId": "wall-north",
+            "startOffset": 0,
+            "endOffset": 480,
+            "depth": 408,
+            "thickness": 24,
+            "elevation": 552
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "countertop.coverage",
+      "severity": "info",
+      "itemIds": ["item-0001", "wall-north"],
+      "message": "The base run on wall A from 32\" to 62\" has no countertop.",
+      "fix": [
+        {
+          "type": "countertop.add",
+          "countertop": {
+            "id": "countertop-02",
+            "wallId": "wall-north",
+            "startOffset": 512,
+            "endOffset": 992,
+            "depth": 408,
+            "thickness": 24,
+            "elevation": 552
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "countertop.coverage",
+      "severity": "info",
+      "itemIds": ["item-0002", "wall-north"],
+      "message": "The base run on wall A from 66\" to 90\" has no countertop.",
+      "fix": [
+        {
+          "type": "countertop.add",
+          "countertop": {
+            "id": "countertop-03",
+            "wallId": "wall-north",
+            "startOffset": 1056,
+            "endOffset": 1440,
+            "depth": 408,
+            "thickness": 24,
+            "elevation": 552
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "countertop.coverage",
+      "severity": "info",
+      "itemIds": ["item-0006", "wall-south"],
+      "message": "The base run on wall C from 0\" to 24\" has no countertop.",
+      "fix": [
+        {
+          "type": "countertop.add",
+          "countertop": {
+            "id": "countertop-04",
+            "wallId": "wall-south",
+            "startOffset": 0,
+            "endOffset": 384,
+            "depth": 408,
+            "thickness": 24,
+            "elevation": 552
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "countertop.coverage",
+      "severity": "info",
+      "itemIds": ["item-0007", "wall-south"],
+      "message": "The base run on wall C from 72\" to 108\" has no countertop.",
+      "fix": [
+        {
+          "type": "countertop.add",
+          "countertop": {
+            "id": "countertop-05",
+            "wallId": "wall-south",
+            "startOffset": 1152,
+            "endOffset": 1728,
+            "depth": 408,
+            "thickness": 24,
+            "elevation": 552
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "wall.alignment",
+      "severity": "info",
+      "itemIds": ["item-0010"],
+      "message": "Wall cabinets on wall A have tops at 84\" and 90\". Align them at 90\".",
+      "fix": [
+        {
+          "type": "item.move",
+          "id": "item-0010",
+          "placement": {
+            "type": "wall",
+            "wallId": "wall-north",
+            "offset": 2080
+          },
+          "elevation": 960
+        }
+      ]
+    }
+  ]
+}

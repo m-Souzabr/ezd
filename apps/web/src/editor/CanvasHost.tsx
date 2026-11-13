@@ -149,7 +149,9 @@ export function CanvasHost(props: Props) {
     const middle =
       drag.kind === 'move' ? { x: point.x - drag.grab.x, y: point.y - drag.grab.y } : point;
     const pointer = props.dragPointer(drag, middle);
-    state.updateDrag(pointer ? snapDrag(state.doc, state.catalog, drag, pointer) : { snap: null });
+    state.updateDrag(
+      pointer ? snapDrag(state.doc, state.catalog, drag, pointer, state.rules) : { snap: null },
+    );
   };
   const trackLatest = useEffectEvent(track);
 

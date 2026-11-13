@@ -253,9 +253,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description The configuration being edited. Without a saved draft it is the published one. */
+        /**
+         * @description The configuration being edited. Without a saved draft it is the published one.
+         *
+         *     Reading it needs any of the three edit permissions. Saving a section needs the
+         *     permission for that section.
+         */
         get: operations["admin_config_draft_retrieve"];
-        /** @description Saves the draft if `revision` is the one the editor loaded, else 409. */
+        /** @description Saves the sections given, if `revision` is the one the editor loaded, else 409. */
         put: operations["admin_config_draft_update"];
         post?: never;
         delete?: never;
@@ -273,7 +278,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Makes the draft the new published version, which is never changed again. */
+        /**
+         * @description Makes the draft the new published version, which is never changed again.
+         *
+         *     It publishes every section of the draft, so it is refused if the draft has changed
+         *     one the user may not edit.
+         */
         post: operations["admin_config_publish_create"];
         delete?: never;
         options?: never;
@@ -306,7 +316,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Publishes a copy of an old version as a new one. The old rows stay as they were. */
+        /**
+         * @description Publishes a copy of an old version as a new one. The old rows stay as they were.
+         *
+         *     Every section comes back, so it is refused if that changes one the user may not edit.
+         */
         post: operations["admin_config_versions_rollback_create"];
         delete?: never;
         options?: never;
@@ -1005,6 +1019,8 @@ export interface components {
         AppConfig: {
             version: number | null;
             config: unknown;
+            rules_config: unknown;
+            quote_defaults: unknown;
         };
         AuditEntry: {
             readonly id: number;
@@ -1017,6 +1033,15 @@ export interface components {
             readonly after: unknown;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        /** @description The company details of a quote's PDF, as they were when the quote was created. */
+        Branding: {
+            numberPrefix: string;
+            companyName: string;
+            address: string;
+            contact: string;
+            logo: string;
+            footerText: string;
         };
         /** @description A published catalog, as the web app and the server read it. */
         Catalog: {
@@ -1083,13 +1108,17 @@ export interface components {
         ConfigDraft: {
             revision: number;
             app_config: unknown;
+            rules_config: unknown;
+            quote_defaults: unknown;
             based_on: number | null;
             /** Format: date-time */
             updated_at: string | null;
         };
         ConfigDraftUpdateRequest: {
             revision: number;
-            app_config: unknown;
+            app_config?: unknown;
+            rules_config?: unknown;
+            quote_defaults?: unknown;
         };
         ConfigPublishRequest: {
             revision: number;
@@ -1487,6 +1516,7 @@ export interface components {
             readonly lines: components["schemas"]["Line"][];
             readonly totals: components["schemas"]["Totals"];
             readonly drawings: components["schemas"]["Drawings"];
+            readonly branding: components["schemas"]["Branding"];
             /** Format: date-time */
             readonly created_at: string;
         };

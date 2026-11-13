@@ -1,12 +1,24 @@
-import { type AppConfig, DEFAULT_APP_CONFIG, parseAppConfig } from '@ezd/core';
+import {
+  type AppConfig,
+  DEFAULT_APP_CONFIG,
+  DEFAULT_QUOTE_DEFAULTS,
+  DEFAULT_RULES_CONFIG,
+  parseAppConfig,
+  parseQuoteDefaults,
+  parseRulesConfig,
+  type QuoteDefaults,
+  type RulesConfig,
+} from '@ezd/core';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { api } from '../api/client';
 import { applyTheme } from '../editor/style';
 import { applyViewportConfig } from '../editor/viewport';
-import { ConfigContext } from './useConfig';
+import { ConfigContext, QuoteDefaultsContext, RulesContext } from './useConfig';
 
 const STORAGE_KEY = 'ezd.config.v1';
+const RULES_KEY = 'ezd.rules.v1';
+const QUOTE_DEFAULTS_KEY = 'ezd.quote-defaults.v1';
 /** How long a first visit waits for the server before it opens with the defaults. */
 const FIRST_LOAD_WAIT_MS = 2000;
 
@@ -21,9 +33,24 @@ function readCached(): AppConfig | null {
   }
 }
 
-function writeCached(config: object): void {
+/** A section kept under `key`, read as the app reads it from the server. */
+function readSection<T>(
+  key: string,
+  parse: (input: unknown) => { ok: true; value: { config: T } } | { ok: false },
+): T | null {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    const text = window.localStorage.getItem(key);
+    if (!text) return null;
+    const parsed = parse(JSON.parse(text));
+    return parsed.ok ? parsed.value.config : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCached(config: object, key = STORAGE_KEY): void {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(config));
   } catch {
     // Private windows and full storage: the next visit asks the server again.
   }
@@ -44,6 +71,12 @@ function apply(config: AppConfig): AppConfig {
  */
 export function ConfigProvider({ children }: { children: ReactNode }) {
   const [cached] = useState(readCached);
+  const [rules, setRules] = useState<RulesConfig>(
+    () => readSection(RULES_KEY, parseRulesConfig) ?? DEFAULT_RULES_CONFIG,
+  );
+  const [quoteDefaults, setQuoteDefaults] = useState<QuoteDefaults>(
+    () => readSection(QUOTE_DEFAULTS_KEY, parseQuoteDefaults) ?? DEFAULT_QUOTE_DEFAULTS,
+  );
   const [config, setConfig] = useState<AppConfig>(() => apply(cached ?? DEFAULT_APP_CONFIG));
   // A first visit holds the screen briefly, so what the server hides is never flashed.
   const [settled, setSettled] = useState(cached !== null);
@@ -58,6 +91,26 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         if (parsed.ok) {
           setConfig(apply(parsed.value.config));
           writeCached(published.config as object);
+        }
+        // Each section is replaced only when it is not what is already in force, so a
+        // design that is open does not start again over a configuration that did not change.
+        const nextRules = parseRulesConfig(published.rules_config);
+        if (nextRules.ok) {
+          setRules((current) =>
+            JSON.stringify(current) === JSON.stringify(nextRules.value.config)
+              ? current
+              : nextRules.value.config,
+          );
+          writeCached(nextRules.value.config, RULES_KEY);
+        }
+        const nextQuote = parseQuoteDefaults(published.quote_defaults);
+        if (nextQuote.ok) {
+          setQuoteDefaults((current) =>
+            JSON.stringify(current) === JSON.stringify(nextQuote.value.config)
+              ? current
+              : nextQuote.value.config,
+          );
+          writeCached(nextQuote.value.config, QUOTE_DEFAULTS_KEY);
         }
         setSettled(true);
       },
@@ -80,5 +133,13 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       </main>
     );
   }
-  return <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>;
+  return (
+    <ConfigContext.Provider value={value}>
+      <RulesContext.Provider value={rules}>
+        <QuoteDefaultsContext.Provider value={quoteDefaults}>
+          {children}
+        </QuoteDefaultsContext.Provider>
+      </RulesContext.Provider>
+    </ConfigContext.Provider>
+  );
 }

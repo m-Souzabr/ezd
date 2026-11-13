@@ -209,9 +209,14 @@ def run_case(
     client: LLMClient,
     models: Models,
     catalog: dict[str, Any] | None = None,
+    rules: dict[str, Any] | None = None,
 ) -> CaseResult:
-    """Runs one case. `catalog` is the published one; None is the seed, as core defaults to."""
-    extra = {} if catalog is None else {"catalog": catalog}
+    """Runs one case. `catalog` and `rules` are the published ones; None is core's default."""
+    extra: dict[str, Any] = {}
+    if catalog is not None:
+        extra["catalog"] = catalog
+    if rules is not None:
+        extra["rules"] = rules
     document = json.loads((Path(settings.EVALS_DIR) / case["document"]).read_text("utf-8"))
     metered = MeteredClient(client)
     summary = core("llm-summary", {"document": document, **extra})

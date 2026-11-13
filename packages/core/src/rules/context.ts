@@ -16,6 +16,7 @@ import {
   wallNormal,
 } from '../geometry/index.js';
 import { formatLength, type Len } from '../units/index.js';
+import { DEFAULT_RULES_CONFIG, type RulesConfig } from './config.js';
 
 // What every rule reads: the document, indexed once per `validate` call.
 
@@ -62,6 +63,8 @@ export type PlacedItem = {
 export type RuleContext = {
   doc: DesignDocument;
   catalog: Catalog;
+  /** The configured thresholds and severities. The defaults when none is given. */
+  config: RulesConfig;
   walls: WallInfo[];
   /** In document order. */
   items: PlacedItem[];
@@ -143,7 +146,11 @@ export const meetInCorner = (a: PlacedItem, b: PlacedItem): boolean =>
 
 const samePoint = (a: Pt, b: Pt): boolean => a.x === b.x && a.y === b.y;
 
-export function createContext(doc: DesignDocument, catalog: Catalog): RuleContext {
+export function createContext(
+  doc: DesignDocument,
+  catalog: Catalog,
+  config: RulesConfig = DEFAULT_RULES_CONFIG,
+): RuleContext {
   const entries = new Map(catalog.entries.map((entry) => [entry.id, entry]));
   const { ceilingHeight } = doc.room;
 
@@ -210,6 +217,7 @@ export function createContext(doc: DesignDocument, catalog: Catalog): RuleContex
   return {
     doc,
     catalog,
+    config,
     walls,
     items,
     itemById: new Map(items.map((placed) => [placed.item.id, placed])),

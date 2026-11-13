@@ -1,11 +1,13 @@
 import { z } from 'zod';
 
 import { type Catalog, CatalogSchema } from '../catalog/index.js';
+import { QuoteDefaultsSchema } from '../bom/index.js';
 import { AppConfigSchema } from '../config/index.js';
 import { CommandSchema } from '../commands/index.js';
 import { DesignDocumentSchema } from '../document/index.js';
 import { llmToolDefinitions } from '../llm/index.js';
 import { DraftRoomSchema, RoomDraftSchema } from '../photo/index.js';
+import { RulesConfigSchema } from '../rules/index.js';
 
 // JSON Schema for callers that cannot import core, such as the Python API. It covers
 // structure only: referential integrity is checked by `parseDocument` and `applyCommand`.
@@ -58,4 +60,16 @@ export const roomDraftJsonSchema = (): JsonSchema => ({
 export const appConfigJsonSchema = (): JsonSchema => ({
   title: 'EZDesign app config',
   ...z.toJSONSchema(AppConfigSchema, { io: 'input' }),
+});
+
+/** The design rules' configuration: switches, severities, thresholds and snap options. */
+export const rulesConfigJsonSchema = (): JsonSchema => ({
+  title: 'EZDesign rules config',
+  ...z.toJSONSchema(RulesConfigSchema, { io: 'input' }),
+});
+
+/** The defaults of a new quote and the branding of its PDF. */
+export const quoteDefaultsJsonSchema = (): JsonSchema => ({
+  title: 'EZDesign quote defaults',
+  ...z.toJSONSchema(QuoteDefaultsSchema, { io: 'input' }),
 });

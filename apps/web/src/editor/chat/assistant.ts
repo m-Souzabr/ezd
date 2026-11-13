@@ -70,6 +70,7 @@ export async function askAssistant(
         summary.aliases,
         summary.doc,
         store.getState().catalog,
+        { rules: store.getState().rules },
       );
       if (run.ok) {
         store.getState().propose({

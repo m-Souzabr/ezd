@@ -44,6 +44,9 @@ class AuditEntry(models.Model):
 class ConfigVersion(models.Model):
     """One version of the app configuration the Control Panel edits.
 
+    That is three sections that are published together: the app settings, the rules and the
+    quote defaults. Each is edited with its own permission.
+
     At most one row is the draft and at most one is published. Publishing turns the draft
     into the new published row, with the next `number`, and marks the previous published
     row `superseded`; a published row is never changed again.
@@ -58,6 +61,10 @@ class ConfigVersion(models.Model):
     number = models.PositiveIntegerField(null=True, blank=True, unique=True)
     status = models.CharField(max_length=10, choices=Status.choices)
     app_config = models.JSONField(default=dict)
+    # The design rules' thresholds, severities and snap options; empty means the defaults.
+    rules_config = models.JSONField(default=dict)
+    # The defaults of a new quote and its PDF branding; empty means the defaults.
+    quote_defaults = models.JSONField(default=dict)
     # Counts the saves of a draft, so a stale save can be refused.
     revision = models.PositiveIntegerField(default=1)
     note = models.CharField(max_length=200, blank=True)

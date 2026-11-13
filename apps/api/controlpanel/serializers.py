@@ -111,19 +111,33 @@ class AppConfigSerializer(serializers.Serializer):
 
     version = serializers.IntegerField(allow_null=True)
     config = serializers.JSONField()
+    # The rules' switches, severities, thresholds and snap options. `{}` means the defaults.
+    rules_config = serializers.JSONField()
+    # The rates a new quote starts from, and the branding without its logo.
+    quote_defaults = serializers.JSONField()
 
 
 class ConfigDraftSerializer(serializers.Serializer):
     # 0 while no draft has been saved: the config is then the published one.
     revision = serializers.IntegerField()
     app_config = serializers.JSONField()
+    rules_config = serializers.JSONField()
+    quote_defaults = serializers.JSONField()
     based_on = serializers.IntegerField(allow_null=True)
     updated_at = serializers.DateTimeField(allow_null=True)
 
 
 class ConfigDraftUpdateSerializer(serializers.Serializer):
     revision = serializers.IntegerField(min_value=0)
-    app_config = serializers.JSONField()
+    # Each is saved only when given, and needs its own permission.
+    app_config = serializers.JSONField(required=False)
+    rules_config = serializers.JSONField(required=False)
+    quote_defaults = serializers.JSONField(required=False)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        if not any(name in attrs for name in ("app_config", "rules_config", "quote_defaults")):
+            raise serializers.ValidationError("Give at least one section to save.")
+        return attrs
 
 
 class ConfigPublishSerializer(serializers.Serializer):

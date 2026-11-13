@@ -203,6 +203,20 @@ starts PostgreSQL only.
   `rules/rules/index.ts`; its thresholds are named constants in `rules/constants.ts`. A
   rule never blocks a command: callers decide what to do with errors. Messages name items
   as `Base cabinet 30" at 12" on wall A`, walls being A, B, C in document order.
+- **Rules config.** `RulesConfigSchema` (`rules/config.ts`) is the Control Panel's setting of
+  the rules: `{ enabled, severity }` per rule id, nine `thresholds` (each a `Len` kept inside
+  `THRESHOLD_RANGES`, so a value cannot make its rule a no-op) and the `snap` options. Unset
+  means `DEFAULT_RULES_CONFIG`, built from `rules/constants.ts` and `DEFAULT_SNAP_OPTIONS`, so
+  the output is what it was before. `validate`, `validateCommand`, `snap`, `dryRunProposal`
+  (`options.rules`) and `createContext` take it as an optional last argument; a rule reads its
+  thresholds from `ctx.config.thresholds`, never from the constants, and `defineRule` applies
+  the switch and the severity. The rules in `LOCKED_RULES` protect the document's integrity
+  and stay on and at error: the strict `validateRulesConfig` refuses a config that changes
+  one, and `defineRule` ignores such a config anyway. Add a threshold to the schema, to
+  `RULE_THRESHOLDS` and to a boundary test; the doc generator reads those. `ezd-core validate`,
+  `llm-summary` and `llm-dry-run` read `rules` from stdin (or `--rules <file>`), so the server
+  checks as the browser does; `packages/core/test-vectors/rules-parity.json` is the shared
+  fixture that core, the CLI, the web store and pytest all check.
 - **Geometry.** Checks along one wall use integer intervals (`geometry/intervals.ts`).
   Oriented-rectangle tests (`geometry/rects.ts`) are for items on different walls and
   free-placed items. `EPS` is the only float tolerance, and touching is never overlap.
@@ -266,6 +280,9 @@ settings)` (`bom/`) are the only pricing code; the browser runs them. Money is i
   embedded font and the quote's own dates, so the same quote gives the same bytes. Its
   drawings are RGB PNGs with no alpha channel (`editor/png.ts`): a PDF embeds an alpha
   channel asynchronously, which reorders the file. The server refuses any other PNG.
+  Branding (company, prefix, footer, logo) is copied into `Quote.branding` by the server from
+  the published quote defaults at creation, never from the request, and the PDF reads only the
+  stored copy, so a later change to the defaults leaves old quotes and their PDFs as they were.
 - **Body size.** A request body over 2 MB is a 413. A view that needs more sets
   `max_body_bytes`, up to `DATA_UPLOAD_MAX_MEMORY_SIZE`, which is the most Django reads.
 - **Autosave on the server** is one `UPDATE ... WHERE id = ? AND draft_revision = ?` on
@@ -345,6 +362,19 @@ normalize-draft`) snaps cabinets to the catalog and marks every model length as 
   and viewport limits are applied to `editor/style.ts` and `editor/viewport.ts` before an
   editor opens. The e2e `config` project runs after the others, because publishing changes
   every editor.
+- **Rules and quote defaults** are two more sections of the same `ConfigVersion`
+  (`rules_config`, `quote_defaults`), published together with `app_config`, so one version
+  number names a whole configuration and a rollback restores all three. Each is edited with its
+  own permission (`config.app.edit`, `config.rules.edit`, `config.quote.edit`): the draft
+  `PUT` takes any of the three sections and needs the code of each one it carries, and a publish
+  or rollback is refused if it changes a section the user may not edit. `QuoteDefaultsSchema`
+  (`bom/defaults.ts`) holds the default rates and `branding`; a logo is a JPEG or an RGB PNG as
+  a data URI under 150 KB, checked again by the server. `GET /api/config/` serves `rules_config`
+  and `quote_defaults` (without the logo, which the browser never needs). The web reads them
+  with `useRulesConfig()` and `useQuoteDefaults()`, passes the rules to `createDesignStore`,
+  and `QuoteForm` starts from the rates. The e2e `rules` project runs after `config`, since both
+  publish. To run e2e on another port (5173 busy), set `E2E_PORT` and
+  `DJANGO_CSRF_TRUSTED_ORIGINS=http://localhost:<port>`.
 - **Django settings** are `config.settings.dev` (default for `manage.py`),
   `config.settings.test` (pytest) and `config.settings.prod` (default for WSGI/ASGI). All
   read environment variables; every variable is listed in `apps/api/.env.example`.

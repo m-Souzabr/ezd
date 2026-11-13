@@ -2,6 +2,7 @@ import {
   type Catalog,
   type Command,
   type CommandError,
+  DEFAULT_RULES_CONFIG,
   type DesignDocument,
   emptyHistory,
   err,
@@ -13,6 +14,7 @@ import {
   type Point,
   redo as coreRedo,
   type Result,
+  type RulesConfig,
   SEED_CATALOG,
   undo as coreUndo,
   validate,
@@ -44,6 +46,8 @@ export type DesignStore = {
   doc: DesignDocument;
   history: History;
   catalog: Catalog;
+  /** The configured rules: severities, thresholds and snap options. */
+  rules: RulesConfig;
   /** Recomputed after every executed command, undo and redo. */
   violations: Violation[];
   selection: Id[];
@@ -103,6 +107,7 @@ const entityIds = (doc: DesignDocument): Set<Id> =>
 export function createDesignStore(
   doc: DesignDocument,
   catalog: Catalog = SEED_CATALOG,
+  rules: RulesConfig = DEFAULT_RULES_CONFIG,
 ): DesignStoreApi {
   return createStore<DesignStore>()(
     immer((set, get) => {
@@ -111,7 +116,7 @@ export function createDesignStore(
         set((state) => {
           state.doc = next.doc;
           state.history = next.history;
-          state.violations = validate(next.doc, catalog);
+          state.violations = validate(next.doc, catalog, rules);
           const ids = entityIds(next.doc);
           state.selection = state.selection.filter((id) => ids.has(id));
           if (state.view.kind === 'elevation' && !ids.has(state.view.wallId)) {
@@ -125,7 +130,8 @@ export function createDesignStore(
         doc,
         history: emptyHistory(),
         catalog,
-        violations: validate(doc, catalog),
+        rules,
+        violations: validate(doc, catalog, rules),
         selection: [],
         tool: 'select',
         openingKind: 'door',

@@ -1,4 +1,9 @@
-import { DEFAULT_APP_CONFIG } from '@ezd/core';
+import {
+  DEFAULT_APP_CONFIG,
+  DEFAULT_QUOTE_DEFAULTS,
+  DEFAULT_RULES_CONFIG,
+  inches,
+} from '@ezd/core';
 import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -6,7 +11,7 @@ import * as client from '../api/client';
 import { COLORS } from '../editor/style';
 import { viewportSettings } from '../editor/viewport';
 import { ConfigProvider } from './ConfigProvider';
-import { useConfig } from './useConfig';
+import { useConfig, useQuoteDefaults, useRulesConfig } from './useConfig';
 
 const KEY = 'ezd.config.v1';
 
@@ -19,7 +24,12 @@ function Probe() {
   );
 }
 
-const published = (config: object) => ({ version: 1, config });
+const published = (config: object) => ({
+  version: 1,
+  config,
+  rules_config: {},
+  quote_defaults: {},
+});
 
 beforeEach(() => window.localStorage.clear());
 afterEach(() => {
@@ -107,5 +117,81 @@ describe('ConfigProvider', () => {
     await screen.findByText(/properties/);
     expect(COLORS.wall).toBe('#112233');
     expect(viewportSettings.maxScale).toBe(20);
+  });
+});
+
+function SectionsProbe() {
+  const rules = useRulesConfig();
+  const quote = useQuoteDefaults();
+  return (
+    <p>
+      aisle:{rules.thresholds.minAisle} markup:{quote.markupBps} company:
+      {quote.branding.companyName}
+    </p>
+  );
+}
+
+describe('the rules and the quote defaults', () => {
+  const sections = {
+    rules_config: { thresholds: { minAisle: inches(30) } },
+    quote_defaults: { markupBps: 1500, branding: { companyName: 'Acme' } },
+  };
+
+  it('start as the defaults, without a provider', () => {
+    render(<SectionsProbe />);
+    expect(
+      screen.getByText(
+        `aisle:${DEFAULT_RULES_CONFIG.thresholds.minAisle} markup:${DEFAULT_QUOTE_DEFAULTS.markupBps} company:`,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('serve what the server published and keep a copy', async () => {
+    vi.spyOn(client.api, 'getConfig').mockResolvedValue({ ...published({}), ...sections });
+    render(
+      <ConfigProvider>
+        <SectionsProbe />
+      </ConfigProvider>,
+    );
+    expect(await screen.findByText('aisle:480 markup:1500 company:Acme')).toBeInTheDocument();
+    expect(JSON.parse(window.localStorage.getItem('ezd.rules.v1')!).thresholds.minAisle).toBe(480);
+    expect(JSON.parse(window.localStorage.getItem('ezd.quote-defaults.v1')!).markupBps).toBe(1500);
+  });
+
+  it('open at once with the copy when the server is down', async () => {
+    window.localStorage.setItem(KEY, JSON.stringify({}));
+    window.localStorage.setItem('ezd.rules.v1', JSON.stringify(sections.rules_config));
+    window.localStorage.setItem('ezd.quote-defaults.v1', JSON.stringify(sections.quote_defaults));
+    vi.spyOn(client.api, 'getConfig').mockRejectedValue(new Error('offline'));
+    render(
+      <ConfigProvider>
+        <SectionsProbe />
+      </ConfigProvider>,
+    );
+    expect(screen.getByText('aisle:480 markup:1500 company:Acme')).toBeInTheDocument();
+  });
+
+  it('keep a field that is not valid at its default, and the rest', async () => {
+    vi.spyOn(client.api, 'getConfig').mockResolvedValue({
+      ...published({}),
+      rules_config: { thresholds: { minAisle: 1 } },
+      quote_defaults: { markupBps: 'lots', taxBps: 825 },
+    });
+    render(
+      <ConfigProvider>
+        <SectionsProbe />
+      </ConfigProvider>,
+    );
+    expect(await screen.findByText('aisle:576 markup:0 company:')).toBeInTheDocument();
+  });
+
+  it('read a server that does not send them yet as the defaults', async () => {
+    vi.spyOn(client.api, 'getConfig').mockResolvedValue({ version: 1, config: {} } as never);
+    render(
+      <ConfigProvider>
+        <SectionsProbe />
+      </ConfigProvider>,
+    );
+    expect(await screen.findByText('aisle:576 markup:0 company:')).toBeInTheDocument();
   });
 });

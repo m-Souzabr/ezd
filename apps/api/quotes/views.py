@@ -8,6 +8,7 @@ from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from controlpanel import appconfig
 from projects.models import Design, Project, snapshot_draft
 from projects.views import OwnedQuerysetMixin
 
@@ -79,6 +80,8 @@ class DesignQuoteListView(OwnedQuerysetMixin, generics.ListAPIView):
                 notes=data["notes"],
                 catalog_version=data["catalog_version"],
                 settings=data["settings"],
+                # What is published now, kept with the quote so its PDF never changes.
+                branding=appconfig.branding_snapshot(),
                 lines=data["lines"],
                 totals=data["totals"],
                 drawings=data["drawings"],

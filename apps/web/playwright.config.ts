@@ -32,7 +32,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: /(config|catalog)\.spec/,
+      testIgnore: /(config|catalog|rules)\.spec/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     {
@@ -41,6 +41,14 @@ export default defineConfig({
       name: 'config',
       testMatch: /(config|catalog)\.spec/,
       dependencies: ['chromium'],
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      // The rules and the quote defaults share the draft with the app configuration, so this
+      // runs after those two, not beside them.
+      name: 'rules',
+      testMatch: /rules\.spec/,
+      dependencies: ['config'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
   ],

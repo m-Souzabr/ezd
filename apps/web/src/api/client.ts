@@ -346,6 +346,16 @@ export const api = {
     request<ConfigDraft>('PUT', '/api/admin/config/draft/', {
       body: { revision, app_config: appConfig },
     }),
+  /** Saves only the rules section. Needs `config.rules.edit`; core's paths come back in a 422. */
+  saveRulesDraft: (revision: number, rulesConfig: object) =>
+    request<ConfigDraft>('PUT', '/api/admin/config/draft/', {
+      body: { revision, rules_config: rulesConfig },
+    }),
+  /** Saves only the quote defaults. Needs `config.quote.edit`. */
+  saveQuoteDefaultsDraft: (revision: number, quoteDefaults: object) =>
+    request<ConfigDraft>('PUT', '/api/admin/config/draft/', {
+      body: { revision, quote_defaults: quoteDefaults },
+    }),
   publishConfig: (revision: number, note: string) =>
     request<ConfigVersion>('POST', '/api/admin/config/publish/', { body: { revision, note } }),
   listConfigVersions: () => request<ConfigVersion[]>('GET', '/api/admin/config/versions/'),

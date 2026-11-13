@@ -8,9 +8,9 @@ export type Section = {
 
 export const SECTIONS: Section[] = [
   { path: 'catalog', label: 'Catalog', permission: 'config.catalog.edit' },
-  { path: 'rules', label: 'Rules', permission: 'config.rules.edit', soon: true },
+  { path: 'rules', label: 'Rules', permission: 'config.rules.edit' },
   { path: 'app', label: 'App settings', permission: 'config.app.edit' },
-  { path: 'quotes', label: 'Quotes', permission: 'config.quote.edit', soon: true },
+  { path: 'quotes', label: 'Quotes', permission: 'config.quote.edit' },
   { path: 'ai', label: 'AI', permission: 'llm.settings.edit' },
   { path: 'users', label: 'Users', permission: 'users.view' },
   { path: 'audit', label: 'Audit', permission: 'audit.view' },

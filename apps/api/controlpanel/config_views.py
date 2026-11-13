@@ -4,15 +4,16 @@ from django.db import IntegrityError, transaction
 from django.db.models import F, Max
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from . import appconfig, audit
-from .codes import APP_EDIT
+from .codes import APP_EDIT, QUOTE_EDIT, RULES_EDIT
 from .models import ConfigVersion
-from .permissions import HasControlPanelPerm
+from .permissions import HasControlPanelPerm, can
 from .serializers import (
     AppConfigSerializer,
     ConfigDraftSerializer,
@@ -25,6 +26,20 @@ from .serializers import (
 Status = ConfigVersion.Status
 OBJECT_TYPE = "config_version"
 PUBLIC_MAX_AGE_SECONDS = 30
+
+# The three sections of a configuration version, each with the permission to edit it. The
+# page for a section is for whoever holds its code; the draft and the versions are shared.
+SECTIONS = {
+    "app_config": APP_EDIT,
+    "rules_config": RULES_EDIT,
+    "quote_defaults": QUOTE_EDIT,
+}
+ANY_SECTION = tuple(SECTIONS.values())
+SECTION_NAMES = {
+    "app_config": "the app settings",
+    "rules_config": "the rules",
+    "quote_defaults": "the quote defaults",
+}
 
 
 class PublicConfigView(APIView):
@@ -41,38 +56,76 @@ class PublicConfigView(APIView):
             {
                 "version": row.number if row else None,
                 "config": appconfig.effective(row.app_config if row else {}),
+                "rules_config": row.rules_config if row else {},
+                "quote_defaults": appconfig.public_quote_defaults(
+                    row.quote_defaults if row else {}
+                ),
             }
         )
         response["Cache-Control"] = f"public, max-age={PUBLIC_MAX_AGE_SECONDS}"
         return response
 
 
+def _sections(row: ConfigVersion | None) -> dict[str, Any]:
+    return {name: getattr(row, name) if row else {} for name in SECTIONS}
+
+
 def _draft_payload(row: ConfigVersion | None) -> dict[str, Any]:
     base = appconfig.published()
-    if row is None:
-        return {
-            "revision": 0,
-            "app_config": base.app_config if base else {},
-            "based_on": base.number if base else None,
-            "updated_at": None,
-        }
     return {
-        "revision": row.revision,
-        "app_config": row.app_config,
+        "revision": row.revision if row else 0,
+        **_sections(row or base),
         "based_on": base.number if base else None,
-        "updated_at": row.updated_at,
+        "updated_at": row.updated_at if row else None,
     }
 
 
+def _redact(sections: dict[str, Any]) -> dict[str, Any]:
+    """The sections as the audit log keeps them: a logo is a size, not a megabyte of text."""
+    defaults = sections.get("quote_defaults") or {}
+    logo = (defaults.get("branding") or {}).get("logo")
+    if not logo:
+        return sections
+    branding = {**defaults["branding"], "logo": f"<logo of {len(logo)} characters>"}
+    return {**sections, "quote_defaults": {**defaults, "branding": branding}}
+
+
 def _snapshot(row: ConfigVersion | None) -> dict[str, Any] | None:
-    return {"number": row.number, "app_config": row.app_config} if row else None
+    return {"number": row.number, **_redact(_sections(row))} if row else None
+
+
+CHECKS = {
+    "app_config": appconfig.validate_config,
+    "rules_config": appconfig.validate_rules_config,
+    "quote_defaults": appconfig.validate_quote_defaults,
+}
+
+
+def _require_for_changes(user: Any, before: ConfigVersion | None, after: dict[str, Any]) -> None:
+    """Refuses a publish that changes a section the user may not edit.
+
+    A section counts as changed only if its meaning is, so `{}` and the same section with
+    every default filled in are the same: the first publish does not change what was not edited.
+    """
+    for name, code in SECTIONS.items():
+        previous = getattr(before, name) if before else {}
+        if previous == after[name] or can(user, code):
+            continue
+        if CHECKS[name](previous) != after[name]:
+            raise PermissionDenied(
+                f"This changes {SECTION_NAMES[name]}, which you do not have permission to publish."
+            )
 
 
 class ConfigDraftView(APIView):
-    """The configuration being edited. Without a saved draft it is the published one."""
+    """The configuration being edited. Without a saved draft it is the published one.
+
+    Reading it needs any of the three edit permissions. Saving a section needs the
+    permission for that section.
+    """
 
     permission_classes = (HasControlPanelPerm,)
-    control_panel_perm = APP_EDIT
+    control_panel_perm = {"GET": ANY_SECTION, "PUT": ANY_SECTION}
 
     @extend_schema(responses={200: ConfigDraftSerializer})
     def get(self, request: Request) -> Response:
@@ -80,24 +133,31 @@ class ConfigDraftView(APIView):
 
     @extend_schema(request=ConfigDraftUpdateSerializer, responses={200: ConfigDraftSerializer})
     def put(self, request: Request) -> Response:
-        """Saves the draft if `revision` is the one the editor loaded, else 409."""
+        """Saves the sections given, if `revision` is the one the editor loaded, else 409."""
         serializer = ConfigDraftUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        revision = serializer.validated_data["revision"]
-        config = appconfig.validate_config(serializer.validated_data["app_config"])
+        data = serializer.validated_data
+        given = [name for name in SECTIONS if name in data]
+        for name in given:
+            if not can(request.user, SECTIONS[name]):
+                raise PermissionDenied(f"You do not have permission to edit {SECTION_NAMES[name]}.")
+        values = {name: CHECKS[name](data[name]) for name in given}
+        revision = data["revision"]
         before = appconfig.draft()
         # One UPDATE on the row's own columns, so two saves cannot both succeed.
         if revision == 0:
+            # A section that is not given starts from what is published, not from nothing.
+            start = {**_sections(appconfig.published()), **values}
             try:
                 with transaction.atomic():
                     row = ConfigVersion.objects.create(
-                        status=Status.DRAFT, app_config=config, created_by=request.user
+                        status=Status.DRAFT, created_by=request.user, **start
                     )
             except IntegrityError as error:
                 raise appconfig.StaleDraft() from error
         else:
             changed = ConfigVersion.objects.filter(status=Status.DRAFT, revision=revision).update(
-                app_config=config, revision=F("revision") + 1
+                **values, revision=F("revision") + 1
             )
             if not changed:
                 raise appconfig.StaleDraft()
@@ -116,24 +176,30 @@ class ConfigDraftView(APIView):
 
 class ConfigPublishView(APIView):
     permission_classes = (HasControlPanelPerm,)
-    control_panel_perm = APP_EDIT
+    control_panel_perm = ANY_SECTION
 
     @extend_schema(request=ConfigPublishSerializer, responses={200: ConfigVersionSerializer})
     def post(self, request: Request) -> Response:
-        """Makes the draft the new published version, which is never changed again."""
+        """Makes the draft the new published version, which is never changed again.
+
+        It publishes every section of the draft, so it is refused if the draft has changed
+        one the user may not edit.
+        """
         serializer = ConfigPublishSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
             draft = ConfigVersion.objects.select_for_update().filter(status=Status.DRAFT).first()
             if draft is None or draft.revision != serializer.validated_data["revision"]:
                 raise appconfig.StaleDraft()
-            config = appconfig.validate_config(draft.app_config)
+            filled = {name: CHECKS[name](getattr(draft, name)) for name in SECTIONS}
             previous = appconfig.published()
+            _require_for_changes(request.user, previous, filled)
             if previous:
                 ConfigVersion.objects.filter(pk=previous.pk).update(status=Status.SUPERSEDED)
             draft.number = (ConfigVersion.objects.aggregate(m=Max("number"))["m"] or 0) + 1
             draft.status = Status.PUBLISHED
-            draft.app_config = config
+            for name, value in filled.items():
+                setattr(draft, name, value)
             draft.note = serializer.validated_data["note"].strip()
             draft.created_by = request.user
             draft.save()
@@ -160,7 +226,7 @@ def _version_row(row: ConfigVersion) -> dict[str, Any]:
 
 class ConfigVersionListView(APIView):
     permission_classes = (HasControlPanelPerm,)
-    control_panel_perm = APP_EDIT
+    control_panel_perm = ANY_SECTION
     pagination_class = None
 
     @extend_schema(responses={200: ConfigVersionSerializer(many=True)})
@@ -175,11 +241,14 @@ class ConfigVersionListView(APIView):
 
 class ConfigRollbackView(APIView):
     permission_classes = (HasControlPanelPerm,)
-    control_panel_perm = APP_EDIT
+    control_panel_perm = ANY_SECTION
 
     @extend_schema(request=ConfigRollbackSerializer, responses={200: ConfigVersionSerializer})
     def post(self, request: Request, number: int) -> Response:
-        """Publishes a copy of an old version as a new one. The old rows stay as they were."""
+        """Publishes a copy of an old version as a new one. The old rows stay as they were.
+
+        Every section comes back, so it is refused if that changes one the user may not edit.
+        """
         serializer = ConfigRollbackSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
@@ -189,15 +258,16 @@ class ConfigRollbackView(APIView):
             previous = appconfig.published()
             if previous and previous.pk == target.pk:
                 raise appconfig.StaleDraft(f"Version {number} is already the published one.")
+            _require_for_changes(request.user, previous, _sections(target))
             if previous:
                 ConfigVersion.objects.filter(pk=previous.pk).update(status=Status.SUPERSEDED)
             row = ConfigVersion.objects.create(
                 number=(ConfigVersion.objects.aggregate(m=Max("number"))["m"] or 0) + 1,
                 status=Status.PUBLISHED,
-                app_config=target.app_config,
                 note=serializer.validated_data["note"].strip()
                 or f"Rolled back to version {number}",
                 created_by=request.user,
+                **_sections(target),
             )
         audit.record(
             request.user,

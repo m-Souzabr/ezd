@@ -1,8 +1,11 @@
+import type { z } from 'zod';
+
 import type { Command } from '../commands/index.js';
 import type { Id } from '../document/index.js';
+import { isLockedRule, type RulesConfig, type SeveritySchema } from './config.js';
 import type { RuleContext } from './context.js';
 
-export type Severity = 'error' | 'warning' | 'info';
+export type Severity = z.infer<typeof SeveritySchema>;
 
 export type Violation = {
   ruleId: string;
@@ -24,6 +27,10 @@ export type Rule = {
 /** A violation before its rule stamps it with an id and a severity. */
 export type Finding = Pick<Violation, 'itemIds' | 'message' | 'fix'>;
 
+/**
+ * Builds a rule. `severity` is the rule's own; the configuration may turn the rule off or
+ * change it, except for the rules that protect the document's integrity.
+ */
 export const defineRule = (
   id: string,
   severity: Severity,
@@ -31,5 +38,12 @@ export const defineRule = (
 ): Rule => ({
   id,
   severity,
-  check: (ctx) => find(ctx).map((finding) => ({ ruleId: id, severity, ...finding })),
+  check(ctx) {
+    const setting = isLockedRule(id)
+      ? undefined
+      : ctx.config.rules[id as keyof RulesConfig['rules']];
+    if (setting && !setting.enabled) return [];
+    const level = setting?.severity ?? severity;
+    return find(ctx).map((finding) => ({ ruleId: id, severity: level, ...finding }));
+  },
 });

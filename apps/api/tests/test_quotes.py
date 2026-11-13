@@ -9,6 +9,7 @@ from django.db import connection
 from rest_framework.test import APIClient
 
 from accounts.models import User
+from controlpanel.appconfig import EMPTY_BRANDING
 from projects.models import Design, DesignVersion, Project
 from quotes.models import Quote
 from quotes.serializers import MAX_DRAWING_BYTES
@@ -135,6 +136,8 @@ def test_create_snapshots_the_draft_and_stores_the_quote(
         "lines": payload()["lines"],
         "totals": payload()["totals"],
         "drawings": payload()["drawings"],
+        # Nothing is published, so the quote has the defaults: no company, no logo.
+        "branding": EMPTY_BRANDING,
         "created_at": body["created_at"],
     }
     # Creating a quote leaves the draft alone.

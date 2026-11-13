@@ -375,8 +375,11 @@ paths:
   /api/admin/config/draft/:
     get:
       operationId: admin_config_draft_retrieve
-      description: The configuration being edited. Without a saved draft it is the
-        published one.
+      description: |-
+        The configuration being edited. Without a saved draft it is the published one.
+
+        Reading it needs any of the three edit permissions. Saving a section needs the
+        permission for that section.
       tags:
       - admin
       security:
@@ -390,8 +393,8 @@ paths:
           description: ''
     put:
       operationId: admin_config_draft_update
-      description: Saves the draft if `revision` is the one the editor loaded, else
-        409.
+      description: Saves the sections given, if `revision` is the one the editor loaded,
+        else 409.
       tags:
       - admin
       requestBody:
@@ -412,8 +415,11 @@ paths:
   /api/admin/config/publish/:
     post:
       operationId: admin_config_publish_create
-      description: Makes the draft the new published version, which is never changed
-        again.
+      description: |-
+        Makes the draft the new published version, which is never changed again.
+
+        It publishes every section of the draft, so it is refused if the draft has changed
+        one the user may not edit.
       tags:
       - admin
       requestBody:
@@ -450,8 +456,10 @@ paths:
   /api/admin/config/versions/{number}/rollback/:
     post:
       operationId: admin_config_versions_rollback_create
-      description: Publishes a copy of an old version as a new one. The old rows stay
-        as they were.
+      description: |-
+        Publishes a copy of an old version as a new one. The old rows stay as they were.
+
+        Every section comes back, so it is refused if that changes one the user may not edit.
       parameters:
       - in: path
         name: number
@@ -1845,8 +1853,12 @@ components:
           type: integer
           nullable: true
         config: {}
+        rules_config: {}
+        quote_defaults: {}
       required:
       - config
+      - quote_defaults
+      - rules_config
       - version
     AuditEntry:
       type: object
@@ -1890,6 +1902,30 @@ components:
       - id
       - object_id
       - object_type
+    Branding:
+      type: object
+      description: The company details of a quote's PDF, as they were when the quote
+        was created.
+      properties:
+        numberPrefix:
+          type: string
+        companyName:
+          type: string
+        address:
+          type: string
+        contact:
+          type: string
+        logo:
+          type: string
+        footerText:
+          type: string
+      required:
+      - address
+      - companyName
+      - contact
+      - footerText
+      - logo
+      - numberPrefix
     Catalog:
       type: object
       description: A published catalog, as the web app and the server read it.
@@ -2046,6 +2082,8 @@ components:
         revision:
           type: integer
         app_config: {}
+        rules_config: {}
+        quote_defaults: {}
         based_on:
           type: integer
           nullable: true
@@ -2056,7 +2094,9 @@ components:
       required:
       - app_config
       - based_on
+      - quote_defaults
       - revision
+      - rules_config
       - updated_at
     ConfigDraftUpdateRequest:
       type: object
@@ -2065,8 +2105,9 @@ components:
           type: integer
           minimum: 0
         app_config: {}
+        rules_config: {}
+        quote_defaults: {}
       required:
-      - app_config
       - revision
     ConfigPublishRequest:
       type: object
@@ -3105,11 +3146,16 @@ components:
           allOf:
           - $ref: '#/components/schemas/Drawings'
           readOnly: true
+        branding:
+          allOf:
+          - $ref: '#/components/schemas/Branding'
+          readOnly: true
         created_at:
           type: string
           format: date-time
           readOnly: true
       required:
+      - branding
       - catalog_version
       - created_at
       - customer_address

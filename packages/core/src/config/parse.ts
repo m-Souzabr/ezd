@@ -1,4 +1,4 @@
-import type { ZodError } from 'zod';
+import type { ZodError, ZodType } from 'zod';
 
 import { type Issue, issuePath } from '../issues.js';
 import { err, ok, type Result } from '../result.js';
@@ -46,18 +46,23 @@ function drop(root: unknown, path: readonly PropertyKey[], keys: readonly string
 export type ParsedConfig = { config: AppConfig; ignored: Issue[] };
 
 /**
- * Reads a configuration from anywhere, such as the server or a stored copy, and never
+ * Reads a value that has a schema with a default for every field, from anywhere, and never
  * refuses it: each field that is not valid, and each key that is not known, is ignored and
  * takes its default. `ignored` says what was dropped. Only input that is not an object is
  * an error.
  */
-export function parseAppConfig(input: unknown): Result<ParsedConfig, Issue> {
-  if (!isRecord(input)) return err({ path: '', message: 'The configuration must be an object.' });
+export function parseForgiving<T>(
+  schema: ZodType<T>,
+  defaults: T,
+  input: unknown,
+  what: string,
+): Result<{ config: T; ignored: Issue[] }, Issue> {
+  if (!isRecord(input)) return err({ path: '', message: `The ${what} must be an object.` });
   const work = JSON.parse(JSON.stringify(input)) as Record<string, unknown>;
   const ignored: Issue[] = [];
   // Each pass removes at least one offending value, so this ends; the bound is a backstop.
   for (let pass = 0; pass < 500; pass += 1) {
-    const parsed = AppConfigSchema.safeParse(work);
+    const parsed = schema.safeParse(work);
     if (parsed.success) return ok({ config: parsed.data, ignored });
     for (const issue of parsed.error.issues) {
       const keys = issue.code === 'unrecognized_keys' ? issue.keys : [];
@@ -65,11 +70,15 @@ export function parseAppConfig(input: unknown): Result<ParsedConfig, Issue> {
       if (!drop(work, issue.path, keys)) {
         // A rule over a whole section, or the whole value: that part starts again.
         const section = issue.path[0];
-        if (section === undefined) return ok({ config: DEFAULT_APP_CONFIG, ignored });
+        if (section === undefined) return ok({ config: defaults, ignored });
         delete work[section as string];
       }
     }
   }
   /* c8 ignore next */
-  return ok({ config: DEFAULT_APP_CONFIG, ignored });
+  return ok({ config: defaults, ignored });
 }
+
+/** Reads the app configuration as `parseForgiving` does. */
+export const parseAppConfig = (input: unknown): Result<ParsedConfig, Issue> =>
+  parseForgiving(AppConfigSchema, DEFAULT_APP_CONFIG, input, 'configuration');

@@ -6,6 +6,7 @@ import {
   type Len,
   type Point,
   type Pt,
+  type RulesConfig,
   snap,
   snapResize,
   type SnapResult,
@@ -45,6 +46,7 @@ export function snapDrag(
   catalog: Catalog,
   drag: Drag,
   pointer: Point,
+  rules?: RulesConfig,
 ): DragUpdate {
   const { item } = drag;
   if (drag.kind !== 'resize') {
@@ -54,13 +56,14 @@ export function snapDrag(
         catalog,
         item,
         pointer,
+        rules,
         ...(drag.kind === 'move' && { excludeItemId: item.id }),
       }),
     };
   }
   const { width, placement } = snapResize(doc, catalog, item, drag.edge, pointer);
   const command = resizeCommand(catalog, item, width, placement);
-  const checked = command ? validateCommand(doc, catalog, command) : null;
+  const checked = command ? validateCommand(doc, catalog, command, rules) : null;
   return {
     width,
     snap: {

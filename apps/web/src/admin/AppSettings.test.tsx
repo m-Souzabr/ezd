@@ -12,6 +12,8 @@ import { AppSettingsPage } from './AppSettings';
 const draft = (overrides: Partial<ConfigDraft> = {}): ConfigDraft => ({
   revision: 0,
   app_config: {},
+  rules_config: {},
+  quote_defaults: {},
   based_on: null,
   updated_at: null,
   ...overrides,

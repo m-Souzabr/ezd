@@ -3,6 +3,7 @@ import { applyCommand, type Command, type CommandError } from '../commands/index
 import type { DesignDocument } from '../document/index.js';
 import { ok, type Result } from '../result.js';
 import { createContext } from './context.js';
+import type { RulesConfig } from './config.js';
 import { RULES } from './rules/index.js';
 import type { Severity, Violation } from './types.js';
 
@@ -25,10 +26,13 @@ const violationKey = (violation: Violation): string =>
  * id, then item ids. Pure and deterministic. The document must be a valid one, as
  * `parseDocument` returns.
  *
+ * `rules` turns rules off, changes their severity and sets their thresholds; without it
+ * the defaults apply.
+ *
  * These are design-quality rules, not building-code checks.
  */
-export function validate(doc: DesignDocument, catalog: Catalog): Violation[] {
-  const ctx = createContext(doc, catalog);
+export function validate(doc: DesignDocument, catalog: Catalog, rules?: RulesConfig): Violation[] {
+  const ctx = createContext(doc, catalog, rules);
   return RULES.flatMap((rule) => rule.check(ctx)).sort(compareViolations);
 }
 
@@ -44,11 +48,12 @@ export function validateCommand(
   doc: DesignDocument,
   catalog: Catalog,
   cmd: Command,
+  rules?: RulesConfig,
 ): Result<{ doc: DesignDocument; violations: Violation[]; introduced: Violation[] }, CommandError> {
   const applied = applyCommand(doc, cmd, { catalog });
   if (!applied.ok) return applied;
-  const before = new Set(validate(doc, catalog).map(violationKey));
-  const violations = validate(applied.value.doc, catalog);
+  const before = new Set(validate(doc, catalog, rules).map(violationKey));
+  const violations = validate(applied.value.doc, catalog, rules);
   return ok({
     doc: applied.value.doc,
     violations,

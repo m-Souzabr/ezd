@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { SEED_CATALOG } from '../catalog/index.js';
 import { type Command, execute } from '../index.js';
-import { validate } from '../rules/index.js';
+import { type RulesConfigInput, validate, validateRulesConfig } from '../rules/index.js';
 import { door, free, kitchen, on, windowAt } from '../test/kitchen.js';
 import { inches } from '../units/index.js';
 import { catalogIndexForLLM } from './catalogIndex.js';
@@ -593,6 +593,43 @@ describe('dryRunProposal', () => {
     expect(run.ok && run.introducedWarnings.map((violation) => violation.ruleId)).toEqual(
       expect.any(Array),
     );
+  });
+});
+
+describe('dryRunProposal with a rules configuration', () => {
+  // A 30 in cabinet 3 in from the wall's end leaves a gap that needs a filler: a warning.
+  const call3 = [
+    call('add_item', { catalogId: 'base.standard', widthIn: 30, wall: 'A', offsetIn: 3 }),
+  ];
+  const run = (input: RulesConfigInput) => {
+    const rules = validateRulesConfig(input);
+    if (!rules.ok) throw new Error(JSON.stringify(rules.error));
+    return dryRunProposal(call3, {}, kitchen([]), catalog, { rules: rules.value });
+  };
+
+  it('shows the warning as a warning by default', () => {
+    const result = run({});
+    expect(result.ok && result.introducedWarnings.map((v) => v.ruleId)).toEqual([
+      'gap.needs-filler',
+    ]);
+  });
+
+  it('sends the proposal back when the configured severity makes the problem an error', () => {
+    const result = run({ rules: { 'gap.needs-filler': { severity: 'error' } } });
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.errors[0]!.message).toMatch(
+      /^The change would cause this problem: .* from the start of the wall\./,
+    );
+  });
+
+  it('does not mention a problem the configuration turns off', () => {
+    const result = run({ rules: { 'gap.needs-filler': { enabled: false } } });
+    expect(result.ok && result.introducedWarnings).toEqual([]);
+  });
+
+  it('measures against the configured threshold', () => {
+    const result = run({ thresholds: { minCabinetGap: 48, maxFillerGap: 48 } });
+    expect(result.ok && result.introducedWarnings).toEqual([]);
   });
 });
 

@@ -2,6 +2,7 @@ import { type DesignDocument, wallLabel } from '@ezd/core';
 import { useMemo } from 'react';
 
 import { useCatalog } from '../catalog/useCatalog';
+import { useRulesConfig } from '../config/useConfig';
 import { DesignStoreProvider, useDesign, useDesignStore } from '../store/context';
 import { createDesignStore, type View } from '../store/designStore';
 import { ElevationCanvas } from './elevation/ElevationCanvas';
@@ -76,7 +77,11 @@ export function VersionPreview({
   onClose(): void;
 }) {
   const catalog = useCatalog();
-  const store = useMemo(() => createDesignStore(document, catalog), [document, catalog]);
+  const rules = useRulesConfig();
+  const store = useMemo(
+    () => createDesignStore(document, catalog, rules),
+    [document, catalog, rules],
+  );
   return (
     <div className="flex h-screen flex-col bg-slate-100 text-slate-900">
       <header className="flex flex-wrap items-center gap-3 border-b border-amber-300 bg-amber-50 px-3 py-2">

@@ -3,7 +3,6 @@ import type { ItemKind } from '../../document/index.js';
 import { EPS, reachAlongWall } from '../../geometry/index.js';
 import { formatLength, type Len } from '../../units/index.js';
 import { type PlacedItem, the, verticalOverlap } from '../context.js';
-import { MAX_FILLER_GAP, MIN_CABINET_GAP } from '../constants.js';
 import { defineRule, type Finding } from '../types.js';
 
 const CABINETS = new Set<ItemKind>(['base', 'wall', 'tall', 'corner']);
@@ -18,6 +17,7 @@ type Neighbour = { placed: PlacedItem; start: Len; end: Len; sameWall: boolean }
  */
 export const gapNeedsFiller = defineRule('gap.needs-filler', 'warning', (ctx) => {
   const findings: Finding[] = [];
+  const { minCabinetGap, maxFillerGap } = ctx.config.thresholds;
 
   const report = (
     cabinet: PlacedItem,
@@ -27,11 +27,11 @@ export const gapNeedsFiller = defineRule('gap.needs-filler', 'warning', (ctx) =>
     side: 'start' | 'end',
   ) => {
     const gap = to - from;
-    if (gap <= 0 || gap >= MIN_CABINET_GAP) return;
+    if (gap <= 0 || gap >= minCabinetGap) return;
     // The filler matches the shorter of the two, so it fits beside both.
     const model = neighbour && neighbour.item.height < cabinet.item.height ? neighbour : cabinet;
     const filler =
-      gap <= MAX_FILLER_GAP
+      gap <= maxFillerGap
         ? ctx.catalog.entries.find(
             (entry) =>
               entry.kind === 'filler' &&
@@ -45,7 +45,7 @@ export const gapNeedsFiller = defineRule('gap.needs-filler', 'warning', (ctx) =>
     const what = neighbour ? the(neighbour.label) : `the ${side} of the wall`;
     const advice = filler
       ? `Add a ${formatLength(gap)} filler.`
-      : `Close the gap, or widen it to at least ${formatLength(MIN_CABINET_GAP)} to fit a cabinet.`;
+      : `Close the gap, or widen it to at least ${formatLength(minCabinetGap)} to fit a cabinet.`;
     findings.push({
       itemIds: neighbour ? [cabinet.item.id, neighbour.item.id] : [cabinet.item.id],
       message: `${cabinet.label} is ${formatLength(gap)} from ${what}. ${advice}`,

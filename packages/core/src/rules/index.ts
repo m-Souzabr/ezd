@@ -1,5 +1,6 @@
 export * from './types.js';
 export * from './constants.js';
+export * from './config.js';
 export { validate, validateCommand } from './engine.js';
 export {
   itemLabel,
