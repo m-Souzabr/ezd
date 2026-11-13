@@ -369,7 +369,7 @@ class CatalogEntryListView(_Edit):
         """Adds an entry to the draft."""
         serializer = CatalogEntryCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return self.create(
+        return self.add(
             request, serializer.validated_data["revision"], serializer.validated_data["entry"]
         )
 
@@ -415,7 +415,7 @@ class CatalogFinishListView(_FinishEdit):
         """Adds a finish to the draft."""
         serializer = CatalogFinishCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return self.create(
+        return self.add(
             request, serializer.validated_data["revision"], serializer.validated_data["finish"]
         )
 
