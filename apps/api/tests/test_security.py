@@ -146,3 +146,29 @@ def test_responses_carry_the_request_id(anonymous: APIClient) -> None:
 @override_settings(DEBUG=True)
 def test_health_needs_no_session_or_database(anonymous: APIClient) -> None:
     assert anonymous.get("/api/health/").json() == {"status": "ok"}
+
+
+@pytest.mark.django_db
+def test_every_response_carries_the_security_headers(client: APIClient) -> None:
+    response = client.get("/api/health/")
+    assert response["Content-Security-Policy"].startswith("default-src 'none'")
+    assert response["X-Content-Type-Options"] == "nosniff"
+    assert response["X-Frame-Options"] == "DENY"
+    assert response["Referrer-Policy"] == "same-origin"
+    assert "camera=()" in response["Permissions-Policy"]
+    admin = client.get("/admin/login/")
+    assert admin["Content-Security-Policy"].startswith("default-src 'self'")
+
+
+@pytest.mark.django_db
+def test_model_calls_have_their_own_throttle(client: APIClient, design: Design) -> None:
+    rates = {**settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"], "llm": "1/min"}
+    with override_settings(
+        REST_FRAMEWORK={**settings.REST_FRAMEWORK, "DEFAULT_THROTTLE_RATES": rates}
+    ):
+        # Reading the chat is not a model call.
+        for _ in range(3):
+            assert client.get(f"/api/designs/{design.id}/chat/").status_code == 200
+        # Counted before the body is read, so an invalid request uses up the allowance too.
+        assert client.post(f"/api/designs/{design.id}/chat/", {}).status_code == 400
+        assert client.post(f"/api/designs/{design.id}/chat/", {}).status_code == 429

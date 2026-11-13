@@ -31,6 +31,7 @@ REST_FRAMEWORK = {
         "login_ip": "100000/min",
         "login_email": "100000/min",
         "auth_ip": "100000/min",
+        "llm": "100000/min",
     },
 }
 

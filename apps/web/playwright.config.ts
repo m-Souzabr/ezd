@@ -48,6 +48,7 @@ export default defineConfig({
         // Every test signs in from 127.0.0.1, in parallel.
         API_THROTTLE_LOGIN_IP: '1000/min',
         API_THROTTLE_AUTH_IP: '1000/min',
+        API_THROTTLE_LLM: '1000/min',
       },
       reuseExistingServer: !CI,
       timeout: 120_000,

@@ -17,6 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from chat.usage import check_quota, record_usage
+from config.api import LLMThrottledMixin
 from llm import config
 from llm.client import LLMUnavailable
 from projects.documents import InvalidDocument, validate_document
@@ -127,7 +128,7 @@ class PhotoFileView(OwnedQuerysetMixin, APIView):
         return response
 
 
-class PhotoAnalyzeView(OwnedQuerysetMixin, APIView):
+class PhotoAnalyzeView(LLMThrottledMixin, OwnedQuerysetMixin, APIView):
     model = Photo
 
     @extend_schema(request=None, responses={201: PhotoDraftSerializer})
