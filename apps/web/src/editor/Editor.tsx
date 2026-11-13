@@ -1,5 +1,5 @@
 import { type DesignDocument, itemLabel, wallLabel } from '@ezd/core';
-import { useEffect } from 'react';
+import { type ReactNode, useEffect } from 'react';
 
 import { handleGlobalKey, isTyping } from '../lib/shortcuts';
 import { useDesign, useDesignStore } from '../store/context';
@@ -37,7 +37,14 @@ function announcement(state: DesignStore): string {
  * The editor screen: the toolbar across the top, the catalog on the left, the plan or an
  * elevation in the middle, and the properties and validation panels on the right.
  */
-export function Editor({ onLoadDocument }: { onLoadDocument(doc: DesignDocument): void }) {
+export function Editor({
+  onLoadDocument,
+  header,
+}: {
+  onLoadDocument(doc: DesignDocument): void;
+  /** Shown in the header after the title: where the design is kept, and links away. */
+  header?: ReactNode;
+}) {
   const store = useDesignStore();
   const view = useDesign((state) => state.view);
   const notice = useDesign((state) => state.notice);
@@ -58,6 +65,7 @@ export function Editor({ onLoadDocument }: { onLoadDocument(doc: DesignDocument)
     <div className="flex h-screen flex-col bg-slate-100 text-slate-900">
       <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-3 pt-2">
         <h1 className="text-base font-semibold tracking-tight">EZDesign</h1>
+        {header}
       </header>
       <Toolbar onLoadDocument={onLoadDocument} />
       <div className="flex min-h-0 flex-1">

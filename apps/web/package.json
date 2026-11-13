@@ -11,16 +11,19 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p e2e",
     "test": "vitest run",
     "e2e": "playwright test",
-    "build": "vite build"
+    "build": "vite build",
+    "openapi": "openapi-typescript ../api/openapi.yaml -o src/api/schema.d.ts"
   },
   "dependencies": {
     "@ezd/core": "workspace:*",
+    "@tanstack/react-query": "catalog:",
     "immer": "catalog:",
     "konva": "catalog:",
     "radix-ui": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-konva": "catalog:",
+    "react-router": "catalog:",
     "zustand": "catalog:"
   },
   "devDependencies": {
@@ -36,6 +39,7 @@
     "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-react-refresh": "catalog:",
     "jsdom": "catalog:",
+    "openapi-typescript": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

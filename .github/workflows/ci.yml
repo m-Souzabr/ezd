@@ -41,9 +41,26 @@ jobs:
           git diff --exit-code -- packages/core/schema
 
   # The editor driven in a real browser. Kept apart from `js` so the browser download does
-  # not slow the unit tests down.
+  # not slow the unit tests down. Playwright starts the web dev server and the API, which
+  # needs PostgreSQL and the Python environment.
   e2e:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: ezd
+          POSTGRES_USER: ezd
+          POSTGRES_PASSWORD: ezd
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ezd -d ezd"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://ezd:ezd@localhost:5432/ezd
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -51,7 +68,13 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
       - run: pnpm install --frozen-lockfile
+      - run: uv sync --frozen
+        working-directory: apps/api
       - name: Install the Playwright browser
         run: pnpm --filter @ezd/web exec playwright install --with-deps chromium
       - run: pnpm --filter @ezd/web e2e
@@ -88,15 +111,34 @@ jobs:
       DATABASE_URL: postgres://ezd:ezd@localhost:5432/ezd
     steps:
       - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
       - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
           cache-dependency-glob: apps/api/uv.lock
       - run: uv sync --frozen
+      # The API validates documents by running `ezd-core`, so the tests need it built.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ezd/core-cli build
       - run: uv run ruff check
+        if: ${{ !cancelled() }}
       - run: uv run ruff format --check
+        if: ${{ !cancelled() }}
       - run: uv run python manage.py makemigrations --check --dry-run
+        if: ${{ !cancelled() }}
       - run: uv run pytest
+        if: ${{ !cancelled() }}
+      - name: OpenAPI file and TypeScript types match the API
+        if: ${{ !cancelled() }}
+        working-directory: .
+        run: |
+          pnpm run openapi
+          git add --intent-to-add apps/api/openapi.yaml apps/web/src/api/schema.d.ts
+          git diff --exit-code -- apps/api/openapi.yaml apps/web/src/api/schema.d.ts
 
   licenses:
     runs-on: ubuntu-latest

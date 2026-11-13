@@ -17,3 +17,11 @@ SECURE_HSTS_SECONDS = env.int("DJANGO_SECURE_HSTS_SECONDS", default=31536000)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+# For example smtp+tls://user:password@host:587
+EMAIL_CONFIG = env.email("EMAIL_URL")
+vars().update(EMAIL_CONFIG)
+
+# Throttle counters. The default is per process; point it at a shared cache when the API
+# runs as more than one process, or each process counts on its own.
+CACHES = {"default": env.cache("CACHE_URL", default="locmemcache://")}

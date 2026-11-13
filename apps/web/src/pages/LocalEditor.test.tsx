@@ -2,14 +2,14 @@ import type { DesignDocument } from '@ezd/core';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { App } from './App';
+import { LocalEditor } from './LocalEditor';
 import {
   createLocalRepository,
   type DesignRepository,
   serializeDocument,
   STORAGE_KEY,
-} from './lib/repository';
-import { room, seedItem, WALLS } from './test/kitchen';
+} from '../lib/repository';
+import { room, seedItem, WALLS } from '../test/kitchen';
 
 // jsdom has no canvas, so the drawing itself is left to the Playwright tests.
 vi.mock('react-konva', () => {
@@ -40,14 +40,14 @@ function memoryRepository(doc: DesignDocument | null = null, notice?: string) {
 
 /** Renders the app and waits for the design to load. */
 async function open(repository: DesignRepository) {
-  render(<App repository={repository} />);
+  render(<LocalEditor repository={repository} />);
   await screen.findByRole('toolbar', { name: 'Editor' });
 }
 
 beforeEach(() => localStorage.clear());
 afterEach(() => void vi.useRealTimers());
 
-describe('App', () => {
+describe('LocalEditor', () => {
   it('lays out the toolbar, the catalog, the canvas and the two panels', async () => {
     await open(memoryRepository().repository);
     expect(screen.getByRole('heading', { name: 'EZDesign' })).toBeInTheDocument();

@@ -56,8 +56,22 @@ pnpm dev
 The web dev server proxies `/api` to the API, so
 <http://localhost:5173/api/health/> answers `{"status": "ok"}`.
 
-The editor does not need the API yet: it keeps the design in the browser's `localStorage`,
-so `pnpm dev` alone is enough to use it.
+The editor at <http://localhost:5173/> does not need the API: it keeps one design in the
+browser's `localStorage`, so `pnpm dev` alone is enough to try it. Accounts, projects,
+saved designs and version history need the API and the database. The API validates each
+document with the `ezd-core` CLI, so build that once (and again after changing core):
+
+```sh
+pnpm --filter @ezd/core-cli build
+```
+
+Password reset emails are printed in the `runserver` terminal.
+
+To run the API in a container instead, next to PostgreSQL (from `apps/api`):
+
+```sh
+docker compose --profile api up --build
+```
 
 The API works with no configuration. To change anything (for example when port 5432 is
 already in use), copy `apps/api/.env.example` to `apps/api/.env` and edit it; set
@@ -75,15 +89,17 @@ pnpm build           # core, core-cli and web builds
 pnpm format          # Prettier (pnpm format:check to verify only)
 ```
 
-End-to-end tests of the editor, in a real browser (Playwright starts the web dev server
-itself):
+End-to-end tests of the editor, in a real browser. Playwright starts the web dev server
+and the API itself; the API needs PostgreSQL running and uses a database of its own
+(`test_ezd`):
 
 ```sh
 pnpm --filter @ezd/web exec playwright install chromium   # once
 pnpm --filter @ezd/web e2e
 ```
 
-Python, from `apps/api` (pytest needs the database from `docker compose up`):
+Python, from `apps/api` (pytest needs the database from `docker compose up` and the CLI
+built with `pnpm --filter @ezd/core-cli build`):
 
 ```sh
 uv run pytest
@@ -100,6 +116,13 @@ pnpm run licenses:py    # Python
 ```
 
 Use `pnpm run licenses`, not `pnpm licenses`: the bare form is a built-in pnpm command.
+
+After changing an API endpoint or serializer, regenerate the OpenAPI file and the web
+app's types, and commit both:
+
+```sh
+pnpm run openapi
+```
 
 CI (`.github/workflows/ci.yml`) runs all of the above on every pull request and on pushes
 to `main`.
