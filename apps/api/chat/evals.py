@@ -204,10 +204,17 @@ class CaseResult:
     responses: list[ProposeResponse] = field(default_factory=list)
 
 
-def run_case(case: dict[str, Any], client: LLMClient, models: Models) -> CaseResult:
+def run_case(
+    case: dict[str, Any],
+    client: LLMClient,
+    models: Models,
+    catalog: dict[str, Any] | None = None,
+) -> CaseResult:
+    """Runs one case. `catalog` is the published one; None is the seed, as core defaults to."""
+    extra = {} if catalog is None else {"catalog": catalog}
     document = json.loads((Path(settings.EVALS_DIR) / case["document"]).read_text("utf-8"))
     metered = MeteredClient(client)
-    summary = core("llm-summary", {"document": document})
+    summary = core("llm-summary", {"document": document, **extra})
     after, proposed, question, kind = document, False, "", "failed"
     errors: list[str] = []
     previous: list[dict[str, Any]] = []
@@ -225,6 +232,7 @@ def run_case(case: dict[str, Any], client: LLMClient, models: Models) -> CaseRes
                 previous_tool_calls=previous,
                 errors=errors,
                 category=category,
+                catalog=catalog,
             ),
         )
         # As the retry endpoint does: never back to the router model.
@@ -237,7 +245,12 @@ def run_case(case: dict[str, Any], client: LLMClient, models: Models) -> CaseRes
             break
         dry = core(
             "llm-dry-run",
-            {"document": document, "toolCalls": result.tool_calls, "aliases": summary["aliases"]},
+            {
+                "document": document,
+                "toolCalls": result.tool_calls,
+                "aliases": summary["aliases"],
+                **extra,
+            },
         )
         if dry["ok"]:
             after, proposed, kind, command = dry["document"], True, "proposal", dry["command"]
@@ -249,7 +262,7 @@ def run_case(case: dict[str, Any], client: LLMClient, models: Models) -> CaseRes
     new_errors: list[str] = []
     if command is not None:
         # The deterministic check, as the API's own validation runs it.
-        checked = core("validate", {"document": document, "commands": command["commands"]})
+        checked = core("validate", {"document": document, "commands": command["commands"], **extra})
         new_errors = [v["message"] for v in checked["introduced"] if v["severity"] == "error"]
 
     outcome = Outcome(document, after, proposed, question, new_errors)

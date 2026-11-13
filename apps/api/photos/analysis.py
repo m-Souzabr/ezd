@@ -118,8 +118,13 @@ def core(command: str, payload: Any) -> dict[str, Any]:
     return output
 
 
-def check_answer(text: str) -> tuple[Any, dict[str, Any] | None, str]:
-    """The parsed answer, the normalized draft (or None) and why it was refused."""
+def check_answer(
+    text: str, catalog: dict[str, Any] | None = None
+) -> tuple[Any, dict[str, Any] | None, str]:
+    """The parsed answer, the normalized draft (or None) and why it was refused.
+
+    Cabinets are snapped to `catalog`, or to the seed catalog when there is none.
+    """
     try:
         answer = json.loads(text)
     except ValueError:
@@ -128,7 +133,9 @@ def check_answer(text: str) -> tuple[Any, dict[str, Any] | None, str]:
     if error is not None:
         path = "/".join(str(part) for part in error.absolute_path) or "(root)"
         return answer, None, f"{path}: {error.message}"[:MAX_ERROR_CHARS]
-    normalized = core("normalize-draft", answer)
+    normalized = core(
+        "normalize-draft", answer if catalog is None else {"draft": answer, "catalog": catalog}
+    )
     if not normalized.get("ok"):
         issues = normalized.get("errors") or [{"path": "", "message": "not a draft room"}]
         first = issues[0]
@@ -151,6 +158,7 @@ def analyze(
     model: str,
     escalation_model: str,
     on_attempt: Callable[[AnalysisAttempt], None] = lambda attempt: None,
+    catalog: dict[str, Any] | None = None,
 ) -> AnalysisResult:
     """Asks the model, then once more on the same model and once on the escalation model if
     the answer does not match the schema. Raises `LLMUnavailable` on vendor errors, after
@@ -178,7 +186,7 @@ def analyze(
                 f"The answer was cut short ({response.stop_reason}).",
             )
         else:
-            answer, draft, error = check_answer(response.text)
+            answer, draft, error = check_answer(response.text, catalog)
         record = AnalysisAttempt(
             model=response.model or attempt_model,
             usage=response.usage,

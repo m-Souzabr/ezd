@@ -9,6 +9,7 @@ from django.db import DatabaseError
 from django.utils.module_loading import import_string
 
 from chat.evals import markdown, report, run_case
+from controlpanel import catalogs
 from llm import config
 from llm.client import LLMClient
 from llm.config import Models
@@ -23,6 +24,11 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
+        parser.add_argument(
+            "--published-catalog",
+            action="store_true",
+            help="Use the catalog published in the database instead of the seed.",
+        )
         parser.add_argument("--client", choices=["fake", "live"], default="fake")
         parser.add_argument("--vendor", help="A key of LLM_CLIENTS, for --client live.")
         parser.add_argument("--router-model")
@@ -43,6 +49,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
+        # The seed unless asked: a run needs no database, and the seed is the first published
+        # catalog, which the recordings were made with.
+        catalog = catalogs.published_catalog() if options["published_catalog"] else None
         evals = Path(settings.EVALS_DIR)
         cases = json.loads((evals / "cases.json").read_text("utf-8"))
         if options["case"]:
@@ -63,7 +72,7 @@ class Command(BaseCommand):
         results = []
         for case in cases:
             client: LLMClient = live_client or self._fake_client(evals, case["name"])
-            result = run_case(case, client, models)
+            result = run_case(case, client, models, catalog)
             results.append(result)
             if options["record"] and live:
                 self._record(evals / "recordings" / vendor / f"{case['name']}.json", result)

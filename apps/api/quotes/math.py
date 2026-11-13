@@ -32,6 +32,34 @@ def apply_bps(cents: int, bps: int) -> int:
     return divide_half_up(cents * bps, BPS)
 
 
+# One inch is 16 sixteenths. A price per inch of width is per 16 units of width.
+IN = 16
+DEFAULT_MULTIPLIER_BPS = BPS
+
+
+def _as_text(value: Any) -> str:
+    """How JavaScript's `String(value)` spells an option value, which keys `optionCents`."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
+
+
+def unit_price_cents(
+    price: dict[str, Any], width: int, options: dict[str, Any], multiplier_bps: int
+) -> int:
+    """The price of one cabinet: base, plus per inch of width, plus its options, times a finish.
+
+    The sum is kept in sixteenths of a cent so a filler a fraction of an inch wide is exact,
+    and rounded half up once.
+    """
+    option_cents = price.get("optionCents") or {}
+    options_total = sum(
+        option_cents.get(f"{key}={_as_text(value)}", 0) for key, value in options.items()
+    )
+    sixteenths = (price["baseCents"] + options_total) * IN + price["perInchWidthCents"] * width
+    return divide_half_up(sixteenths * multiplier_bps, IN * BPS)
+
+
 def line_total_cents(quantity: int, unit: str, unit_price_cents: int) -> int:
     """Pieces times the unit price, or hundredths of a square foot times the price of one."""
     if unit == "each":

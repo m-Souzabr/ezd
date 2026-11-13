@@ -18,6 +18,7 @@ from rest_framework.views import APIView
 
 from chat.usage import check_quota, record_usage
 from config.api import LLMThrottledMixin, UploadThrottledMixin
+from controlpanel import catalogs
 from llm import config
 from llm.client import LLMUnavailable
 from projects.documents import InvalidDocument, validate_document
@@ -152,7 +153,12 @@ class PhotoAnalyzeView(LLMThrottledMixin, OwnedQuerysetMixin, APIView):
         # the view would return the draft while `analyzing` and the browser would poll it.
         try:
             result = analyze(
-                client, image, config.vision_model(), models.escalation, on_attempt=charge
+                client,
+                image,
+                config.vision_model(),
+                models.escalation,
+                on_attempt=charge,
+                catalog=catalogs.published_catalog(),
             )
         except LLMUnavailable as error:
             draft.status = PhotoDraft.Status.FAILED

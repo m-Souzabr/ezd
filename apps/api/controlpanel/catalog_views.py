@@ -60,7 +60,7 @@ class PublicCatalogVersionView(APIView):
     permission_classes = (AllowAny,)
     authentication_classes = ()
 
-    @extend_schema(responses={200: CatalogSerializer})
+    @extend_schema(operation_id="catalog_version_retrieve", responses={200: CatalogSerializer})
     def get(self, request: Request, version: str) -> Response:
         catalog = catalogs.catalog_for_version(version)
         if catalog is None:
@@ -300,11 +300,11 @@ class _Edit(APIView):
         request: Request,
         revision: int,
         action: str,
-        change: Callable[[dict[str, Any]], tuple[Any, Any, str]],
+        mutate: Callable[[dict[str, Any]], tuple[Any, Any, str]],
     ) -> Response:
-        """`change` mutates the working copy and returns (before, after, id)."""
+        """`mutate` changes the working copy and returns (before, after, id)."""
         catalog = _working_copy(revision)
-        before, after, item_id = change(catalog)
+        before, after, item_id = mutate(catalog)
         stored = catalogs.check_structure(catalog)
         row = _store(request.user, revision, stored)
         audit.record(
@@ -317,10 +317,10 @@ class _Edit(APIView):
         )
         return Response(_draft_payload(row))
 
-    def create(self, request: Request, revision: int, item: Any) -> Response:
+    def add(self, request: Request, revision: int, item: Any) -> Response:
         item = _object(item, self.noun)
 
-        def change(catalog: dict[str, Any]) -> tuple[Any, Any, str]:
+        def mutate(catalog: dict[str, Any]) -> tuple[Any, Any, str]:
             item_id = item.get("id")
             if not isinstance(item_id, str) or not item_id.strip():
                 raise serializers.ValidationError({self.noun: "Give it an id."})
@@ -329,14 +329,14 @@ class _Edit(APIView):
             catalog[self.collection].append(item)
             return None, item, item_id
 
-        return self.edit(request, revision, "create", change)
+        return self.edit(request, revision, "create", mutate)
 
-    def patch(self, request: Request, revision: int, item_id: str, changes: Any) -> Response:
+    def change(self, request: Request, revision: int, item_id: str, changes: Any) -> Response:
         changes = _object(changes, "changes")
         if "id" in changes:
             raise serializers.ValidationError({"changes": "An id cannot be changed."})
 
-        def change(catalog: dict[str, Any]) -> tuple[Any, Any, str]:
+        def mutate(catalog: dict[str, Any]) -> tuple[Any, Any, str]:
             item = _find(catalog, self.collection, item_id)
             before = copy.deepcopy(item)
             for key, value in changes.items():
@@ -346,12 +346,12 @@ class _Edit(APIView):
                     item[key] = value
             return before, copy.deepcopy(item), item_id
 
-        return self.edit(request, revision, "update", change)
+        return self.edit(request, revision, "update", mutate)
 
-    def flag(self, request: Request, revision: int, item_id: str, retire: bool) -> Response:
+    def set_retired(self, request: Request, revision: int, item_id: str, retire: bool) -> Response:
         """Retires or restores. Nothing is ever deleted."""
 
-        def change(catalog: dict[str, Any]) -> tuple[Any, Any, str]:
+        def mutate(catalog: dict[str, Any]) -> tuple[Any, Any, str]:
             item = _find(catalog, self.collection, item_id)
             before = copy.deepcopy(item)
             if retire:
@@ -360,7 +360,7 @@ class _Edit(APIView):
                 item.pop("retired", None)
             return before, copy.deepcopy(item), item_id
 
-        return self.edit(request, revision, "retire" if retire else "restore", change)
+        return self.edit(request, revision, "retire" if retire else "restore", mutate)
 
 
 class CatalogEntryListView(_Edit):
@@ -376,12 +376,12 @@ class CatalogEntryListView(_Edit):
 
 class CatalogEntryDetailView(_Edit):
     @extend_schema(request=CatalogEntryChangeSerializer, responses={200: CatalogDraftSerializer})
-    def patch(self, request: Request, entry_id: str) -> Response:  # type: ignore[override]
+    def patch(self, request: Request, entry_id: str) -> Response:
         """Replaces the given fields of an entry of the draft."""
         serializer = CatalogEntryChangeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        return super().patch(request, data["revision"], entry_id, data["changes"])
+        return self.change(request, data["revision"], entry_id, data["changes"])
 
 
 class CatalogEntryRetireView(_Edit):
@@ -389,7 +389,9 @@ class CatalogEntryRetireView(_Edit):
     def post(self, request: Request, entry_id: str) -> Response:
         serializer = CatalogRevisionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return self.flag(request, serializer.validated_data["revision"], entry_id, retire=True)
+        return self.set_retired(
+            request, serializer.validated_data["revision"], entry_id, retire=True
+        )
 
 
 class CatalogEntryRestoreView(_Edit):
@@ -397,7 +399,9 @@ class CatalogEntryRestoreView(_Edit):
     def post(self, request: Request, entry_id: str) -> Response:
         serializer = CatalogRevisionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return self.flag(request, serializer.validated_data["revision"], entry_id, retire=False)
+        return self.set_retired(
+            request, serializer.validated_data["revision"], entry_id, retire=False
+        )
 
 
 class _FinishEdit(_Edit):
@@ -418,12 +422,12 @@ class CatalogFinishListView(_FinishEdit):
 
 class CatalogFinishDetailView(_FinishEdit):
     @extend_schema(request=CatalogEntryChangeSerializer, responses={200: CatalogDraftSerializer})
-    def patch(self, request: Request, finish_id: str) -> Response:  # type: ignore[override]
+    def patch(self, request: Request, finish_id: str) -> Response:
         """Replaces the given fields of a finish of the draft."""
         serializer = CatalogEntryChangeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        return super().patch(request, data["revision"], finish_id, data["changes"])
+        return self.change(request, data["revision"], finish_id, data["changes"])
 
 
 class CatalogFinishRetireView(_FinishEdit):
@@ -431,7 +435,9 @@ class CatalogFinishRetireView(_FinishEdit):
     def post(self, request: Request, finish_id: str) -> Response:
         serializer = CatalogRevisionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return self.flag(request, serializer.validated_data["revision"], finish_id, retire=True)
+        return self.set_retired(
+            request, serializer.validated_data["revision"], finish_id, retire=True
+        )
 
 
 class CatalogFinishRestoreView(_FinishEdit):
@@ -439,4 +445,6 @@ class CatalogFinishRestoreView(_FinishEdit):
     def post(self, request: Request, finish_id: str) -> Response:
         serializer = CatalogRevisionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return self.flag(request, serializer.validated_data["revision"], finish_id, retire=False)
+        return self.set_retired(
+            request, serializer.validated_data["revision"], finish_id, retire=False
+        )

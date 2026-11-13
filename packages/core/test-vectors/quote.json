@@ -4,10 +4,25 @@
     {
       "name": "markup, discount and tax in that order",
       "lines": [
-        { "quantity": 2, "unit": "each", "unitPriceCents": 30000, "lineTotalCents": 60000 },
-        { "quantity": 1, "unit": "each", "unitPriceCents": 21000, "lineTotalCents": 21000 }
+        {
+          "quantity": 2,
+          "unit": "each",
+          "unitPriceCents": 30000,
+          "lineTotalCents": 60000
+        },
+        {
+          "quantity": 1,
+          "unit": "each",
+          "unitPriceCents": 21000,
+          "lineTotalCents": 21000
+        }
       ],
-      "settings": { "markupBps": 2000, "discountBps": 500, "taxBps": 825, "currency": "USD" },
+      "settings": {
+        "markupBps": 2000,
+        "discountBps": 500,
+        "taxBps": 825,
+        "currency": "USD"
+      },
       "totals": {
         "subtotalCents": 81000,
         "markupCents": 16200,
@@ -20,9 +35,19 @@
     {
       "name": "zero rates leave the subtotal",
       "lines": [
-        { "quantity": 1, "unit": "each", "unitPriceCents": 12345, "lineTotalCents": 12345 }
+        {
+          "quantity": 1,
+          "unit": "each",
+          "unitPriceCents": 12345,
+          "lineTotalCents": 12345
+        }
       ],
-      "settings": { "markupBps": 0, "discountBps": 0, "taxBps": 0, "currency": "USD" },
+      "settings": {
+        "markupBps": 0,
+        "discountBps": 0,
+        "taxBps": 0,
+        "currency": "USD"
+      },
       "totals": {
         "subtotalCents": 12345,
         "markupCents": 0,
@@ -35,9 +60,19 @@
     {
       "name": "a 100 percent discount takes the markup too and leaves nothing to tax",
       "lines": [
-        { "quantity": 5, "unit": "each", "unitPriceCents": 10000, "lineTotalCents": 50000 }
+        {
+          "quantity": 5,
+          "unit": "each",
+          "unitPriceCents": 10000,
+          "lineTotalCents": 50000
+        }
       ],
-      "settings": { "markupBps": 1000, "discountBps": 10000, "taxBps": 700, "currency": "USD" },
+      "settings": {
+        "markupBps": 1000,
+        "discountBps": 10000,
+        "taxBps": 700,
+        "currency": "USD"
+      },
       "totals": {
         "subtotalCents": 50000,
         "markupCents": 5000,
@@ -49,8 +84,20 @@
     },
     {
       "name": "half a cent rounds up at each step",
-      "lines": [{ "quantity": 1, "unit": "each", "unitPriceCents": 5, "lineTotalCents": 5 }],
-      "settings": { "markupBps": 1000, "discountBps": 0, "taxBps": 2500, "currency": "USD" },
+      "lines": [
+        {
+          "quantity": 1,
+          "unit": "each",
+          "unitPriceCents": 5,
+          "lineTotalCents": 5
+        }
+      ],
+      "settings": {
+        "markupBps": 1000,
+        "discountBps": 0,
+        "taxBps": 2500,
+        "currency": "USD"
+      },
       "totals": {
         "subtotalCents": 5,
         "markupCents": 1,
@@ -62,8 +109,20 @@
     },
     {
       "name": "just under half a cent rounds down",
-      "lines": [{ "quantity": 3, "unit": "each", "unitPriceCents": 1, "lineTotalCents": 3 }],
-      "settings": { "markupBps": 1000, "discountBps": 5000, "taxBps": 4999, "currency": "USD" },
+      "lines": [
+        {
+          "quantity": 3,
+          "unit": "each",
+          "unitPriceCents": 1,
+          "lineTotalCents": 3
+        }
+      ],
+      "settings": {
+        "markupBps": 1000,
+        "discountBps": 5000,
+        "taxBps": 4999,
+        "currency": "USD"
+      },
       "totals": {
         "subtotalCents": 3,
         "markupCents": 0,
@@ -76,12 +135,37 @@
     {
       "name": "square feet in hundredths, each line rounded half up",
       "lines": [
-        { "quantity": 2550, "unit": "sqft", "unitPriceCents": 6500, "lineTotalCents": 165750 },
-        { "quantity": 333, "unit": "sqft", "unitPriceCents": 4999, "lineTotalCents": 16647 },
-        { "quantity": 1, "unit": "sqft", "unitPriceCents": 50, "lineTotalCents": 1 },
-        { "quantity": 1, "unit": "sqft", "unitPriceCents": 49, "lineTotalCents": 0 }
+        {
+          "quantity": 2550,
+          "unit": "sqft",
+          "unitPriceCents": 6500,
+          "lineTotalCents": 165750
+        },
+        {
+          "quantity": 333,
+          "unit": "sqft",
+          "unitPriceCents": 4999,
+          "lineTotalCents": 16647
+        },
+        {
+          "quantity": 1,
+          "unit": "sqft",
+          "unitPriceCents": 50,
+          "lineTotalCents": 1
+        },
+        {
+          "quantity": 1,
+          "unit": "sqft",
+          "unitPriceCents": 49,
+          "lineTotalCents": 0
+        }
       ],
-      "settings": { "markupBps": 1500, "discountBps": 250, "taxBps": 600, "currency": "USD" },
+      "settings": {
+        "markupBps": 1500,
+        "discountBps": 250,
+        "taxBps": 600,
+        "currency": "USD"
+      },
       "totals": {
         "subtotalCents": 182398,
         "markupCents": 27360,
@@ -94,7 +178,12 @@
     {
       "name": "no lines",
       "lines": [],
-      "settings": { "markupBps": 2000, "discountBps": 500, "taxBps": 825, "currency": "USD" },
+      "settings": {
+        "markupBps": 2000,
+        "discountBps": 500,
+        "taxBps": 825,
+        "currency": "USD"
+      },
       "totals": {
         "subtotalCents": 0,
         "markupCents": 0,
@@ -107,9 +196,19 @@
     {
       "name": "large amounts and rates of one basis point",
       "lines": [
-        { "quantity": 1, "unit": "each", "unitPriceCents": 99999999, "lineTotalCents": 99999999 }
+        {
+          "quantity": 1,
+          "unit": "each",
+          "unitPriceCents": 99999999,
+          "lineTotalCents": 99999999
+        }
       ],
-      "settings": { "markupBps": 3333, "discountBps": 1, "taxBps": 1, "currency": "USD" },
+      "settings": {
+        "markupBps": 3333,
+        "discountBps": 1,
+        "taxBps": 1,
+        "currency": "USD"
+      },
       "totals": {
         "subtotalCents": 99999999,
         "markupCents": 33330000,
@@ -118,6 +217,106 @@
         "taxCents": 13332,
         "totalCents": 133329998
       }
+    }
+  ],
+  "unitPrices": [
+    {
+      "name": "base price, width and a priced option, times a finish multiplier",
+      "price": {
+        "baseCents": 12000,
+        "perInchWidthCents": 600,
+        "optionCents": {
+          "topDrawer=true": 2500
+        }
+      },
+      "width": 480,
+      "options": {
+        "doors": 2,
+        "topDrawer": true
+      },
+      "multiplierBps": 11000,
+      "unitPriceCents": 35750
+    },
+    {
+      "name": "an option that is off or not priced adds nothing",
+      "price": {
+        "baseCents": 12000,
+        "perInchWidthCents": 600,
+        "optionCents": {
+          "topDrawer=true": 2500,
+          "drawers=4": 3000
+        }
+      },
+      "width": 480,
+      "options": {
+        "doors": 2,
+        "topDrawer": false,
+        "drawers": 3
+      },
+      "multiplierBps": 10000,
+      "unitPriceCents": 30000
+    },
+    {
+      "name": "several priced options add up",
+      "price": {
+        "baseCents": 1000,
+        "perInchWidthCents": 0,
+        "optionCents": {
+          "drawers=4": 300,
+          "hinge=left": 50
+        }
+      },
+      "width": 480,
+      "options": {
+        "drawers": 4,
+        "hinge": "left"
+      },
+      "multiplierBps": 10000,
+      "unitPriceCents": 1350
+    },
+    {
+      "name": "a filler a fraction of an inch wide is exact in sixteenths",
+      "price": {
+        "baseCents": 3000,
+        "perInchWidthCents": 400
+      },
+      "width": 88,
+      "options": {},
+      "multiplierBps": 10000,
+      "unitPriceCents": 5200
+    },
+    {
+      "name": "half a cent rounds up",
+      "price": {
+        "baseCents": 0,
+        "perInchWidthCents": 1
+      },
+      "width": 8,
+      "options": {},
+      "multiplierBps": 10000,
+      "unitPriceCents": 1
+    },
+    {
+      "name": "less than half a cent rounds down",
+      "price": {
+        "baseCents": 0,
+        "perInchWidthCents": 1
+      },
+      "width": 7,
+      "options": {},
+      "multiplierBps": 10000,
+      "unitPriceCents": 0
+    },
+    {
+      "name": "an appliance has no price",
+      "price": {
+        "baseCents": 0,
+        "perInchWidthCents": 0
+      },
+      "width": 576,
+      "options": {},
+      "multiplierBps": 10000,
+      "unitPriceCents": 0
     }
   ]
 }

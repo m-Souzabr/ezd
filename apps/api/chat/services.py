@@ -20,9 +20,8 @@ from llm.prompt import (
     ROUTER_PROMPT,
     ROUTER_TOOL,
     SYSTEM_PROMPT,
-    catalog_index,
+    assistant_for,
     check_tool_calls,
-    tools,
 )
 
 logger = logging.getLogger("ezd.llm")
@@ -57,6 +56,8 @@ class AttemptInput:
     errors: list[str] = field(default_factory=list)
     # The router's category, kept from the first attempt so a retry does not ask again.
     category: str | None = None
+    # The published catalog the tools and index are made from. None is the seed snapshot.
+    catalog: dict[str, Any] | None = None
 
 
 @dataclass
@@ -199,18 +200,19 @@ def run_attempt(client: LLMClient, models: Models, input: AttemptInput) -> Attem
         return result
 
     model = model_for(models, category, input.attempt)
+    assistant = assistant_for(input.catalog)
     response = client.propose(
         ProposeRequest(
             system=SYSTEM_PROMPT,
-            catalog_index=catalog_index(),
-            tools=tools(),
+            catalog_index=assistant.catalog_index,
+            tools=assistant.tools,
             messages=build_messages(input),
             model=model,
             max_output_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
         )
     )
     usage = _add(usage, response.usage)
-    checked, errors = check_tool_calls(response.tool_calls)
+    checked, errors = check_tool_calls(response.tool_calls, input.catalog)
     question = next((call.arguments["question"] for call in checked if call.name == "ask_user"), "")
     calls = (
         [] if errors or question else [{"name": c.name, "arguments": c.arguments} for c in checked]
