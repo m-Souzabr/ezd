@@ -9,6 +9,8 @@ from django.core.cache import cache
 from rest_framework.test import APIClient
 
 from accounts.models import User
+from llm.config import set_fake_client
+from llm.fake import FakeClient
 from projects.models import Design, DesignVersion, Project
 
 FIXTURES = Path(settings.REPO_DIR) / "packages/core/src/document/fixtures"
@@ -26,6 +28,14 @@ def core_fixture(name: str, design_id: str | None = None) -> dict[str, Any]:
 @pytest.fixture(autouse=True)
 def _clear_throttles() -> None:
     cache.clear()
+
+
+@pytest.fixture(autouse=True)
+def fake_llm() -> FakeClient:
+    """The assistant's client in every test: answers only what a test scripts."""
+    client = FakeClient()
+    set_fake_client(client)
+    return client
 
 
 @pytest.fixture

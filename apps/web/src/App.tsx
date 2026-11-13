@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router';
 
 import { RequireSession, SessionExpiry } from './auth/SessionGate';
+import { AISettingsPage } from './pages/AISettings';
 import { ForgotPasswordPage, LoginPage, RegisterPage, ResetPasswordPage } from './pages/AuthPages';
 import { DesignEditorPage } from './pages/DesignEditor';
 import { LocalEditor } from './pages/LocalEditor';
@@ -51,6 +52,14 @@ export function App() {
           element={
             <RequireSession>
               <QuotePage />
+            </RequireSession>
+          }
+        />
+        <Route
+          path="/settings/ai"
+          element={
+            <RequireSession>
+              <AISettingsPage />
             </RequireSession>
           }
         />

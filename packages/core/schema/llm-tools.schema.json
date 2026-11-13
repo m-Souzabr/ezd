@@ -1,0 +1,1437 @@
+{
+  "title": "EZDesign LLM tools",
+  "catalogVersion": "seed-1",
+  "tools": [
+    {
+      "name": "add_item",
+      "description": "Add a catalog item. Put it on a wall (wall and offsetIn) or free-standing (free). Heights, depths, elevation and options default to the catalog entry. Sizes follow the catalog: cabinet widths are multiples of 3 in within the range of the entry, heights and depths are one of the standard values listed for the entry, and only fillers take an arbitrary width. Never round a size the user asked for to something else without saying so; if it is not allowed, ask with ask_user.",
+      "parameters": {
+        "type": "object",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "base.standard"
+              },
+              "widthIn": {
+                "type": "number",
+                "minimum": 9,
+                "maximum": 48,
+                "multipleOf": 3
+              },
+              "heightIn": {
+                "type": "number",
+                "const": 34.5
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 24
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              },
+              "options": {
+                "description": "doors: 1 | 2, default 2; topDrawer: true | false, default true; hinge: left | right, default left",
+                "type": "object",
+                "properties": {
+                  "doors": {
+                    "type": "number",
+                    "enum": [
+                      1,
+                      2
+                    ]
+                  },
+                  "topDrawer": {
+                    "type": "boolean"
+                  },
+                  "hinge": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Base cabinet"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "base.drawers"
+              },
+              "widthIn": {
+                "type": "number",
+                "minimum": 12,
+                "maximum": 36,
+                "multipleOf": 3
+              },
+              "heightIn": {
+                "type": "number",
+                "const": 34.5
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 24
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              },
+              "options": {
+                "description": "drawers: 3 | 4, default 3",
+                "type": "object",
+                "properties": {
+                  "drawers": {
+                    "type": "number",
+                    "enum": [
+                      3,
+                      4
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Drawer base cabinet"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "base.sink"
+              },
+              "widthIn": {
+                "type": "number",
+                "minimum": 24,
+                "maximum": 42,
+                "multipleOf": 3
+              },
+              "heightIn": {
+                "type": "number",
+                "const": 34.5
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 24
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              },
+              "options": {
+                "description": "doors: 2, default 2",
+                "type": "object",
+                "properties": {
+                  "doors": {
+                    "type": "number",
+                    "const": 2
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Sink base cabinet"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "base.corner.blind"
+              },
+              "widthIn": {
+                "type": "number",
+                "minimum": 36,
+                "maximum": 48,
+                "multipleOf": 3
+              },
+              "heightIn": {
+                "type": "number",
+                "const": 34.5
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 24
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              },
+              "options": {
+                "description": "blind: left | right, default left",
+                "type": "object",
+                "properties": {
+                  "blind": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Blind corner base (width along its own wall, blind end behind the adjacent run)"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "base.corner.susan"
+              },
+              "widthIn": {
+                "type": "number",
+                "enum": [
+                  33,
+                  36
+                ]
+              },
+              "heightIn": {
+                "type": "number",
+                "const": 34.5
+              },
+              "depthIn": {
+                "type": "number",
+                "enum": [
+                  33,
+                  36
+                ]
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Lazy Susan corner base (width along its own wall, depth along the wall to its left)"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "wall.standard"
+              },
+              "widthIn": {
+                "type": "number",
+                "minimum": 9,
+                "maximum": 48,
+                "multipleOf": 3
+              },
+              "heightIn": {
+                "type": "number",
+                "enum": [
+                  12,
+                  15,
+                  18,
+                  24,
+                  30,
+                  36,
+                  42
+                ]
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 12
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              },
+              "options": {
+                "description": "doors: 1 | 2, default 2; hinge: left | right, default left",
+                "type": "object",
+                "properties": {
+                  "doors": {
+                    "type": "number",
+                    "enum": [
+                      1,
+                      2
+                    ]
+                  },
+                  "hinge": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Wall cabinet"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "wall.fridge"
+              },
+              "widthIn": {
+                "type": "number",
+                "enum": [
+                  30,
+                  33,
+                  36
+                ]
+              },
+              "heightIn": {
+                "type": "number",
+                "enum": [
+                  12,
+                  15,
+                  18,
+                  24
+                ]
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 24
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              },
+              "options": {
+                "description": "doors: 2, default 2",
+                "type": "object",
+                "properties": {
+                  "doors": {
+                    "type": "number",
+                    "const": 2
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Over-refrigerator wall cabinet"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "wall.corner.diagonal"
+              },
+              "widthIn": {
+                "type": "number",
+                "const": 24
+              },
+              "heightIn": {
+                "type": "number",
+                "enum": [
+                  30,
+                  36,
+                  42
+                ]
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 24
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              },
+              "options": {
+                "description": "hinge: left | right, default left",
+                "type": "object",
+                "properties": {
+                  "hinge": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Diagonal corner wall cabinet (width along its own wall, depth along the wall to its left)"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "tall.pantry"
+              },
+              "widthIn": {
+                "type": "number",
+                "minimum": 18,
+                "maximum": 36,
+                "multipleOf": 3
+              },
+              "heightIn": {
+                "type": "number",
+                "enum": [
+                  84,
+                  90,
+                  96
+                ]
+              },
+              "depthIn": {
+                "type": "number",
+                "enum": [
+                  12,
+                  24
+                ]
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              },
+              "options": {
+                "description": "doors: 2 | 4, default 2",
+                "type": "object",
+                "properties": {
+                  "doors": {
+                    "type": "number",
+                    "enum": [
+                      2,
+                      4
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Pantry cabinet"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "tall.oven"
+              },
+              "widthIn": {
+                "type": "number",
+                "enum": [
+                  27,
+                  30,
+                  33
+                ]
+              },
+              "heightIn": {
+                "type": "number",
+                "enum": [
+                  84,
+                  90,
+                  96
+                ]
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 24
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              },
+              "options": {
+                "description": "ovens: 1 | 2, default 1",
+                "type": "object",
+                "properties": {
+                  "ovens": {
+                    "type": "number",
+                    "enum": [
+                      1,
+                      2
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Oven cabinet"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "filler.base"
+              },
+              "widthIn": {
+                "type": "number",
+                "minimum": 0.5,
+                "maximum": 6,
+                "multipleOf": 0.0625
+              },
+              "heightIn": {
+                "type": "number",
+                "const": 34.5
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 0.75
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Base filler"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "filler.wall"
+              },
+              "widthIn": {
+                "type": "number",
+                "minimum": 0.5,
+                "maximum": 6,
+                "multipleOf": 0.0625
+              },
+              "heightIn": {
+                "type": "number",
+                "enum": [
+                  12,
+                  15,
+                  18,
+                  24,
+                  30,
+                  36,
+                  42
+                ]
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 0.75
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Wall filler"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "filler.tall"
+              },
+              "widthIn": {
+                "type": "number",
+                "minimum": 0.5,
+                "maximum": 6,
+                "multipleOf": 0.0625
+              },
+              "heightIn": {
+                "type": "number",
+                "enum": [
+                  84,
+                  90,
+                  96
+                ]
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 0.75
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Tall filler"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "panel.end"
+              },
+              "widthIn": {
+                "type": "number",
+                "const": 0.75
+              },
+              "heightIn": {
+                "type": "number",
+                "enum": [
+                  34.5,
+                  84,
+                  90,
+                  96,
+                  12,
+                  15,
+                  18,
+                  24,
+                  30,
+                  36,
+                  42
+                ]
+              },
+              "depthIn": {
+                "type": "number",
+                "enum": [
+                  12,
+                  24
+                ]
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "End panel"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "appliance.range"
+              },
+              "widthIn": {
+                "type": "number",
+                "enum": [
+                  30,
+                  36
+                ]
+              },
+              "heightIn": {
+                "type": "number",
+                "const": 36
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 27
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Range"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "appliance.fridge"
+              },
+              "widthIn": {
+                "type": "number",
+                "enum": [
+                  30,
+                  33,
+                  36
+                ]
+              },
+              "heightIn": {
+                "type": "number",
+                "enum": [
+                  66,
+                  69,
+                  72
+                ]
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 30
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Refrigerator"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "appliance.dishwasher"
+              },
+              "widthIn": {
+                "type": "number",
+                "enum": [
+                  18,
+                  24
+                ]
+              },
+              "heightIn": {
+                "type": "number",
+                "const": 34.5
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 24
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Dishwasher"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "appliance.hood"
+              },
+              "widthIn": {
+                "type": "number",
+                "enum": [
+                  30,
+                  36
+                ]
+              },
+              "heightIn": {
+                "type": "number",
+                "enum": [
+                  6,
+                  18
+                ]
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 18
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Range hood"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalogId": {
+                "type": "string",
+                "const": "appliance.microwave"
+              },
+              "widthIn": {
+                "type": "number",
+                "const": 30
+              },
+              "heightIn": {
+                "type": "number",
+                "const": 18
+              },
+              "depthIn": {
+                "type": "number",
+                "const": 15
+              },
+              "wall": {
+                "$ref": "#/$defs/WallLabel"
+              },
+              "offsetIn": {
+                "$ref": "#/$defs/ItemOffset"
+              },
+              "free": {
+                "$ref": "#/$defs/FreePlacement"
+              },
+              "elevationIn": {
+                "$ref": "#/$defs/Elevation"
+              }
+            },
+            "required": [
+              "catalogId",
+              "widthIn"
+            ],
+            "additionalProperties": false,
+            "description": "Over-the-range microwave"
+          }
+        ],
+        "$defs": {
+          "WallLabel": {
+            "type": "string",
+            "pattern": "^[A-Z]{1,2}$",
+            "description": "Wall label from the design summary: A, B, C and so on."
+          },
+          "ItemOffset": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0625,
+            "description": "Left edge of the item, from the start of the wall, along it."
+          },
+          "FreePlacement": {
+            "type": "object",
+            "properties": {
+              "xIn": {
+                "type": "number",
+                "multipleOf": 0.0625,
+                "description": "Back left corner, plan x."
+              },
+              "yIn": {
+                "type": "number",
+                "multipleOf": 0.0625,
+                "description": "Back left corner, plan y (y grows into the room from wall A)."
+              },
+              "rotation": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 359,
+                "description": "Degrees, clockwise seen from above."
+              }
+            },
+            "required": [
+              "xIn",
+              "yIn",
+              "rotation"
+            ],
+            "additionalProperties": false,
+            "description": "Free-standing placement, for islands. Give either wall and offsetIn, or free."
+          },
+          "Elevation": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0625,
+            "description": "Bottom of the item above the floor. Leave it out for the catalog default."
+          }
+        }
+      }
+    },
+    {
+      "name": "move_item",
+      "description": "Move an item to another position on a wall (wall and offsetIn) or free-standing (free), optionally at another elevation.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string",
+            "pattern": "^c\\d+$",
+            "description": "Item alias from the design summary: c1, c2 and so on."
+          },
+          "wall": {
+            "$ref": "#/$defs/WallLabel"
+          },
+          "offsetIn": {
+            "$ref": "#/$defs/ItemOffset"
+          },
+          "free": {
+            "$ref": "#/$defs/FreePlacement"
+          },
+          "elevationIn": {
+            "$ref": "#/$defs/Elevation"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "additionalProperties": false,
+        "$defs": {
+          "WallLabel": {
+            "type": "string",
+            "pattern": "^[A-Z]{1,2}$",
+            "description": "Wall label from the design summary: A, B, C and so on."
+          },
+          "ItemOffset": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0625,
+            "description": "Left edge of the item, from the start of the wall, along it."
+          },
+          "FreePlacement": {
+            "type": "object",
+            "properties": {
+              "xIn": {
+                "type": "number",
+                "multipleOf": 0.0625,
+                "description": "Back left corner, plan x."
+              },
+              "yIn": {
+                "type": "number",
+                "multipleOf": 0.0625,
+                "description": "Back left corner, plan y (y grows into the room from wall A)."
+              },
+              "rotation": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 359,
+                "description": "Degrees, clockwise seen from above."
+              }
+            },
+            "required": [
+              "xIn",
+              "yIn",
+              "rotation"
+            ],
+            "additionalProperties": false,
+            "description": "Free-standing placement, for islands. Give either wall and offsetIn, or free."
+          },
+          "Elevation": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0625,
+            "description": "Bottom of the item above the floor. Leave it out for the catalog default."
+          }
+        }
+      }
+    },
+    {
+      "name": "resize_item",
+      "description": "Change the width, height or depth of an item. Sizes follow the catalog: cabinet widths are multiples of 3 in within the range of the entry, heights and depths are one of the standard values listed for the entry, and only fillers take an arbitrary width. Never round a size the user asked for to something else without saying so; if it is not allowed, ask with ask_user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string",
+            "pattern": "^c\\d+$",
+            "description": "Item alias from the design summary: c1, c2 and so on."
+          },
+          "widthIn": {
+            "description": "A multiple of 3 in for cabinets and appliances; fillers only may take any width.",
+            "type": "number",
+            "minimum": 0.5,
+            "maximum": 48,
+            "multipleOf": 0.0625
+          },
+          "heightIn": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "multipleOf": 0.0625
+          },
+          "depthIn": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "multipleOf": 0.0625
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_item_options",
+      "description": "Change an item's options (only the keys given change) or its own finish (a cabinet finish id).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string",
+            "pattern": "^c\\d+$",
+            "description": "Item alias from the design summary: c1, c2 and so on."
+          },
+          "options": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            }
+          },
+          "finishId": {
+            "description": "A cabinet finish id.",
+            "type": "string",
+            "enum": [
+              "cabinet.white",
+              "cabinet.navy",
+              "cabinet.sage",
+              "cabinet.oak"
+            ]
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "remove_item",
+      "description": "Remove an item.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string",
+            "pattern": "^c\\d+$",
+            "description": "Item alias from the design summary: c1, c2 and so on."
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "add_opening",
+      "description": "Add a door, window or passage to a wall. Doors and passages have no sill; windows need sillIn.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "wall": {
+            "$ref": "#/$defs/WallLabel"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "door",
+              "window",
+              "passage"
+            ]
+          },
+          "offsetIn": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0625,
+            "description": "Left edge, from the start of the wall."
+          },
+          "widthIn": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "multipleOf": 0.0625
+          },
+          "heightIn": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "multipleOf": 0.0625
+          },
+          "sillIn": {
+            "description": "Windows only: the sill above the floor.",
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0625
+          },
+          "swing": {
+            "description": "Doors only.",
+            "type": "string",
+            "enum": [
+              "in-left",
+              "in-right",
+              "out-left",
+              "out-right"
+            ]
+          }
+        },
+        "required": [
+          "wall",
+          "kind",
+          "offsetIn",
+          "widthIn",
+          "heightIn"
+        ],
+        "additionalProperties": false,
+        "$defs": {
+          "WallLabel": {
+            "type": "string",
+            "pattern": "^[A-Z]{1,2}$",
+            "description": "Wall label from the design summary: A, B, C and so on."
+          }
+        }
+      }
+    },
+    {
+      "name": "update_opening",
+      "description": "Change an opening. Only the fields given change.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "opening": {
+            "type": "string",
+            "pattern": "^o\\d+$",
+            "description": "Opening alias from the design summary: o1, o2 and so on."
+          },
+          "wall": {
+            "$ref": "#/$defs/WallLabel"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "door",
+              "window",
+              "passage"
+            ]
+          },
+          "offsetIn": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0625,
+            "description": "Left edge, from the start of the wall."
+          },
+          "widthIn": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "multipleOf": 0.0625
+          },
+          "heightIn": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "multipleOf": 0.0625
+          },
+          "sillIn": {
+            "description": "Windows only: the sill above the floor.",
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0625
+          },
+          "swing": {
+            "description": "Doors only.",
+            "type": "string",
+            "enum": [
+              "in-left",
+              "in-right",
+              "out-left",
+              "out-right"
+            ]
+          }
+        },
+        "required": [
+          "opening"
+        ],
+        "additionalProperties": false,
+        "$defs": {
+          "WallLabel": {
+            "type": "string",
+            "pattern": "^[A-Z]{1,2}$",
+            "description": "Wall label from the design summary: A, B, C and so on."
+          }
+        }
+      }
+    },
+    {
+      "name": "remove_opening",
+      "description": "Remove an opening.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "opening": {
+            "type": "string",
+            "pattern": "^o\\d+$",
+            "description": "Opening alias from the design summary: o1, o2 and so on."
+          }
+        },
+        "required": [
+          "opening"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_finish",
+      "description": "Set the design-wide finish for cabinets, countertops, walls or the floor.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "cabinet",
+              "countertop",
+              "wall",
+              "floor"
+            ]
+          },
+          "finishId": {
+            "type": "string",
+            "enum": [
+              "cabinet.white",
+              "cabinet.navy",
+              "cabinet.sage",
+              "cabinet.oak",
+              "countertop.white",
+              "countertop.charcoal",
+              "countertop.butcher",
+              "wall.white",
+              "wall.greige",
+              "floor.oak",
+              "floor.slate"
+            ]
+          }
+        },
+        "required": [
+          "target",
+          "finishId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "generate_countertops",
+      "description": "Add countertops over every run of base cabinets that has none. Call it after the cabinets it should cover.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "ask_user",
+      "description": "Ask the user a clarifying question instead of changing the design. Use it when the request is ambiguous, impossible, or asks for a size the catalog does not allow. Call no other tool in the same turn.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

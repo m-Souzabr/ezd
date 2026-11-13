@@ -33,3 +33,7 @@ REST_FRAMEWORK = {
         "auth_ip": "100000/min",
     },
 }
+
+# Tests script the assistant through `llm.config.fake_client()`; nothing calls a vendor.
+LLM_VENDOR = "fake"
+LLM_API_KEY = ""

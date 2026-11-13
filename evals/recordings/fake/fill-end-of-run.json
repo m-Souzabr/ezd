@@ -1,0 +1,42 @@
+{
+  "note": "Scripted, not recorded: exercises the pipeline in CI. Replace with `run_evals --client live --record`.",
+  "responses": [
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "name": "classify_request",
+          "arguments": {
+            "category": "simple_edit"
+          }
+        }
+      ],
+      "stop_reason": "completed",
+      "usage": {
+        "input_tokens": 180,
+        "output_tokens": 12,
+        "cached_tokens": 0
+      }
+    },
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "name": "add_item",
+          "arguments": {
+            "catalogId": "base.standard",
+            "widthIn": 30,
+            "wall": "A",
+            "offsetIn": 114
+          }
+        }
+      ],
+      "stop_reason": "completed",
+      "usage": {
+        "input_tokens": 5400,
+        "output_tokens": 90,
+        "cached_tokens": 4096
+      }
+    }
+  ]
+}

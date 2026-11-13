@@ -1,4 +1,4 @@
-import { type Command, inches, type Point, SEED_CATALOG, validate } from '@ezd/core';
+import { applyCommand, type Command, inches, type Point, SEED_CATALOG, validate } from '@ezd/core';
 import { describe, expect, it } from 'vitest';
 
 import { type Drag, snapDrag } from '../editor/dragging';
@@ -259,5 +259,50 @@ describe('dragging', () => {
     });
     store.getState().undo();
     expect(store.getState().doc.items[0]).toEqual(item);
+  });
+});
+
+describe('proposals', () => {
+  const proposalFor = (store: ReturnType<typeof storeFor>) => {
+    const command: Command = {
+      type: 'batch',
+      label: 'Assistant edit',
+      commands: [add('item-000001', 12), add('item-000002', 48)],
+    };
+    const executed = applyCommand(store.getState().doc, command, { catalog: SEED_CATALOG });
+    if (!executed.ok) throw new Error(executed.error.message);
+    return { messageId: 'msg-1', command, doc: executed.value.doc, changes: [], warnings: [] };
+  };
+
+  it('accepting is one history entry, and one undo restores the document', () => {
+    const store = storeFor(room());
+    const before = store.getState().doc;
+    store.getState().propose(proposalFor(store));
+    expect(store.getState().doc).toBe(before);
+
+    expect(store.getState().acceptProposal().ok).toBe(true);
+    expect(store.getState().doc.items).toHaveLength(2);
+    expect(store.getState().history.past).toHaveLength(1);
+    expect(store.getState().proposal).toBeNull();
+
+    store.getState().undo();
+    expect(store.getState().doc).toEqual(before);
+  });
+
+  it('rejecting leaves the document as it was', () => {
+    const store = storeFor(room());
+    const before = store.getState().doc;
+    store.getState().propose(proposalFor(store));
+    store.getState().propose(null);
+    expect(store.getState().doc).toBe(before);
+    expect(store.getState().history.past).toHaveLength(0);
+    expect(store.getState().acceptProposal().ok).toBe(false);
+  });
+
+  it('a manual edit cancels a pending proposal', () => {
+    const store = storeFor(room());
+    store.getState().propose(proposalFor(store));
+    store.getState().execute(add('item-000009', 96));
+    expect(store.getState().proposal).toBeNull();
   });
 });

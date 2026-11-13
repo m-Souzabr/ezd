@@ -51,7 +51,7 @@ function renderAt(path: string, user: User | null | undefined) {
 
 describe('RequireSession', () => {
   it('shows the page to a signed-in user', () => {
-    renderAt('/projects/p1', { id: 1, email: 'ada@example.com', name: 'Ada' });
+    renderAt('/projects/p1', { id: 1, email: 'ada@example.com', name: 'Ada', is_staff: false });
     expect(screen.getByText('the project')).toBeInTheDocument();
   });
 

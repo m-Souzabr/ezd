@@ -4,6 +4,7 @@ import {
   type CommandError,
   type DesignDocument,
   emptyHistory,
+  err,
   execute as coreExecute,
   type History,
   type HistoryState,
@@ -25,6 +26,18 @@ import type { OpeningToolKind } from '../editor/tools/opening';
 import { DEFAULT_VIEWPORT, type Size, type Viewport } from '../editor/viewport';
 
 export type Tool = 'select' | 'wall' | 'opening' | 'pan';
+
+/** A change the assistant proposed, dry-run by core, waiting for the user to accept it. */
+export type Proposal = {
+  /** The assistant message that proposed it. */
+  messageId: string;
+  /** One `batch`: accepting it is one undo step. */
+  command: Command;
+  /** The document as it would be: what the views draw the ghosts from. */
+  doc: DesignDocument;
+  changes: string[];
+  warnings: Violation[];
+};
 export type View = { kind: 'plan' } | { kind: 'elevation'; wallId: Id };
 
 export type DesignStore = {
@@ -46,6 +59,8 @@ export type DesignStore = {
   wallDraft: Point[];
   /** A message for the user, such as why core refused a command. */
   notice: string | null;
+  /** The assistant's pending proposal. Any change to the document cancels it. */
+  proposal: Proposal | null;
 
   execute(cmd: Command): Result<void, CommandError>;
   undo(): void;
@@ -64,6 +79,10 @@ export type DesignStore = {
   commitDrag(): void;
   cancelDrag(): void;
   notify(notice: string | null): void;
+  /** Shows a proposal, or drops the pending one without changing the document. */
+  propose(proposal: Proposal | null): void;
+  /** Executes the pending proposal's command. */
+  acceptProposal(): Result<void, CommandError>;
 };
 
 export type DesignStoreApi = StoreApi<DesignStore>;
@@ -98,6 +117,8 @@ export function createDesignStore(
           if (state.view.kind === 'elevation' && !ids.has(state.view.wallId)) {
             state.view = { kind: 'plan' };
           }
+          // A proposal was dry-run against the document before this change.
+          state.proposal = null;
         });
 
       return {
@@ -114,6 +135,7 @@ export function createDesignStore(
         drag: null,
         wallDraft: [],
         notice: null,
+        proposal: null,
 
         execute(cmd) {
           const { doc: current, history } = get();
@@ -197,6 +219,16 @@ export function createDesignStore(
           set((state) => {
             state.notice = notice;
           }),
+        propose: (proposal) =>
+          set((state) => {
+            state.proposal = proposal;
+          }),
+        acceptProposal() {
+          const { proposal } = get();
+          if (!proposal)
+            return err({ code: 'NOT_FOUND', message: 'There is no proposal to accept.' });
+          return get().execute(proposal.command);
+        },
       };
     }),
   );

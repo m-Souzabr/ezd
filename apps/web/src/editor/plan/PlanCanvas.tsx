@@ -1,4 +1,5 @@
 import {
+  type DesignDocument,
   formatLength,
   type Id,
   IN,
@@ -17,6 +18,7 @@ import { selectedId, severityById, violationsFor } from '../../store/selectors';
 import { CanvasHost, type CanvasPointer } from '../CanvasHost';
 import { type Drag, dragGhost, dragHasError } from '../dragging';
 import { newId } from '../ids';
+import { previewGhosts } from '../preview';
 import { openingCommand } from '../tools/opening';
 import { findTarget, handleAt, hitTest, isResizable, wallAt } from '../tools/select';
 import { pointAtLength, snapWallPoint, WALL_SNAP_PX, wallCommands } from '../tools/wall';
@@ -30,6 +32,7 @@ import {
   GuidesLayer,
   ItemsLayer,
   OpeningsLayer,
+  ProposalLayer,
   SelectionLayer,
   WallDraftLayer,
   WallsLayer,
@@ -49,8 +52,11 @@ function grabOffset(footprint: readonly Pt[], item: Item, point: Pt): Pt {
   return { x: point.x - x, y: point.y - y };
 }
 
-/** The 2D plan: draws the room from above and turns pointer input into commands. */
-export function PlanCanvas() {
+/**
+ * The 2D plan: draws the room from above and turns pointer input into commands. With
+ * `previewDoc`, the items that differ from the document are drawn over it as ghosts.
+ */
+export function PlanCanvas({ previewDoc }: { previewDoc?: DesignDocument | undefined } = {}) {
   const store = useDesignStore();
   const doc = useDesign((state) => state.doc);
   const catalog = useDesign((state) => state.catalog);
@@ -68,6 +74,10 @@ export function PlanCanvas() {
   const lengthInput = useRef<HTMLInputElement>(null);
 
   const severities = useMemo(() => severityById(violations), [violations]);
+  const ghosts = useMemo(
+    () => (previewDoc ? previewGhosts(doc, previewDoc) : null),
+    [doc, previewDoc],
+  );
   const selectedTarget = single ? findTarget(doc, single) : null;
   const selectedItem = selectedTarget?.kind === 'item' ? selectedTarget.item : undefined;
 
@@ -310,6 +320,14 @@ export function PlanCanvas() {
                       catalog={catalog}
                       selection={selection}
                       handles={tool === 'select'}
+                      viewport={viewport}
+                    />
+                  )}
+                  {previewDoc && ghosts && (
+                    <ProposalLayer
+                      doc={doc}
+                      previewDoc={previewDoc}
+                      ghosts={ghosts}
                       viewport={viewport}
                     />
                   )}

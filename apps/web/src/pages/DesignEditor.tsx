@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router';
 
 import { api, ApiError, type DesignVersionSummary } from '../api/client';
 import { versionsKey } from '../api/keys';
+import { ChatPanel } from '../editor/chat/ChatPanel';
 import { Editor } from '../editor/Editor';
 import { BUTTON } from '../editor/panels/fields';
 import { ConflictDialog, SaveStatus } from '../editor/panels/SaveStatus';
@@ -281,7 +282,12 @@ function DesignEditor({ designId }: { designId: string }) {
   return (
     <DesignStoreProvider store={store}>
       {/* Keyed by store, so nothing typed or hovered carries over to a replaced document. */}
-      <Editor key={generation} onLoadDocument={loadDocument} header={header} />
+      <Editor
+        key={generation}
+        onLoadDocument={loadDocument}
+        header={header}
+        assistant={<ChatPanel designId={designId} />}
+      />
       <ConflictDialog autosave={autosave} onReloadTheirs={reloadTheirs} />
     </DesignStoreProvider>
   );

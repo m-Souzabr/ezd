@@ -13,6 +13,17 @@ logger = logging.getLogger("ezd.request")
 
 # The only attributes of a log record that are written, besides the message and level.
 REQUEST_FIELDS = ("request_id", "method", "path", "status", "duration_ms", "user_id")
+# And those of a call to the language model (`chat.services`). Never a key or a prompt.
+LLM_FIELDS = (
+    "model",
+    "category",
+    "input_tokens",
+    "output_tokens",
+    "cached_tokens",
+    "latency_ms",
+    "attempt",
+    "outcome",
+)
 
 
 class JsonFormatter(logging.Formatter):
@@ -23,7 +34,7 @@ class JsonFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
         }
-        for field in REQUEST_FIELDS:
+        for field in REQUEST_FIELDS + LLM_FIELDS:
             if hasattr(record, field):
                 entry[field] = getattr(record, field)
         if record.exc_info:
