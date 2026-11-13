@@ -18,6 +18,7 @@ QUOTE = payload()
 # Routes that are not about an owned object.
 PUBLIC = {
     "health",
+    "ready",
     "auth-register",
     "auth-login",
     "auth-password-reset",

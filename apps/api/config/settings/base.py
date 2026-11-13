@@ -35,6 +35,7 @@ MIDDLEWARE = [
     "config.logging.RequestLogMiddleware",
     "config.api.BodyLimitMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "config.headers.SecurityHeadersMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -89,6 +90,11 @@ CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_HTTPONLY = False
 CSRF_FAILURE_VIEW = "config.views.csrf_failure"
 
+# Django's defaults, stated so a change is deliberate. HSTS is set in prod.py.
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+X_FRAME_OPTIONS = "DENY"
+
 # The most Django reads of any request body. Each view accepts less: 2 MB unless it sets
 # `max_body_bytes` (see config.api).
 DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
@@ -101,13 +107,16 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": ["config.api.UserThrottle"],
     "DEFAULT_THROTTLE_RATES": {
         "user": env.str("API_THROTTLE_USER", default="600/min"),
-        "login_ip": "5/min",
-        "login_email": "5/min",
-        "auth_ip": "20/min",
+        "login_ip": env.str("API_THROTTLE_LOGIN_IP", default="5/min"),
+        "login_email": env.str("API_THROTTLE_LOGIN_EMAIL", default="5/min"),
+        "auth_ip": env.str("API_THROTTLE_AUTH_IP", default="20/min"),
+        "llm": env.str("API_THROTTLE_LLM", default="20/min"),
+        "upload": env.str("API_THROTTLE_UPLOAD", default="30/min"),
     },
     # How many proxies sit in front of the API, to find the client address for throttling.
     "NUM_PROXIES": env.int("DJANGO_NUM_PROXIES", default=0),
     "EXCEPTION_HANDLER": "config.api.exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "config.pagination.HeaderLimitOffsetPagination",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
@@ -218,6 +227,9 @@ LLM_PRICES = {
     "gpt-5.4-mini": {"input": 0.75, "cached_input": 0.075, "output": 4.50},
     "gpt-5.5": {"input": 5.00, "cached_input": 0.50, "output": 30.00},
 }
+
+# A dotted path to `fn(error, context)` that sends unexpected errors to a tracker, or empty.
+ERROR_REPORTER = env.str("ERROR_REPORTER", default="")
 
 LOGGING = {
     "version": 1,

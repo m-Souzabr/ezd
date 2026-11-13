@@ -33,12 +33,19 @@ jobs:
         if: ${{ !cancelled() }}
       - run: pnpm build
         if: ${{ !cancelled() }}
-      - name: JSON Schema files match the Zod schemas
+      # The JS and CSS the editor loads before it starts, gzipped: 350 kB at most.
+      - name: Bundle size
+        if: ${{ !cancelled() }}
+        run: pnpm --filter @ezd/web bundle-size
+      - name: No TODO or FIXME without a linked issue
+        if: ${{ !cancelled() }}
+        run: pnpm run todos
+      - name: JSON Schema files, fixtures and docs/RULES.md match the code that generates them
         if: ${{ !cancelled() }}
         run: |
           pnpm --filter @ezd/core schema
-          git add --intent-to-add packages/core/schema
-          git diff --exit-code -- packages/core/schema
+          git add --intent-to-add packages/core/schema packages/core/src/document/fixtures docs/RULES.md
+          git diff --exit-code -- packages/core/schema packages/core/src/document/fixtures docs/RULES.md
 
   # The editor driven in a real browser. Kept apart from `js` so the browser download does
   # not slow the unit tests down. Playwright starts the web dev server and the API, which
@@ -130,7 +137,8 @@ jobs:
         if: ${{ !cancelled() }}
       - run: uv run python manage.py makemigrations --check --dry-run
         if: ${{ !cancelled() }}
-      - run: uv run pytest
+      # Fails below 90 percent (pyproject.toml).
+      - run: uv run pytest --cov
         if: ${{ !cancelled() }}
       # The assistant's eval suite, on the recorded responses: no vendor, no key.
       - name: Eval suite (FakeClient)
@@ -176,3 +184,47 @@ jobs:
       - name: Python licenses
         if: ${{ !cancelled() }}
         run: pnpm run licenses:py
+      - name: License report
+        if: ${{ !cancelled() }}
+        run: pnpm run licenses:report
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: license-report
+          path: licenses-report/
+          retention-days: 90
+
+  # Secrets in the history, and known vulnerabilities in the dependencies. High severity or
+  # worse fails the job.
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: pnpm/action-setup@v6
+        if: ${{ !cancelled() }}
+      - uses: actions/setup-node@v7
+        if: ${{ !cancelled() }}
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v10.3.3
+        if: ${{ !cancelled() }}
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - name: JS dependency audit
+        if: ${{ !cancelled() }}
+        run: pnpm audit --audit-level high
+      # pip-audit runs from uvx, outside the API's dependency tree.
+      - name: Python dependency audit
+        if: ${{ !cancelled() }}
+        working-directory: apps/api
+        run: |
+          uv export --frozen --no-hashes --format requirements-txt > "$RUNNER_TEMP/requirements.txt"
+          uvx pip-audit --strict --vulnerability-service osv -r "$RUNNER_TEMP/requirements.txt"

@@ -120,7 +120,11 @@ describe('request', () => {
 
     const error = await request('GET', '/api/projects/').catch((caught: unknown) => caught);
 
-    expect(error).toMatchObject({ status: 502, body: null, message: 'The request failed (502).' });
+    expect(error).toMatchObject({
+      status: 502,
+      body: null,
+      message: 'The server had a problem. Try again in a moment.',
+    });
   });
 
   it('throws a NetworkError when there is no answer', async () => {
@@ -197,5 +201,21 @@ describe('the autosave request', () => {
       document: { id: 'd1' },
       base_revision: 4,
     });
+  });
+});
+
+describe('the message for an error', () => {
+  it("is the server's own, or a plain sentence, never a raw body", () => {
+    expect(new ApiError(400, { detail: 'Not that.' }).message).toBe('Not that.');
+    expect(new ApiError(400, { name: ['Too long.'], extra: { nested: 1 } }).message).toBe(
+      'Too long.',
+    );
+    expect(new ApiError(404, null).message).toBe('This was not found. It may have been deleted.');
+    expect(new ApiError(429, '<html>').message).toBe(
+      'Too many requests. Wait a moment and try again.',
+    );
+    expect(new ApiError(418, { data: [{ x: 1 }] }).message).toBe(
+      'The request did not succeed. Try again.',
+    );
   });
 });

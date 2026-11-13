@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
+import * as client from '../api/client';
 import type { User } from '../api/client';
 import { loginPath, nextPath, SESSION_KEY } from './session';
-import { RequireSession } from './SessionGate';
+import { RequireSession, SessionExpiry } from './SessionGate';
 
 describe('where to go after signing in', () => {
   it('returns to the page that asked for a session', () => {
@@ -58,5 +59,29 @@ describe('RequireSession', () => {
   it('sends anyone else to the login page, to come back afterwards', () => {
     renderAt('/projects/p1?tab=2', null);
     expect(screen.getByText('at /login?next=%2Fprojects%2Fp1%3Ftab%3D2')).toBeInTheDocument();
+  });
+});
+
+describe('a 401 after signing out', () => {
+  it('leaves the login page as it is', () => {
+    const queryClient = new QueryClient();
+    let unauthorized = () => {};
+    const spy = vi.spyOn(client, 'setUnauthorizedHandler').mockImplementation((handler) => {
+      unauthorized = handler;
+      return () => {};
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/login']}>
+          <SessionExpiry />
+          <Routes>
+            <Route path="*" element={<Where />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    act(() => unauthorized());
+    expect(screen.getByText('at /login')).toBeInTheDocument();
+    spy.mockRestore();
   });
 });

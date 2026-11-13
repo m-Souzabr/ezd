@@ -55,15 +55,27 @@ export class NetworkError extends Error {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+/** What to tell the user when the server gave no message of its own, as for an HTML page. */
+const FALLBACK: Record<number, string> = {
+  400: 'The request was not accepted. Check what you entered and try again.',
+  401: 'Your session has ended. Sign in again.',
+  403: 'You do not have access to this.',
+  404: 'This was not found. It may have been deleted.',
+  409: 'This was changed elsewhere. Reload to see the latest version.',
+  413: 'This is too large to send.',
+  429: 'Too many requests. Wait a moment and try again.',
+};
+
 function describe(status: number, body: unknown): string {
   if (isRecord(body)) {
     if (typeof body.detail === 'string') return body.detail;
     const messages = Object.values(body).flatMap((value) =>
-      Array.isArray(value) ? value.map(String) : [],
+      Array.isArray(value) ? value.filter((item) => typeof item === 'string') : [],
     );
     if (messages.length > 0) return messages.join(' ');
   }
-  return `The request failed (${status}).`;
+  if (status >= 500) return 'The server had a problem. Try again in a moment.';
+  return FALLBACK[status] ?? 'The request did not succeed. Try again.';
 }
 
 /** Worth trying again unchanged: no answer, a server fault, or a throttle. */

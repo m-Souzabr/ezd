@@ -91,6 +91,9 @@ export function ValidationPanel() {
             </section>
           );
         })}
+        <p className="border-t border-slate-100 px-3 py-2 text-xs text-slate-600">
+          These checks are design guidance, not building-code compliance.
+        </p>
       </div>
     </PanelSection>
   );

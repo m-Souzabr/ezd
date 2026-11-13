@@ -183,7 +183,11 @@ test('editing goes on while offline and is saved when the connection returns', a
 test('a save over a newer one is refused: reload theirs, or overwrite with mine', async ({
   page,
   context,
+  browserName,
 }) => {
+  // WebKit slows the timers of the tab in the background, and every step here waits for
+  // an autosave in one tab or the other.
+  test.slow(browserName === 'webkit');
   const url = await newDesign(page);
   const other = await context.newPage();
   await other.goto(url);
@@ -220,6 +224,7 @@ test('a save over a newer one is refused: reload theirs, or overwrite with mine'
     await expect(conflict).toBeHidden();
     await saved(page);
 
+    await other.bringToFront();
     await other.reload();
     await saved(other);
     expect(await getDoc(other)).toEqual(mine);

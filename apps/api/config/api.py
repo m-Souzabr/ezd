@@ -98,6 +98,41 @@ class UserThrottle(UserRateThrottle):
         return api_settings.DEFAULT_THROTTLE_RATES.get(self.scope)
 
 
+class LLMThrottle(UserThrottle):
+    """Calls to the language model, per signed-in user: each one costs money."""
+
+    scope = "llm"
+
+
+class UploadThrottle(UserThrottle):
+    """Photo uploads, per signed-in user: each one is decoded and re-encoded on the server."""
+
+    scope = "upload"
+
+
+class PostThrottledMixin:
+    """Adds `post_throttle` to a view's POST, the expensive request of the view."""
+
+    request: Request
+    post_throttle: type[UserThrottle]
+
+    def get_throttles(self) -> list[Any]:
+        throttles = list(super().get_throttles())
+        if self.request.method == "POST":
+            throttles.append(self.post_throttle())
+        return throttles
+
+
+class LLMThrottledMixin(PostThrottledMixin):
+    """A view whose POST calls the language model."""
+
+    post_throttle = LLMThrottle
+
+
+class UploadThrottledMixin(PostThrottledMixin):
+    post_throttle = UploadThrottle
+
+
 class LoginIpThrottle(_ScopedRateThrottle):
     scope = "login_ip"
 

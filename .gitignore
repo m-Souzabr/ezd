@@ -9,6 +9,7 @@ pnpm-debug.log*
 dist/
 build/
 coverage/
+licenses-report/
 playwright-report/
 test-results/
 
@@ -17,6 +18,7 @@ __pycache__/
 *.py[cod]
 .venv/
 .pytest_cache/
+.coverage
 .ruff_cache/
 *.egg-info/
 staticfiles/

@@ -17,8 +17,14 @@ DATABASES = {
     "default": env.db("DATABASE_URL", default="postgres://ezd:ezd@localhost:5432/ezd"),
 }
 
-# Password reset emails are printed by `runserver`.
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Password reset emails are printed by `runserver`. The end-to-end tests write them to
+# files instead (EMAIL_FILE_PATH), to follow the link.
+EMAIL_FILE_PATH = env.str("EMAIL_FILE_PATH", default="")
+EMAIL_BACKEND = (
+    "django.core.mail.backends.filebased.EmailBackend"
+    if EMAIL_FILE_PATH
+    else "django.core.mail.backends.console.EmailBackend"
+)
 
 # The Vite dev server proxies /api here, so the browser's origin is the web app's.
 CSRF_TRUSTED_ORIGINS = env.list(

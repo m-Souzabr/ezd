@@ -1,5 +1,5 @@
 import type { DesignDocument, Item } from '@ezd/core';
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 // Shared by the end-to-end tests: reading the document through `window.__ezd`, which the
 // dev build exposes, and aiming the mouse at plan coordinates.
@@ -73,4 +73,54 @@ export async function openWithRoom(page: Page, width = 120, depth = 96) {
   await dialog.getByLabel('Depth', { exact: true }).fill(String(depth));
   await dialog.getByRole('button', { name: 'Create room' }).click();
   await dialog.waitFor({ state: 'hidden' });
+}
+
+export const PASSWORD = 'correct-horse-battery';
+
+/** A new address for each test, so tests and reruns against one API never collide. */
+export const newEmail = (tag = 'e2e') =>
+  `${tag}-${Date.now()}-${Math.floor(Math.random() * 1e9)}@example.com`;
+
+/**
+ * Sends a request to the API as the page's browser context, with the CSRF token, so the
+ * page shares the session it sets up. For seeding data without going through the UI.
+ */
+export async function api<T>(page: Page, method: string, path: string, data?: unknown): Promise<T> {
+  if (!(await page.context().cookies()).some((cookie) => cookie.name === 'csrftoken')) {
+    await page.request.get('/api/auth/me/');
+  }
+  const token = (await page.context().cookies()).find((c) => c.name === 'csrftoken')?.value ?? '';
+  const response = await page.request.fetch(path, {
+    method,
+    headers: { 'X-CSRFToken': token, Accept: 'application/json' },
+    ...(data !== undefined && { data }),
+  });
+  if (!response.ok())
+    throw new Error(`${method} ${path}: ${response.status()} ${await response.text()}`);
+  return (response.status() === 204 ? undefined : await response.json()) as T;
+}
+
+/** A new signed-in account, made through the API. */
+export async function signUp(page: Page, tag = 'e2e') {
+  const email = newEmail(tag);
+  await api(page, 'POST', '/api/auth/register/', { email, password: PASSWORD, name: 'End To End' });
+  return email;
+}
+
+/** A project with one empty design, made through the API. Returns the design's id. */
+export async function newDesign(page: Page, name = 'Kitchen'): Promise<string> {
+  const project = await api<{ id: string }>(page, 'POST', '/api/projects/', { name: 'E2E house' });
+  const design = await api<{ id: string }>(page, 'POST', `/api/projects/${project.id}/designs/`, {
+    name,
+  });
+  return design.id;
+}
+
+/** Opens a design and makes a rectangle room from the template. */
+export async function openDesignWithRoom(page: Page, designId: string) {
+  await page.goto(`/designs/${designId}`);
+  await page.getByRole('button', { name: 'Room template' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Room template' });
+  await dialog.getByRole('button', { name: 'Create room' }).click();
+  await expect(dialog).toBeHidden();
 }

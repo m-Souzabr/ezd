@@ -56,6 +56,54 @@ source directly. A change in core shows up in web and CLI tests and in the web d
 with no intermediate build. `pnpm build` still compiles `core` to `dist` for any consumer
 that does not set the condition.
 
+## How a change flows
+
+Every client of the document makes a `Command` and hands it to core. Nothing else writes
+to a document.
+
+```mermaid
+flowchart LR
+  drag["Drag and drop,<br/>panels, keyboard"] -- "editor/edits.ts" --> cmd
+  chat["Chat assistant"] -- "tool calls<br/>proposalToCommands" --> cmd
+  photo["Photo import"] -- "confirmed draft<br/>draftToCommands" --> cmd
+  file["Template, import"] --> cmd
+  cmd(["Command"]) --> exec["store.execute<br/>(history: execute, undo, redo)"]
+  exec --> apply["core applyCommand<br/>schema, ids, catalog"]
+  apply -- "{ doc, inverse }" --> store[("Design store<br/>doc + history")]
+  store --> rules["validate: rules"]
+  store --> views["plan, elevations,<br/>BOM, quote PDF"]
+  store -- "2 s after a change" --> save["autosave<br/>PUT draft, base_revision"]
+  save --> server["API: JSON Schema,<br/>then ezd-core validate-document"]
+  server --> db[("PostgreSQL")]
+```
+
+- **The editor** (`apps/web/src/store/designStore.ts`) is the only place that replaces the
+  document, with what core's `execute`, `undo` or `redo` returned. ESLint rejects any other
+  assignment.
+- **The chat assistant** never changes the document: its tool calls become one `batch`,
+  dry-run in the browser and drawn as ghosts; Accept executes the batch as one command.
+- **Photo import** is the same shape one step earlier: the model's answer becomes a draft,
+  the user corrects it, and the confirmed draft becomes one `batch` applied to an empty
+  document, which the server stores as the design and its version 1.
+- **The server** never trusts the browser: every stored document passes the JSON Schema
+  generated from core and then core itself (`ezd-core validate-document`), and a confirmed
+  photo draft is checked again with `ezd-core draft-problems`.
+
+## What is where
+
+| Concern                                                              | Code                                                                                             |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Document, commands, history, rules, snapping, BOM and pricing, scene | `packages/core/src/`                                                                             |
+| Chat: summary for the model, tools, proposal to commands             | `packages/core/src/llm/`, `apps/api/chat/`, `apps/api/llm/`                                      |
+| Photo: draft schemas, normalising, problems, draft to commands       | `packages/core/src/photo/`, `apps/api/photos/`                                                   |
+| Editor: store, views, tools, panels                                  | `apps/web/src/store/`, `apps/web/src/editor/`                                                    |
+| Accounts, projects, designs, versions, autosave                      | `apps/api/accounts/`, `apps/api/projects/`, `apps/web/src/lib/`                                  |
+| Quotes and their PDF                                                 | `apps/api/quotes/`, `apps/web/src/quotes/`                                                       |
+| Errors: boundary, reporting hooks, readiness                         | `apps/web/src/ErrorBoundary.tsx`, `apps/web/src/lib/reportError.ts`, `apps/api/config/errors.py` |
+
+See also `docs/EXTENDING.md` (what v1 left out and how to add it), `docs/OPERATIONS.md`,
+`docs/SECURITY.md`, `docs/PERFORMANCE.md`, `docs/BROWSERS.md` and `docs/RULES.md`.
+
 ## Rules that shape later phases
 
 - All mutations go through commands. Drag and drop, LLM tool calls, undo and redo, server

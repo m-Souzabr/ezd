@@ -10,6 +10,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from config.api import LLMThrottledMixin
 from llm import config
 from llm.client import LLMClient, LLMUnavailable
 from projects.models import Design
@@ -133,7 +134,7 @@ def _proposal(message: Message, result: AttemptResult) -> dict:
     }
 
 
-class DesignChatView(OwnedQuerysetMixin, APIView):
+class DesignChatView(LLMThrottledMixin, OwnedQuerysetMixin, APIView):
     """The chat of a design: its latest conversation, and a new message to the assistant."""
 
     model = Design
@@ -189,7 +190,7 @@ class DesignChatView(OwnedQuerysetMixin, APIView):
         return Response(_proposal(message, result))
 
 
-class MessageRetryView(OwnedQuerysetMixin, APIView):
+class MessageRetryView(LLMThrottledMixin, OwnedQuerysetMixin, APIView):
     model = Message
 
     @extend_schema(request=RetryRequestSerializer, responses={200: ProposalSerializer})

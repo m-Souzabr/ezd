@@ -352,6 +352,18 @@ paths:
           type: string
           format: uuid
         required: true
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
       tags:
       - designs
       security:
@@ -361,9 +373,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/QuoteSummary'
+                $ref: '#/components/schemas/PaginatedQuoteSummaryList'
           description: ''
     post:
       operationId: designs_quotes_create
@@ -416,6 +426,18 @@ paths:
           type: string
           format: uuid
         required: true
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
       tags:
       - designs
       security:
@@ -425,9 +447,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/DesignVersionSummary'
+                $ref: '#/components/schemas/PaginatedDesignVersionSummaryList'
           description: ''
     post:
       operationId: designs_versions_create
@@ -752,6 +772,19 @@ paths:
     get:
       operationId: projects_list
       description: The user's projects that are not archived, newest first.
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
       tags:
       - projects
       security:
@@ -761,9 +794,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Project'
+                $ref: '#/components/schemas/PaginatedProjectList'
           description: ''
     post:
       operationId: projects_create
@@ -864,6 +895,18 @@ paths:
           type: string
           format: uuid
         required: true
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
       tags:
       - projects
       security:
@@ -873,9 +916,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/DesignSummary'
+                $ref: '#/components/schemas/PaginatedDesignSummaryList'
           description: ''
     post:
       operationId: projects_designs_create
@@ -921,6 +962,18 @@ paths:
           type: string
           format: uuid
         required: true
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
       tags:
       - projects
       security:
@@ -930,9 +983,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Photo'
+                $ref: '#/components/schemas/PaginatedPhotoList'
           description: ''
     post:
       operationId: projects_photos_create
@@ -1003,6 +1054,25 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/ready/:
+    get:
+      operationId: ready_retrieve
+      description: 'Readiness probe: the API can reach its database.'
+      tags:
+      - ready
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ready'
+          description: ''
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotReady'
+          description: ''
 components:
   schemas:
     ChatRequestRequest:
@@ -1609,6 +1679,33 @@ components:
       - default
       - escalation
       - router
+    NotReady:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+      - status
+    PaginatedDesignSummaryList:
+      type: array
+      items:
+        $ref: '#/components/schemas/DesignSummary'
+    PaginatedDesignVersionSummaryList:
+      type: array
+      items:
+        $ref: '#/components/schemas/DesignVersionSummary'
+    PaginatedPhotoList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Photo'
+    PaginatedProjectList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Project'
+    PaginatedQuoteSummaryList:
+      type: array
+      items:
+        $ref: '#/components/schemas/QuoteSummary'
     PasswordResetConfirmRequest:
       type: object
       properties:
@@ -2045,6 +2142,13 @@ components:
       - id
       - number
       - total_cents
+    Ready:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+      - status
     RegisterRequest:
       type: object
       properties:

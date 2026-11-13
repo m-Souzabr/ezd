@@ -13,8 +13,10 @@ code-agent rules are in [AGENTS.md](AGENTS.md); the package dependency direction
 ```
 packages/core/      @ezd/core      pure TypeScript domain (no React, DOM or Node APIs)
 packages/core-cli/  @ezd/core-cli  Node CLI wrapping core for Python callers
-apps/web/           @ezd/web       React + Vite app
+apps/web/           @ezd/web       React + Vite app, its Playwright tests (e2e/, perf/)
 apps/api/           Django project (Python)
+evals/              chat eval cases and the photo test set, with recorded answers
+docs/               architecture, operations, security, performance, browsers, rules
 ```
 
 ## Prerequisites
@@ -124,5 +126,34 @@ app's types, and commit both:
 pnpm run openapi
 ```
 
-CI (`.github/workflows/ci.yml`) runs all of the above on every pull request and on pushes
-to `main`.
+Other checks, from the repository root:
+
+```sh
+pnpm --filter @ezd/web bundle-size   # after pnpm build: the editor's initial JS, gzipped
+pnpm --filter @ezd/web perf          # drag frame rate and cold load, on the production build
+pnpm run todos                       # every TODO or FIXME links an issue
+pnpm run licenses:report             # licenses-report/, attached to a release
+```
+
+The assistant's eval suites, from `apps/api` (`--client fake` replays recorded answers, as
+CI does; `--client live` needs an API key):
+
+```sh
+uv run python manage.py run_evals --client fake
+uv run python manage.py run_photo_evals --client fake
+```
+
+CI (`.github/workflows/ci.yml`) runs all of the above but `perf` on every pull request and
+on pushes to `main`, plus a secret scan and dependency audits.
+
+## Documentation
+
+| Document                                     | What it covers                                                         |
+| -------------------------------------------- | ---------------------------------------------------------------------- |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Packages, how a change flows through core, where things live           |
+| [docs/EXTENDING.md](docs/EXTENDING.md)       | Collaboration, vendor catalogs, bath and closet, other LLM vendors, 3D |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md)     | Deployment, health checks, error reporting, backups and restore        |
+| [docs/SECURITY.md](docs/SECURITY.md)         | Controls, CI checks and the security review                            |
+| [docs/PERFORMANCE.md](docs/PERFORMANCE.md)   | Targets and measured numbers                                           |
+| [docs/BROWSERS.md](docs/BROWSERS.md)         | Browser support and test results                                       |
+| [docs/RULES.md](docs/RULES.md)               | Every design rule, generated from the code                             |

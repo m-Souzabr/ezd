@@ -3,7 +3,7 @@ import { type ReactNode, useEffect } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router';
 
 import { setUnauthorizedHandler } from '../api/client';
-import { loginPath, SESSION_KEY, useSession } from './session';
+import { isSignInPage, loginPath, SESSION_KEY, useSession } from './session';
 
 /**
  * Sends the user to the login page when a request finds the session has ended, and
@@ -19,9 +19,11 @@ export function SessionExpiry() {
     () =>
       setUnauthorizedHandler(() => {
         queryClient.setQueryData(SESSION_KEY, null);
-        void navigate(loginPath(here), { replace: true });
+        // A request that was in flight when the user signed out answers 401 after the
+        // login page is already showing: stay there, without `next=/login`.
+        if (!isSignInPage(location.pathname)) void navigate(loginPath(here), { replace: true });
       }),
-    [navigate, queryClient, here],
+    [navigate, queryClient, here, location.pathname],
   );
   return null;
 }

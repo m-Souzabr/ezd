@@ -17,3 +17,7 @@ export function nextPath(search: string, fallback = '/projects'): string {
 
 export const loginPath = (from: string): string =>
   from === '/' ? '/login' : `/login?next=${encodeURIComponent(from)}`;
+
+/** The pages for signing in, where a 401 is expected and leads nowhere else. */
+const SIGN_IN_PAGES = ['/login', '/register', '/forgot-password', '/reset-password'];
+export const isSignInPage = (pathname: string): boolean => SIGN_IN_PAGES.includes(pathname);

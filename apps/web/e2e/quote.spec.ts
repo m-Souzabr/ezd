@@ -61,6 +61,18 @@ test('quote a small kitchen and download its PDF', async ({ page }) => {
     expect(subtotal).toMatch(/^\$[\d,]+\.\d\d$/);
   });
 
+  await test.step('export the bill of materials as CSV', async () => {
+    const [file] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('button', { name: 'Export CSV' }).click(),
+    ]);
+    expect(file.suggestedFilename()).toBe('Kitchen materials.csv');
+    const csv = await readFile(await file.path(), 'utf8');
+    const rows = csv.trim().split(/\r?\n/);
+    expect(rows.length).toBeGreaterThanOrEqual(4);
+    expect(csv).toMatch(/base\.standard|Base cabinet/);
+  });
+
   await test.step('create a quote at the BOM total', async () => {
     await page.getByRole('button', { name: 'Quotes' }).click();
     const dialog = page.getByRole('dialog', { name: 'Quotes' });

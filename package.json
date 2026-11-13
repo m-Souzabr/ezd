@@ -17,7 +17,9 @@
     "format:check": "prettier --check .",
     "licenses": "node scripts/check-licenses.mjs js",
     "licenses:py": "node scripts/check-licenses.mjs py",
-    "openapi": "cd apps/api && uv run python manage.py spectacular --file openapi.yaml --validate --fail-on-warn && cd ../.. && pnpm --filter @ezd/web openapi"
+    "openapi": "cd apps/api && uv run python manage.py spectacular --file openapi.yaml --validate --fail-on-warn && cd ../.. && pnpm --filter @ezd/web openapi",
+    "licenses:report": "node scripts/license-report.mjs",
+    "todos": "node scripts/check-todos.mjs"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",

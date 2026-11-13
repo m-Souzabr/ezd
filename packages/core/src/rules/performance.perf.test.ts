@@ -2,38 +2,18 @@ import { describe, expect, it } from 'vitest';
 
 import { defaultItemFor, getEntry, SEED_CATALOG } from '../catalog/index.js';
 import { snap } from '../snapping/index.js';
-import { door, free, type ItemSpec, kitchen, on, windowAt } from '../test/kitchen.js';
+import { largeKitchen } from '../test/large.js';
 import { inches } from '../units/index.js';
 import { validate } from './index.js';
 
 // Targets from the phase issue, on CI hardware: `validate` on a 200-item document in under
 // 10 ms and `snap` in under 4 ms. Run by vitest.perf.config.ts, without coverage, which
 // slows the code several times over.
+// Core has no `console` in its types; the timings are printed for docs/PERFORMANCE.md.
+declare const console: { log(message: string): void };
+
 const VALIDATE_BUDGET_MS = 10;
 const SNAP_BUDGET_MS = 4;
-
-/** A 60 ft by 50 ft kitchen: base and wall cabinets round every wall, and islands. */
-function largeKitchen() {
-  const specs: ItemSpec[] = [];
-  for (const [wallId, length] of [
-    ['wall-north', 720],
-    ['wall-east', 600],
-    ['wall-south', 720],
-    ['wall-west', 600],
-  ] as const) {
-    for (let at = 24; at + 30 <= length - 24; at += 30) {
-      specs.push(on('base.standard', wallId, at), on('wall.standard', wallId, at));
-    }
-  }
-  for (let i = 0; specs.length < 200; i += 1) {
-    specs.push(free('base.standard', 120 + (i % 8) * 60, 150 + Math.floor(i / 8) * 80));
-  }
-  return kitchen(specs, {
-    width: 720,
-    depth: 600,
-    openings: [door('wall-south', 300, 32, 'in-left'), windowAt('wall-north', 300, 48)],
-  });
-}
 
 /** Mean time of one call in milliseconds, once the code is warm. */
 function meanMs(run: (i: number) => void): number {
@@ -45,7 +25,7 @@ function meanMs(run: (i: number) => void): number {
 }
 
 describe('performance on a 200-item document', () => {
-  const doc = largeKitchen();
+  const doc = largeKitchen(200);
 
   it('has 200 items and plenty for the rules to find', () => {
     expect(doc.items).toHaveLength(200);
@@ -62,5 +42,31 @@ describe('performance on a 200-item document', () => {
       snap({ doc, catalog: SEED_CATALOG, item, pointer: { x: inches(100 + i), y: inches(5) } }),
     );
     expect(mean).toBeLessThan(SNAP_BUDGET_MS);
+    console.log(`200 items: snap ${mean.toFixed(3)} ms`);
+  });
+
+  it('prints the validate time, for docs/PERFORMANCE.md', () => {
+    console.log(`200 items: validate ${meanMs(() => validate(doc, SEED_CATALOG)).toFixed(3)} ms`);
+  });
+});
+
+// No target for 500 items: twice the budget is the point where a design this size would
+// feel slow, so a regression past it fails.
+describe('performance on a 500-item document', () => {
+  const doc = largeKitchen(500);
+
+  it('has 500 items', () => {
+    expect(doc.items).toHaveLength(500);
+  });
+
+  it(`validates in under ${2 * VALIDATE_BUDGET_MS} ms and snaps in under ${2 * SNAP_BUDGET_MS} ms`, () => {
+    const validateMs = meanMs(() => validate(doc, SEED_CATALOG));
+    const item = defaultItemFor(getEntry(SEED_CATALOG, 'base.standard')!, 'item-new-0001');
+    const snapMs = meanMs((i) =>
+      snap({ doc, catalog: SEED_CATALOG, item, pointer: { x: inches(100 + i), y: inches(5) } }),
+    );
+    console.log(`500 items: validate ${validateMs.toFixed(3)} ms, snap ${snapMs.toFixed(3)} ms`);
+    expect(validateMs).toBeLessThan(2 * VALIDATE_BUDGET_MS);
+    expect(snapMs).toBeLessThan(2 * SNAP_BUDGET_MS);
   });
 });

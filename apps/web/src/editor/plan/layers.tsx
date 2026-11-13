@@ -12,6 +12,7 @@ import {
   type SnapGuide,
 } from '@ezd/core';
 import type Konva from 'konva';
+import { memo } from 'react';
 import { Circle, Group, Line, Rect, Shape } from 'react-konva';
 
 import { CenteredText, DimensionLine } from '../draw';
@@ -52,7 +53,7 @@ function gridLines(ctx: Konva.Context, bounds: Bounds, step: number) {
 }
 
 /** Lines every 3 in when zoomed in and every 12 in when zoomed out, heavier every fourth. */
-export function GridLayer({ viewport, visible }: { viewport: Viewport; visible: Bounds }) {
+function GridLayerView({ viewport, visible }: { viewport: Viewport; visible: Bounds }) {
   const step = gridStep(viewport);
   return (
     <Group>
@@ -74,7 +75,7 @@ export function GridLayer({ viewport, visible }: { viewport: Viewport; visible: 
   );
 }
 
-export function FloorLayer({ doc }: { doc: DesignDocument }) {
+function FloorLayerView({ doc }: { doc: DesignDocument }) {
   const { walls } = doc.room;
   if (!isClosedLoop(walls)) return null;
   return (
@@ -87,7 +88,7 @@ export function FloorLayer({ doc }: { doc: DesignDocument }) {
   );
 }
 
-export function WallsLayer({ doc }: { doc: DesignDocument }) {
+function WallsLayerView({ doc }: { doc: DesignDocument }) {
   return (
     <Group>
       {doc.room.walls.map((wall) => (
@@ -104,7 +105,7 @@ export function WallsLayer({ doc }: { doc: DesignDocument }) {
 }
 
 /** Each opening as a gap in its wall, with a swing arc for a door or panes for a window. */
-export function OpeningsLayer({ doc }: { doc: DesignDocument }) {
+function OpeningsLayerView({ doc }: { doc: DesignDocument }) {
   return (
     <Group>
       {doc.room.openings.map((opening) => {
@@ -165,7 +166,7 @@ export function OpeningsLayer({ doc }: { doc: DesignDocument }) {
   );
 }
 
-export function CountertopsLayer({ doc }: { doc: DesignDocument }) {
+function CountertopsLayerView({ doc }: { doc: DesignDocument }) {
   return (
     <Group>
       {doc.countertops.map((countertop) => {
@@ -201,7 +202,7 @@ const MIN_LABEL_WIDTH_PX = 26;
  * on the wall are dashed and drawn over the ones on the floor. An item with violations is
  * outlined red or amber.
  */
-export function ItemsLayer({
+function ItemsLayerView({
   doc,
   severities,
   viewport,
@@ -250,7 +251,7 @@ export function ItemsLayer({
 }
 
 /** Wall lengths always; for the selected item, its width and the gaps beside it. */
-export function DimensionsLayer({
+function DimensionsLayerView({
   doc,
   selected,
   viewport,
@@ -502,3 +503,19 @@ export function WallDraftLayer({
     </Group>
   );
 }
+
+// The layers drawn from the document alone do not change while an item is dragged: only
+// the ghost and guides do. Memoised, they are not drawn again on every pointer move.
+const sameBounds = (a: Bounds, b: Bounds): boolean =>
+  (Object.keys(a) as (keyof Bounds)[]).every((key) => a[key] === b[key]);
+export const GridLayer = memo(
+  GridLayerView,
+  (before, after) =>
+    before.viewport === after.viewport && sameBounds(before.visible, after.visible),
+);
+export const FloorLayer = memo(FloorLayerView);
+export const WallsLayer = memo(WallsLayerView);
+export const OpeningsLayer = memo(OpeningsLayerView);
+export const CountertopsLayer = memo(CountertopsLayerView);
+export const ItemsLayer = memo(ItemsLayerView);
+export const DimensionsLayer = memo(DimensionsLayerView);

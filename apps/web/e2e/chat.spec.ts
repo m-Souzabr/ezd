@@ -1,6 +1,13 @@
 import { expect, test } from '@playwright/test';
 
-import { getDoc, getPreviewDoc, historyLength } from './helpers';
+import {
+  getDoc,
+  getPreviewDoc,
+  historyLength,
+  newDesign,
+  openDesignWithRoom,
+  signUp,
+} from './helpers';
 
 // The phase 8 scenario, with the API's assistant answering from e2e/llm-script.json: ask
 // for a cabinet, see it as a ghost, accept it, and undo it in one step.
@@ -53,4 +60,22 @@ test('ask the assistant for a cabinet, accept the preview, undo it once', async 
     expect((await getDoc(page)).items).toHaveLength(0);
     expect(await historyLength(page)).toBe(before);
   });
+});
+
+test('a proposal the user rejects leaves the design as it was', async ({ page }) => {
+  await signUp(page, 'chat-reject');
+  await openDesignWithRoom(page, await newDesign(page));
+  const before = await getDoc(page);
+  const history = await historyLength(page);
+  const assistant = page.getByRole('region', { name: 'Assistant' });
+  await assistant.getByLabel('Message to the assistant').fill(MESSAGE);
+  await assistant.getByRole('button', { name: 'Send' }).click();
+  await expect(assistant.getByRole('group', { name: 'Proposed change' })).toBeVisible();
+  expect((await getPreviewDoc(page))?.items).toHaveLength(1);
+
+  await assistant.getByRole('button', { name: 'Reject' }).click();
+  await expect(assistant.getByText('Rejected')).toBeVisible();
+  expect(await getDoc(page)).toEqual(before);
+  expect(await historyLength(page)).toBe(history);
+  expect(await getPreviewDoc(page)).toBeNull();
 });

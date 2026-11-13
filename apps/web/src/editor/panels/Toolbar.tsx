@@ -9,6 +9,7 @@ import { canRedo, canUndo, fitView } from '../../store/selectors';
 import { asOne } from '../edits';
 import type { OpeningToolKind } from '../tools/opening';
 import { BUTTON } from './fields';
+import { HelpDialog } from './HelpDialog';
 import { RoomTemplateDialog } from './RoomTemplateDialog';
 
 const TOOLS: { tool: Tool; name: string; hint: string }[] = [
@@ -181,6 +182,7 @@ export function Toolbar({
         <RadixToolbar.Button className={BUTTON} onClick={() => fileInput.current?.click()}>
           Import JSON
         </RadixToolbar.Button>
+        <HelpDialog trigger={<RadixToolbar.Button className={BUTTON}>Help</RadixToolbar.Button>} />
       </RadixToolbar.Root>
 
       <input
