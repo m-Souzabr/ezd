@@ -1,0 +1,15 @@
+{
+  "shape": "galley",
+  "walls": [
+    {
+      "lengthIn": 132,
+      "openings": [],
+      "items": ["base", "base", "dishwasher", "sink"]
+    },
+    {
+      "lengthIn": 132,
+      "openings": [],
+      "items": ["base", "base", "fridge", "range"]
+    }
+  ]
+}

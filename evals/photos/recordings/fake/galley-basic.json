@@ -1,0 +1,101 @@
+{
+  "responses": [
+    {
+      "draft": "{\"shape\": \"galley\", \"walls\": [",
+      "stop_reason": "max_output_tokens",
+      "usage": {
+        "input_tokens": 1850,
+        "output_tokens": 420,
+        "cached_tokens": 0
+      },
+      "model": "gpt-5.4-mini"
+    },
+    {
+      "draft": {
+        "shape": "galley",
+        "ceilingHeightIn": 96,
+        "walls": [
+          {
+            "label": "left",
+            "lengthIn": 141,
+            "visible": true,
+            "confidence": "medium"
+          },
+          {
+            "label": "right",
+            "lengthIn": 141,
+            "visible": true,
+            "confidence": "medium"
+          }
+        ],
+        "openings": [],
+        "items": [
+          {
+            "wall": "left",
+            "category": "base",
+            "offsetIn": 1,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "left",
+            "category": "sink",
+            "offsetIn": 31,
+            "widthIn": 37,
+            "confidence": "high"
+          },
+          {
+            "wall": "left",
+            "category": "dishwasher",
+            "offsetIn": 67,
+            "widthIn": 25,
+            "confidence": "medium"
+          },
+          {
+            "wall": "left",
+            "category": "base",
+            "offsetIn": 91,
+            "widthIn": 37,
+            "confidence": "high"
+          },
+          {
+            "wall": "right",
+            "category": "fridge",
+            "offsetIn": 1,
+            "widthIn": 37,
+            "confidence": "medium"
+          },
+          {
+            "wall": "right",
+            "category": "base",
+            "offsetIn": 37,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "right",
+            "category": "range",
+            "offsetIn": 67,
+            "widthIn": 31,
+            "confidence": "medium"
+          },
+          {
+            "wall": "right",
+            "category": "base",
+            "offsetIn": 97,
+            "widthIn": 31,
+            "confidence": "high"
+          }
+        ],
+        "notes": "Lengths are estimated from standard cabinet sizes."
+      },
+      "stop_reason": "completed",
+      "usage": {
+        "input_tokens": 1850,
+        "output_tokens": 420,
+        "cached_tokens": 0
+      },
+      "model": "gpt-5.4-mini"
+    }
+  ]
+}

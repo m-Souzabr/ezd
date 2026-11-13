@@ -139,6 +139,13 @@ jobs:
       - name: Eval report
         if: ${{ !cancelled() }}
         run: cat ../../evals/reports/ci/report.md >> "$GITHUB_STEP_SUMMARY"
+      # The photo test set, on the recorded answers: every answer must convert.
+      - name: Photo eval suite (FakeClient)
+        if: ${{ !cancelled() }}
+        run: uv run python manage.py run_photo_evals --client fake --min-schema-valid 1 --out ../../evals/reports/ci-photos
+      - name: Photo eval report
+        if: ${{ !cancelled() }}
+        run: cat ../../evals/reports/ci-photos/report.md >> "$GITHUB_STEP_SUMMARY"
       - name: OpenAPI file and TypeScript types match the API
         if: ${{ !cancelled() }}
         working-directory: .

@@ -1,0 +1,88 @@
+{
+  "responses": [
+    {
+      "draft": {
+        "shape": "single-wall",
+        "ceilingHeightIn": 96,
+        "walls": [
+          {
+            "label": "back",
+            "lengthIn": 180,
+            "visible": true,
+            "confidence": "medium"
+          }
+        ],
+        "openings": [
+          {
+            "wall": "back",
+            "kind": "window",
+            "offsetIn": 125,
+            "widthIn": 31,
+            "heightIn": null,
+            "sillIn": 40,
+            "confidence": "medium"
+          }
+        ],
+        "items": [
+          {
+            "wall": "back",
+            "category": "fridge",
+            "offsetIn": 1,
+            "widthIn": 37,
+            "confidence": "medium"
+          },
+          {
+            "wall": "back",
+            "category": "base",
+            "offsetIn": 37,
+            "widthIn": 25,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "range",
+            "offsetIn": 61,
+            "widthIn": 31,
+            "confidence": "medium"
+          },
+          {
+            "wall": "back",
+            "category": "base",
+            "offsetIn": 91,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "sink",
+            "offsetIn": 121,
+            "widthIn": 37,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "microwave",
+            "offsetIn": 61,
+            "widthIn": 31,
+            "confidence": "medium"
+          },
+          {
+            "wall": "back",
+            "category": "wall",
+            "offsetIn": 91,
+            "widthIn": 31,
+            "confidence": "medium"
+          }
+        ],
+        "notes": "Lengths are estimated from standard cabinet sizes."
+      },
+      "stop_reason": "completed",
+      "usage": {
+        "input_tokens": 1850,
+        "output_tokens": 420,
+        "cached_tokens": 0
+      },
+      "model": "gpt-5.4-mini"
+    }
+  ]
+}

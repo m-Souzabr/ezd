@@ -1,0 +1,15 @@
+{
+  "shape": "l-shape",
+  "walls": [
+    {
+      "lengthIn": 144,
+      "openings": ["door"],
+      "items": ["base", "base", "range"]
+    },
+    {
+      "lengthIn": 96,
+      "openings": [],
+      "items": ["base", "sink", "wall"]
+    }
+  ]
+}

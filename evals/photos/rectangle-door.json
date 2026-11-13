@@ -1,0 +1,20 @@
+{
+  "shape": "rectangle",
+  "walls": [
+    {
+      "lengthIn": 120,
+      "openings": ["door"],
+      "items": ["base", "base"]
+    },
+    {
+      "lengthIn": 144,
+      "openings": ["window"],
+      "items": ["base", "base", "range", "sink"]
+    },
+    {
+      "lengthIn": 120,
+      "openings": ["passage"],
+      "items": ["fridge"]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "shape": "u-shape",
+  "walls": [
+    {
+      "lengthIn": 108,
+      "openings": [],
+      "items": ["base", "fridge"]
+    },
+    {
+      "lengthIn": 132,
+      "openings": ["window"],
+      "items": ["base", "base", "range", "sink"]
+    },
+    {
+      "lengthIn": 84,
+      "openings": [],
+      "items": ["base", "dishwasher"]
+    }
+  ]
+}

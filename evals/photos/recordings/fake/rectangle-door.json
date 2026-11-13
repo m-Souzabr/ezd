@@ -1,0 +1,124 @@
+{
+  "responses": [
+    {
+      "draft": {
+        "shape": "rectangle",
+        "ceilingHeightIn": 96,
+        "walls": [
+          {
+            "label": "left",
+            "lengthIn": 128,
+            "visible": true,
+            "confidence": "medium"
+          },
+          {
+            "label": "back",
+            "lengthIn": 154,
+            "visible": true,
+            "confidence": "medium"
+          },
+          {
+            "label": "right",
+            "lengthIn": 128,
+            "visible": true,
+            "confidence": "medium"
+          },
+          {
+            "label": "front",
+            "lengthIn": null,
+            "visible": false,
+            "confidence": "low"
+          }
+        ],
+        "openings": [
+          {
+            "wall": "left",
+            "kind": "door",
+            "offsetIn": 72,
+            "widthIn": 33,
+            "heightIn": null,
+            "sillIn": null,
+            "confidence": "medium"
+          },
+          {
+            "wall": "back",
+            "kind": "window",
+            "offsetIn": 35,
+            "widthIn": 31,
+            "heightIn": null,
+            "sillIn": 40,
+            "confidence": "medium"
+          },
+          {
+            "wall": "right",
+            "kind": "door",
+            "offsetIn": 12,
+            "widthIn": 37,
+            "heightIn": null,
+            "sillIn": null,
+            "confidence": "medium"
+          }
+        ],
+        "items": [
+          {
+            "wall": "left",
+            "category": "base",
+            "offsetIn": 1,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "left",
+            "category": "base",
+            "offsetIn": 31,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "base",
+            "offsetIn": 1,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "sink",
+            "offsetIn": 31,
+            "widthIn": 37,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "range",
+            "offsetIn": 67,
+            "widthIn": 31,
+            "confidence": "medium"
+          },
+          {
+            "wall": "back",
+            "category": "base",
+            "offsetIn": 97,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "right",
+            "category": "fridge",
+            "offsetIn": 85,
+            "widthIn": 37,
+            "confidence": "medium"
+          }
+        ],
+        "notes": "Lengths are estimated from standard cabinet sizes."
+      },
+      "stop_reason": "completed",
+      "usage": {
+        "input_tokens": 1850,
+        "output_tokens": 420,
+        "cached_tokens": 0
+      },
+      "model": "gpt-5.4-mini"
+    }
+  ]
+}

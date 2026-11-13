@@ -1,0 +1,10 @@
+{
+  "shape": "single-wall",
+  "walls": [
+    {
+      "lengthIn": 156,
+      "openings": ["window"],
+      "items": ["base", "base", "dishwasher", "hood", "range", "sink", "wall", "wall"]
+    }
+  ]
+}

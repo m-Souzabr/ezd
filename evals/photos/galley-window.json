@@ -1,0 +1,15 @@
+{
+  "shape": "galley",
+  "walls": [
+    {
+      "lengthIn": 120,
+      "openings": [],
+      "items": ["base", "base", "hood", "range"]
+    },
+    {
+      "lengthIn": 120,
+      "openings": ["window"],
+      "items": ["base", "base", "sink"]
+    }
+  ]
+}

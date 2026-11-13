@@ -1,0 +1,87 @@
+{
+  "responses": [
+    {
+      "draft": {
+        "shape": "l-shape",
+        "ceilingHeightIn": 96,
+        "walls": [
+          {
+            "label": "left",
+            "lengthIn": 154,
+            "visible": true,
+            "confidence": "medium"
+          },
+          {
+            "label": "right",
+            "lengthIn": 103,
+            "visible": true,
+            "confidence": "medium"
+          }
+        ],
+        "openings": [
+          {
+            "wall": "left",
+            "kind": "door",
+            "offsetIn": 6,
+            "widthIn": 33,
+            "heightIn": null,
+            "sillIn": null,
+            "confidence": "medium"
+          }
+        ],
+        "items": [
+          {
+            "wall": "left",
+            "category": "base",
+            "offsetIn": 41,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "left",
+            "category": "range",
+            "offsetIn": 71,
+            "widthIn": 31,
+            "confidence": "medium"
+          },
+          {
+            "wall": "left",
+            "category": "base",
+            "offsetIn": 101,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "right",
+            "category": "sink",
+            "offsetIn": 1,
+            "widthIn": 37,
+            "confidence": "high"
+          },
+          {
+            "wall": "right",
+            "category": "base",
+            "offsetIn": 37,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "right",
+            "category": "wall",
+            "offsetIn": 37,
+            "widthIn": 31,
+            "confidence": "medium"
+          }
+        ],
+        "notes": "Lengths are estimated from standard cabinet sizes."
+      },
+      "stop_reason": "completed",
+      "usage": {
+        "input_tokens": 1850,
+        "output_tokens": 420,
+        "cached_tokens": 0
+      },
+      "model": "gpt-5.4-mini"
+    }
+  ]
+}

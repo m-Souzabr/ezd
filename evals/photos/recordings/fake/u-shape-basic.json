@@ -1,0 +1,210 @@
+{
+  "responses": [
+    {
+      "draft": {
+        "shape": "horseshoe",
+        "ceilingHeightIn": 96,
+        "walls": [
+          {
+            "label": "left",
+            "lengthIn": 103,
+            "visible": true,
+            "confidence": "medium"
+          },
+          {
+            "label": "back",
+            "lengthIn": 128,
+            "visible": true,
+            "confidence": "medium"
+          },
+          {
+            "label": "right",
+            "lengthIn": 103,
+            "visible": true,
+            "confidence": "medium"
+          }
+        ],
+        "openings": [
+          {
+            "wall": "back",
+            "kind": "window",
+            "offsetIn": 29,
+            "widthIn": 31,
+            "heightIn": null,
+            "sillIn": 40,
+            "confidence": "medium"
+          }
+        ],
+        "items": [
+          {
+            "wall": "left",
+            "category": "base",
+            "offsetIn": 1,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "left",
+            "category": "base",
+            "offsetIn": 31,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "base",
+            "offsetIn": 1,
+            "widthIn": 25,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "sink",
+            "offsetIn": 25,
+            "widthIn": 37,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "dishwasher",
+            "offsetIn": 61,
+            "widthIn": 25,
+            "confidence": "medium"
+          },
+          {
+            "wall": "back",
+            "category": "base",
+            "offsetIn": 85,
+            "widthIn": 37,
+            "confidence": "high"
+          },
+          {
+            "wall": "right",
+            "category": "range",
+            "offsetIn": 31,
+            "widthIn": 31,
+            "confidence": "medium"
+          },
+          {
+            "wall": "right",
+            "category": "base",
+            "offsetIn": 1,
+            "widthIn": 31,
+            "confidence": "high"
+          }
+        ],
+        "notes": "Lengths are estimated from standard cabinet sizes."
+      },
+      "stop_reason": "completed",
+      "usage": {
+        "input_tokens": 1850,
+        "output_tokens": 420,
+        "cached_tokens": 0
+      },
+      "model": "gpt-5.4-mini"
+    },
+    {
+      "draft": {
+        "shape": "u-shape",
+        "ceilingHeightIn": 96,
+        "walls": [
+          {
+            "label": "left",
+            "lengthIn": 103,
+            "visible": true,
+            "confidence": "medium"
+          },
+          {
+            "label": "back",
+            "lengthIn": 128,
+            "visible": true,
+            "confidence": "medium"
+          },
+          {
+            "label": "right",
+            "lengthIn": 103,
+            "visible": true,
+            "confidence": "medium"
+          }
+        ],
+        "openings": [
+          {
+            "wall": "back",
+            "kind": "window",
+            "offsetIn": 29,
+            "widthIn": 31,
+            "heightIn": null,
+            "sillIn": 40,
+            "confidence": "medium"
+          }
+        ],
+        "items": [
+          {
+            "wall": "left",
+            "category": "base",
+            "offsetIn": 1,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "left",
+            "category": "base",
+            "offsetIn": 31,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "base",
+            "offsetIn": 1,
+            "widthIn": 25,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "sink",
+            "offsetIn": 25,
+            "widthIn": 37,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "dishwasher",
+            "offsetIn": 61,
+            "widthIn": 25,
+            "confidence": "medium"
+          },
+          {
+            "wall": "back",
+            "category": "base",
+            "offsetIn": 85,
+            "widthIn": 37,
+            "confidence": "high"
+          },
+          {
+            "wall": "right",
+            "category": "range",
+            "offsetIn": 31,
+            "widthIn": 31,
+            "confidence": "medium"
+          },
+          {
+            "wall": "right",
+            "category": "base",
+            "offsetIn": 1,
+            "widthIn": 31,
+            "confidence": "high"
+          }
+        ],
+        "notes": "Lengths are estimated from standard cabinet sizes."
+      },
+      "stop_reason": "completed",
+      "usage": {
+        "input_tokens": 1850,
+        "output_tokens": 420,
+        "cached_tokens": 0
+      },
+      "model": "gpt-5.4-mini"
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "responses": [
+    {
+      "draft": {
+        "shape": "galley",
+        "ceilingHeightIn": 96,
+        "walls": [
+          {
+            "label": "left",
+            "lengthIn": 128,
+            "visible": true,
+            "confidence": "medium"
+          },
+          {
+            "label": "right",
+            "lengthIn": 128,
+            "visible": true,
+            "confidence": "medium"
+          }
+        ],
+        "openings": [],
+        "items": [
+          {
+            "wall": "left",
+            "category": "base",
+            "offsetIn": 1,
+            "widthIn": 37,
+            "confidence": "high"
+          },
+          {
+            "wall": "left",
+            "category": "range",
+            "offsetIn": 37,
+            "widthIn": 31,
+            "confidence": "medium"
+          },
+          {
+            "wall": "left",
+            "category": "base",
+            "offsetIn": 67,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "left",
+            "category": "hood",
+            "offsetIn": 37,
+            "widthIn": 31,
+            "confidence": "medium"
+          },
+          {
+            "wall": "right",
+            "category": "base",
+            "offsetIn": 1,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "right",
+            "category": "sink",
+            "offsetIn": 31,
+            "widthIn": 37,
+            "confidence": "high"
+          },
+          {
+            "wall": "right",
+            "category": "base",
+            "offsetIn": 67,
+            "widthIn": 31,
+            "confidence": "high"
+          }
+        ],
+        "notes": "Lengths are estimated from standard cabinet sizes."
+      },
+      "stop_reason": "completed",
+      "usage": {
+        "input_tokens": 1850,
+        "output_tokens": 420,
+        "cached_tokens": 0
+      },
+      "model": "gpt-5.4-mini"
+    }
+  ]
+}
