@@ -23,3 +23,13 @@ export const photosKey = (projectId: string) => ['projects', projectId, 'photos'
 
 /** One photo draft. */
 export const photoDraftKey = (id: string) => ['photo-drafts', id] as const;
+
+/** The Control Panel's user list for one set of filters, and every user list by prefix. */
+export const adminUsersKey = (params?: object) =>
+  params ? (['admin', 'users', params] as const) : (['admin', 'users'] as const);
+
+/** The seeded roles and their permissions. */
+export const adminRolesKey = ['admin', 'roles'] as const;
+
+/** The audit log for one set of filters. */
+export const adminAuditKey = (params: object) => ['admin', 'audit', params] as const;

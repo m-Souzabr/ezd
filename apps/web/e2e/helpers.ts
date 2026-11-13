@@ -124,3 +124,21 @@ export async function openDesignWithRoom(page: Page, designId: string) {
   await dialog.getByRole('button', { name: 'Create room' }).click();
   await expect(dialog).toBeHidden();
 }
+
+/** The staff accounts the test API starts with (`apps/api/tests/fixtures/staff.json`). */
+export const ADMINISTRATOR = 'admin-e2e@example.com';
+export const SUPPORT = 'support-e2e@example.com';
+
+/** Fills in the login page and submits it, whatever the answer. */
+export async function submitLogin(page: Page, email: string, password = PASSWORD) {
+  await page.goto('/login');
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Password').fill(password);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+}
+
+/** Signs in through the login page and waits for the session to start. */
+export async function signIn(page: Page, email: string, password = PASSWORD) {
+  await submitLogin(page, email, password);
+  await expect(page).toHaveURL(/\/projects$/);
+}

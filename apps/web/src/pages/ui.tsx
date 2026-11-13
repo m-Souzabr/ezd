@@ -58,9 +58,14 @@ export function AccountLinks() {
         My projects
       </Link>
       {user.is_staff && (
-        <Link to="/settings/ai" className={LINK}>
-          AI settings
-        </Link>
+        <>
+          <Link to="/admin" className={LINK}>
+            Admin
+          </Link>
+          <Link to="/admin/ai" className={LINK}>
+            AI settings
+          </Link>
+        </>
       )}
       <span className="text-slate-600">{user.email}</span>
       <button type="button" className={BUTTON} onClick={signOut}>

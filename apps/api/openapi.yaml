@@ -3,6 +3,194 @@ info:
   title: EZDesign API
   version: '1'
 paths:
+  /api/admin/audit/:
+    get:
+      operationId: admin_audit_list
+      parameters:
+      - in: query
+        name: action
+        schema:
+          type: string
+        description: An action, or the start of one.
+      - in: query
+        name: actor
+        schema:
+          type: string
+        description: An actor's id or part of their email.
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditEntryList'
+          description: ''
+  /api/admin/roles/:
+    get:
+      operationId: admin_roles_list
+      description: The roles and the permission codes each one holds. Read-only.
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+          description: ''
+  /api/admin/users/:
+    get:
+      operationId: admin_users_list
+      description: Every account, for staff. Searchable, filterable and sortable.
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: is_staff
+        schema:
+          type: boolean
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      - in: query
+        name: role
+        schema:
+          type: string
+        description: The name of a role.
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Part of the email or name.
+      - in: query
+        name: sort
+        schema:
+          type: string
+        description: A column, with `-` for descending.
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAdminUserList'
+          description: ''
+    post:
+      operationId: admin_users_create
+      description: Creates an account with no password and emails its owner a link
+        to choose one.
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUserCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUser'
+          description: ''
+  /api/admin/users/{id}/:
+    get:
+      operationId: admin_users_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUser'
+          description: ''
+    patch:
+      operationId: admin_users_partial_update
+      description: Changes name, email, active, staff, superuser or roles.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAdminUserUpdateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUser'
+          description: ''
+  /api/admin/users/{id}/reset-password/:
+    post:
+      operationId: admin_users_reset_password_create
+      description: Emails the account's owner a link to choose a new password.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/auth/login/:
     post:
       operationId: auth_login_create
@@ -1075,6 +1263,134 @@ paths:
           description: ''
 components:
   schemas:
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        name:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
+        is_superuser:
+          type: boolean
+          readOnly: true
+          title: Superuser status
+          description: Designates that this user has all permissions without explicitly
+            assigning them.
+        roles:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        active_projects:
+          type: integer
+          readOnly: true
+        chat_tokens_this_month:
+          type: integer
+          readOnly: true
+      required:
+      - active_projects
+      - chat_tokens_this_month
+      - date_joined
+      - email
+      - id
+      - is_active
+      - is_staff
+      - is_superuser
+      - last_login
+      - name
+      - roles
+    AdminUserCreateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        name:
+          type: string
+          default: ''
+          maxLength: 150
+        is_staff:
+          type: boolean
+          default: false
+        roles:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 150
+      required:
+      - email
+    AuditEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        actor:
+          type: integer
+          readOnly: true
+          nullable: true
+        actor_email:
+          type: string
+          readOnly: true
+        action:
+          type: string
+          readOnly: true
+        object_type:
+          type: string
+          readOnly: true
+        object_id:
+          type: string
+          readOnly: true
+        before:
+          readOnly: true
+          nullable: true
+        after:
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - actor
+      - actor_email
+      - after
+      - before
+      - created_at
+      - id
+      - object_id
+      - object_type
     ChatRequestRequest:
       type: object
       properties:
@@ -1686,6 +2002,14 @@ components:
           type: string
       required:
       - status
+    PaginatedAdminUserList:
+      type: array
+      items:
+        $ref: '#/components/schemas/AdminUser'
+    PaginatedAuditEntryList:
+      type: array
+      items:
+        $ref: '#/components/schemas/AuditEntry'
     PaginatedDesignSummaryList:
       type: array
       items:
@@ -1736,6 +2060,29 @@ components:
           maxLength: 254
       required:
       - email
+    PatchedAdminUserUpdateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        name:
+          type: string
+          maxLength: 150
+        is_active:
+          type: boolean
+        is_staff:
+          type: boolean
+        is_superuser:
+          type: boolean
+        roles:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 150
     PatchedDesignRequest:
       type: object
       properties:
@@ -2204,6 +2551,18 @@ components:
       required:
       - errors
       - summary
+    Role:
+      type: object
+      properties:
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+      required:
+      - name
+      - permissions
     RoleEnum:
       enum:
       - user
@@ -2384,11 +2743,26 @@ components:
           readOnly: true
           title: Staff status
           description: Designates whether the user can log into this admin site.
+        is_superuser:
+          type: boolean
+          readOnly: true
+          title: Superuser status
+          description: Designates that this user has all permissions without explicitly
+            assigning them.
+        permissions:
+          type: array
+          items:
+            type: string
+          description: The Control Panel codes the user holds; the web app only uses
+            them to hide things.
+          readOnly: true
       required:
       - email
       - id
       - is_staff
+      - is_superuser
       - name
+      - permissions
   securitySchemes:
     cookieAuth:
       type: apiKey

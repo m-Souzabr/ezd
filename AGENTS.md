@@ -295,6 +295,17 @@ normalize-draft`) snaps cabinets to the catalog and marks every model length as 
   `recordings/fake/`. CI requires every recorded answer to convert.
 - **Relative imports in `packages/core` and `packages/core-cli`** carry a `.js` extension
   (`./units.js`), so the emitted ESM runs in Node unchanged.
+- **Control Panel.** `/admin` in the web app is for staff (`is_staff`), and each section needs
+  a permission code (`controlpanel/codes.py`: `users.view`, `audit.view`, ...), held through the
+  seeded groups Administrator, Catalog editor and Support; a superuser holds them all. A view
+  declares its code with `HasControlPanelPerm` and `control_panel_perm` (a code, or a dict from
+  method to code); the server enforces it, and `useCan` / `RequirePermission` only hide things.
+  Every admin mutation calls `controlpanel.audit.record`, which redacts secret-looking keys.
+  `controlpanel/guards.py` keeps the last active superuser and stops anyone from locking
+  themselves out, in the API and in the Django `UserAdmin`. The e2e API starts with an
+  administrator and a support user (`apps/api/tests/fixtures/staff.json`, password as
+  `PASSWORD` in `e2e/helpers.ts`); their password hash needs a full-length salt, or Django
+  rehashes it on login and ends the sessions of parallel logins.
 - **Django settings** are `config.settings.dev` (default for `manage.py`),
   `config.settings.test` (pytest) and `config.settings.prod` (default for WSGI/ASGI). All
   read environment variables; every variable is listed in `apps/api/.env.example`.

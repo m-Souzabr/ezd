@@ -8,6 +8,7 @@ from typing import Any
 import httpx2 as httpx
 import openai
 import pytest
+from django.contrib.auth.models import Group
 from django.test import override_settings
 from rest_framework.test import APIClient
 
@@ -49,6 +50,7 @@ MODELS = Models(router="router-model", default="default-model", escalation="top-
 @pytest.fixture
 def staff(db: None) -> APIClient:
     user = User.objects.create_user(email="admin@example.com", password="x", is_staff=True)
+    user.groups.add(Group.objects.get(name="Administrator"))
     api = APIClient()
     api.force_login(user)
     return api

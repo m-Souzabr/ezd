@@ -24,6 +24,11 @@ export type ChatUsage = Schemas['Usage'];
 export type LLMSettings = Schemas['LLMSettings'];
 export type Photo = Schemas['Photo'];
 export type PhotoDraft = Schemas['PhotoDraft'];
+export type AdminUser = Schemas['AdminUser'];
+export type AdminUserCreate = Schemas['AdminUserCreateRequest'];
+export type AdminUserUpdate = Schemas['PatchedAdminUserUpdateRequest'];
+export type AuditEntry = Schemas['AuditEntry'];
+export type Role = Schemas['Role'];
 export type LLMSettingsUpdate = Schemas['PatchedLLMSettingsUpdateRequest'];
 
 /** The server answered, but not with success. */
@@ -117,8 +122,11 @@ type Options = {
   allowUnauthorized?: boolean;
 };
 
-/** Sends JSON and reads JSON. Unsafe methods carry the CSRF token from the cookie. */
-export async function request<T>(method: string, path: string, options: Options = {}): Promise<T> {
+async function call(
+  method: string,
+  path: string,
+  options: Options,
+): Promise<{ response: Response; body: unknown }> {
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
   if (method !== 'GET') {
@@ -133,11 +141,35 @@ export async function request<T>(method: string, path: string, options: Options 
     headers,
     ...(options.body !== undefined && { body: JSON.stringify(options.body) }),
   });
-  if (response.status === 204) return undefined as T;
+  if (response.status === 204) return { response, body: undefined };
   const body: unknown = await response.json().catch(() => null);
-  if (response.ok) return body as T;
+  if (response.ok) return { response, body };
   if (response.status === 401 && !options.allowUnauthorized) onUnauthorized();
   throw new ApiError(response.status, body);
+}
+
+/** Sends JSON and reads JSON. Unsafe methods carry the CSRF token from the cookie. */
+export async function request<T>(method: string, path: string, options: Options = {}): Promise<T> {
+  return (await call(method, path, options)).body as T;
+}
+
+/** One page of a list, with the number of rows there are in all (`X-Total-Count`). */
+export type Page<T> = { rows: T[]; total: number };
+
+export async function requestPage<T>(path: string): Promise<Page<T>> {
+  const { response, body } = await call('GET', path, {});
+  const rows = body as T[];
+  return { rows, total: Number(response.headers.get('X-Total-Count') ?? rows.length) };
+}
+
+/** The query string for the given parameters, leaving out those that are empty. */
+export function queryString(params: Record<string, string | number | boolean | undefined>): string {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '') query.set(key, String(value));
+  }
+  const text = query.toString();
+  return text ? `?${text}` : '';
 }
 
 /**
@@ -180,6 +212,17 @@ export async function upload<T>(
     xhr.send(body);
   });
 }
+
+export type UserListParams = {
+  search?: string;
+  is_active?: boolean;
+  is_staff?: boolean;
+  role?: string;
+  sort?: string;
+  limit?: number;
+  offset?: number;
+};
+export type AuditListParams = { actor?: string; action?: string; limit?: number; offset?: number };
 
 const credentials = { allowUnauthorized: true };
 
@@ -275,6 +318,18 @@ export const api = {
     }),
   discardPhotoDraft: (id: string) =>
     request<PhotoDraft>('POST', `/api/photo-drafts/${id}/discard/`),
+
+  /** The Control Panel. Every route needs staff, and the permission named in its comment. */
+  listUsers: (params: UserListParams) =>
+    requestPage<AdminUser>(`/api/admin/users/${queryString(params)}`),
+  inviteUser: (body: AdminUserCreate) => request<AdminUser>('POST', '/api/admin/users/', { body }),
+  updateUser: (id: number, body: AdminUserUpdate) =>
+    request<AdminUser>('PATCH', `/api/admin/users/${id}/`, { body }),
+  resetUserPassword: (id: number) =>
+    request<void>('POST', `/api/admin/users/${id}/reset-password/`),
+  listRoles: () => request<Role[]>('GET', '/api/admin/roles/'),
+  listAudit: (params: AuditListParams) =>
+    requestPage<AuditEntry>(`/api/admin/audit/${queryString(params)}`),
 
   /** Staff only. The answer never holds the key, only its last four characters. */
   getLLMSettings: () => request<LLMSettings>('GET', '/api/llm/settings/'),

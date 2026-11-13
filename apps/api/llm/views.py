@@ -2,10 +2,13 @@ from typing import Any
 
 from django.conf import settings
 from drf_spectacular.utils import extend_schema
-from rest_framework.permissions import IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from controlpanel import audit
+from controlpanel.codes import LLM_EDIT
+from controlpanel.permissions import HasControlPanelPerm
 
 from . import config
 from .models import LLMSettings
@@ -32,10 +35,20 @@ def _payload() -> dict[str, Any]:
     }
 
 
+def _audit_view(row: LLMSettings) -> dict[str, Any]:
+    return {
+        "router_model": row.router_model,
+        "default_model": row.default_model,
+        "escalation_model": row.escalation_model,
+        "has_key": bool(row.encrypted_api_key),
+    }
+
+
 class LLMSettingsView(APIView):
     """The assistant's API key and models, for the whole site. Staff only."""
 
-    permission_classes = (IsAdminUser,)
+    permission_classes = (HasControlPanelPerm,)
+    control_panel_perm = LLM_EDIT
 
     @extend_schema(responses={200: LLMSettingsSerializer})
     def get(self, request: Request) -> Response:
@@ -48,6 +61,7 @@ class LLMSettingsView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         row = LLMSettings.load()
+        before = _audit_view(row)
         if "api_key" in data:
             key = data["api_key"]
             row.encrypted_api_key = encrypt(key) if key else ""
@@ -57,4 +71,13 @@ class LLMSettingsView(APIView):
                 setattr(row, field, data[field].strip())
         row.updated_by = request.user
         row.save()
+        # The key itself is never recorded, only that it was set or cleared.
+        audit.record(
+            request.user,
+            "llm.settings.update",
+            "llm_settings",
+            row.pk,
+            before=before,
+            after={**_audit_view(row), "key_changed": "api_key" in data},
+        )
         return Response(_payload())
