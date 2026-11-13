@@ -14,6 +14,9 @@ export type DesignVersionSummary = Schemas['DesignVersionSummary'];
 export type DraftSaved = Schemas['DraftSaved'];
 export type DraftConflict = Schemas['DraftConflict'];
 export type DocumentIssue = Schemas['DocumentIssue'];
+export type Quote = Schemas['Quote'];
+export type QuoteSummary = Schemas['QuoteSummary'];
+export type QuoteCreate = Schemas['QuoteCreateRequest'];
 
 /** The server answered, but not with success. */
 export class ApiError extends Error {
@@ -170,6 +173,14 @@ export const api = {
     request<DesignVersion>('GET', `/api/designs/${designId}/versions/${number}/`),
   restoreVersion: (designId: string, number: number) =>
     request<Design>('POST', `/api/designs/${designId}/versions/${number}/restore/`),
+
+  listQuotes: (designId: string) =>
+    request<QuoteSummary[]>('GET', `/api/designs/${designId}/quotes/`),
+  /** Snapshots the draft as a new version and stores the quote for it. */
+  createQuote: (designId: string, body: QuoteCreate) =>
+    request<Quote>('POST', `/api/designs/${designId}/quotes/`, { body }),
+  getQuote: (id: string) => request<Quote>('GET', `/api/quotes/${id}/`),
+  deleteQuote: (id: string) => request<void>('DELETE', `/api/quotes/${id}/`),
 };
 
 export type Api = typeof api;

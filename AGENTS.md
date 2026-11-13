@@ -118,6 +118,8 @@ Run from the root with a filter, or `cd` into the package and drop the filter.
   not part of `pnpm test`; CI runs them in the `e2e` job. They read the document through
   `window.__ezd` (`getDoc`, `getHistoryLength`, `getViewport`), which only development and
   test builds expose, and drive the canvas by mouse coordinates.
+- Run Prettier from the repository root (`pnpm format`): run from a package, it does not
+  read the root `.prettierignore` and rewrites the generated files.
 - OpenAPI: `pnpm run openapi` rewrites `apps/api/openapi.yaml` from the API and
   `apps/web/src/api/schema.d.ts` from that file. Run it and commit the result whenever an
   endpoint or a serializer changes; CI fails if the committed files are stale.
@@ -180,6 +182,12 @@ starts PostgreSQL only.
   floor polygon and boxes in world inches, with plan x as world x, plan y as world z and
   elevation as world y. `rotationY` is in degrees, counterclockwise seen from above, as
   Three.js turns a mesh. A box's `sourceId` is the wall, item or countertop to select.
+- **Bill of materials and pricing.** `computeBom(doc, catalog)` and `computeQuote(lines,
+settings)` (`bom/`) are the only pricing code; the browser runs them. Money is integer
+  cents and rates are integer basis points; every division goes through `divideHalfUp`, once
+  per step. A countertop quantity is hundredths of a square foot. The API's
+  `quotes/math.py` is a port used only to check stored quotes, and both are tested against
+  `packages/core/test-vectors/quote.json`: change the two together, and add a vector.
 - **Web store.** `createDesignStore(doc)` (`apps/web/src/store/`) holds one design: the
   document, its history and violations, and the UI state (selection, tool, view, viewport,
   drag ghost). Its `execute`, `undo` and `redo` are the only places that replace `doc`,
@@ -221,6 +229,13 @@ starts PostgreSQL only.
   `projects.documents.validate_document`: known `schemaVersion`, the JSON Schema from
   core, `id` equal to the design id, then `ezd-core validate-document`. Failures are a 422
   with `errors: [{ path, message }]` and nothing is stored.
+- **Quotes** are immutable. Creating one snapshots the draft as a new `DesignVersion`,
+  only if the draft is still at the `draft_revision` the browser priced (409 otherwise),
+  and the server rejects lines or totals that do not follow from each other (422). The PDF
+  is rendered in the browser from the stored quote alone (`apps/web/src/quotes/`), with an
+  embedded font and the quote's own dates, so the same quote gives the same bytes. Its
+  drawings are RGB PNGs with no alpha channel (`editor/png.ts`): a PDF embeds an alpha
+  channel asynchronously, which reorders the file. The server refuses any other PNG.
 - **Body size.** A request body over 2 MB is a 413. A view that needs more sets
   `max_body_bytes`, up to `DATA_UPLOAD_MAX_MEMORY_SIZE`, which is the most Django reads.
 - **Autosave on the server** is one `UPDATE ... WHERE id = ? AND draft_revision = ?` on

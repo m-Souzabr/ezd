@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "accounts",
     "projects",
+    "quotes",
 ]
 
 MIDDLEWARE = [

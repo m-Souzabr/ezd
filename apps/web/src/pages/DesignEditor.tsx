@@ -10,6 +10,7 @@ import { BUTTON } from '../editor/panels/fields';
 import { ConflictDialog, SaveStatus } from '../editor/panels/SaveStatus';
 import { VersionsDialog } from '../editor/panels/VersionsDialog';
 import { VersionPreview } from '../editor/VersionPreview';
+import { QuotesDialog } from '../quotes/QuotesDialog';
 import {
   type Autosave,
   type BackupStore,
@@ -251,6 +252,21 @@ function DesignEditor({ designId }: { designId: string }) {
         }}
         onPreview={(version) => void showPreview(version)}
         onRestore={(version) => restore(version.number)}
+      />
+      <QuotesDialog
+        designId={designId}
+        trigger={
+          <button type="button" className={BUTTON}>
+            Quotes
+          </button>
+        }
+        beforeQuote={async () => {
+          await autosave.flush();
+          if (autosave.hasUnsavedChanges()) {
+            throw new Error('The design has changes that could not be saved yet.');
+          }
+          return repository.revision();
+        }}
       />
       <nav aria-label="Design" className="ml-auto flex items-center gap-3 pb-1 text-sm">
         {design && (

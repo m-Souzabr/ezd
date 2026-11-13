@@ -5,6 +5,7 @@ import { ForgotPasswordPage, LoginPage, RegisterPage, ResetPasswordPage } from '
 import { DesignEditorPage } from './pages/DesignEditor';
 import { LocalEditor } from './pages/LocalEditor';
 import { ProjectDetailPage, ProjectsPage } from './pages/Projects';
+import { QuotePage } from './pages/QuotePage';
 import { AccountLinks } from './pages/ui';
 
 /**
@@ -42,6 +43,14 @@ export function App() {
           element={
             <RequireSession>
               <DesignEditorPage />
+            </RequireSession>
+          }
+        />
+        <Route
+          path="/quotes/:id"
+          element={
+            <RequireSession>
+              <QuotePage />
             </RequireSession>
           }
         />

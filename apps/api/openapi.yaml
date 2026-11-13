@@ -216,6 +216,70 @@ paths:
               schema:
                 $ref: '#/components/schemas/InvalidDocument'
           description: ''
+  /api/designs/{id}/quotes/:
+    get:
+      operationId: designs_quotes_list
+      description: The quotes of a design, newest first, without their lines and drawings.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - designs
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuoteSummary'
+          description: ''
+    post:
+      operationId: designs_quotes_create
+      description: Snapshots the draft as a new version of the design and stores the
+        quote for it.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - designs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaleDraft'
+          description: ''
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InconsistentQuote'
+          description: ''
   /api/designs/{id}/versions/:
     get:
       operationId: designs_versions_list
@@ -495,8 +559,54 @@ paths:
               schema:
                 $ref: '#/components/schemas/InvalidDocument'
           description: ''
+  /api/quotes/{id}/:
+    get:
+      operationId: quotes_retrieve
+      description: One quote with everything needed to render its PDF, or delete it.
+        Never changed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - quotes
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+          description: ''
+    delete:
+      operationId: quotes_destroy
+      description: One quote with everything needed to render its PDF, or delete it.
+        Never changed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - quotes
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
 components:
   schemas:
+    CurrencyEnum:
+      enum:
+      - USD
+      type: string
+      description: '* `USD` - USD'
     Design:
       type: object
       properties:
@@ -693,6 +803,64 @@ components:
       required:
       - draft_revision
       - updated_at
+    Drawings:
+      type: object
+      properties:
+        plan:
+          type: string
+        elevations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Elevation'
+      required:
+      - elevations
+      - plan
+    DrawingsRequest:
+      type: object
+      properties:
+        plan:
+          type: string
+          minLength: 1
+        elevations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElevationRequest'
+      required:
+      - elevations
+      - plan
+    Elevation:
+      type: object
+      properties:
+        wallId:
+          type: string
+          maxLength: 36
+        label:
+          type: string
+          maxLength: 20
+        image:
+          type: string
+      required:
+      - image
+      - label
+      - wallId
+    ElevationRequest:
+      type: object
+      properties:
+        wallId:
+          type: string
+          minLength: 1
+          maxLength: 36
+        label:
+          type: string
+          minLength: 1
+          maxLength: 20
+        image:
+          type: string
+          minLength: 1
+      required:
+      - image
+      - label
+      - wallId
     Health:
       type: object
       properties:
@@ -700,6 +868,21 @@ components:
           type: string
       required:
       - status
+    InconsistentQuote:
+      type: object
+      description: The body of a 422.
+      properties:
+        detail:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+      required:
+      - detail
+      - errors
     InvalidDocument:
       type: object
       description: The body of a 422.
@@ -713,6 +896,151 @@ components:
       required:
       - detail
       - errors
+    Line:
+      type: object
+      description: One `BomLine` of core, plus the finish by name so the PDF needs
+        no catalog.
+      properties:
+        key:
+          type: string
+          maxLength: 1000
+        catalogId:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 500
+        width:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+        depth:
+          type: integer
+          minimum: 1
+        finishId:
+          type: string
+          nullable: true
+          maxLength: 200
+        finishName:
+          type: string
+          maxLength: 200
+        options:
+          type: object
+          additionalProperties: {}
+        quantity:
+          type: integer
+          maximum: 10000000
+          minimum: 0
+        unit:
+          $ref: '#/components/schemas/UnitEnum'
+        unitPriceCents:
+          type: integer
+          maximum: 1000000000000
+          minimum: 0
+          format: int64
+        lineTotalCents:
+          type: integer
+          maximum: 1000000000000
+          minimum: 0
+          format: int64
+        itemIds:
+          type: array
+          items:
+            type: string
+            maxLength: 36
+          maxItems: 5000
+      required:
+      - catalogId
+      - depth
+      - description
+      - finishId
+      - finishName
+      - height
+      - itemIds
+      - key
+      - lineTotalCents
+      - options
+      - quantity
+      - unit
+      - unitPriceCents
+      - width
+    LineRequest:
+      type: object
+      description: One `BomLine` of core, plus the finish by name so the PDF needs
+        no catalog.
+      properties:
+        key:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        catalogId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+        width:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+        depth:
+          type: integer
+          minimum: 1
+        finishId:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 200
+        finishName:
+          type: string
+          maxLength: 200
+        options:
+          type: object
+          additionalProperties: {}
+        quantity:
+          type: integer
+          maximum: 10000000
+          minimum: 0
+        unit:
+          $ref: '#/components/schemas/UnitEnum'
+        unitPriceCents:
+          type: integer
+          maximum: 1000000000000
+          minimum: 0
+          format: int64
+        lineTotalCents:
+          type: integer
+          maximum: 1000000000000
+          minimum: 0
+          format: int64
+        itemIds:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 36
+          maxItems: 5000
+      required:
+      - catalogId
+      - depth
+      - description
+      - finishId
+      - finishName
+      - height
+      - itemIds
+      - key
+      - lineTotalCents
+      - options
+      - quantity
+      - unit
+      - unitPriceCents
+      - width
     LoginRequest:
       type: object
       properties:
@@ -805,6 +1133,162 @@ components:
           maxLength: 200
       required:
       - name
+    Quote:
+      type: object
+      description: Everything the PDF is rendered from.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        number:
+          type: integer
+          readOnly: true
+        project_name:
+          type: string
+          readOnly: true
+        design:
+          type: string
+          format: uuid
+          readOnly: true
+        design_name:
+          type: string
+          readOnly: true
+        design_version:
+          type: integer
+          readOnly: true
+        customer_name:
+          type: string
+          readOnly: true
+        customer_email:
+          type: string
+          format: email
+          readOnly: true
+        customer_address:
+          type: string
+          readOnly: true
+        notes:
+          type: string
+          readOnly: true
+        catalog_version:
+          type: string
+          readOnly: true
+        settings:
+          allOf:
+          - $ref: '#/components/schemas/Settings'
+          readOnly: true
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/Line'
+          readOnly: true
+        totals:
+          allOf:
+          - $ref: '#/components/schemas/Totals'
+          readOnly: true
+        drawings:
+          allOf:
+          - $ref: '#/components/schemas/Drawings'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - catalog_version
+      - created_at
+      - customer_address
+      - customer_email
+      - customer_name
+      - design
+      - design_name
+      - design_version
+      - drawings
+      - id
+      - lines
+      - notes
+      - number
+      - project_name
+      - settings
+      - totals
+    QuoteCreateRequest:
+      type: object
+      properties:
+        draft_revision:
+          type: integer
+          minimum: 1
+        customer_name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        customer_email:
+          oneOf:
+          - type: string
+            format: email
+            default: ''
+          - type: string
+            maxLength: 0
+        customer_address:
+          type: string
+          default: ''
+          maxLength: 1000
+        notes:
+          type: string
+          default: ''
+          maxLength: 5000
+        catalog_version:
+          type: string
+          minLength: 1
+          maxLength: 50
+        settings:
+          $ref: '#/components/schemas/SettingsRequest'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineRequest'
+        totals:
+          $ref: '#/components/schemas/TotalsRequest'
+        drawings:
+          $ref: '#/components/schemas/DrawingsRequest'
+      required:
+      - catalog_version
+      - customer_name
+      - draft_revision
+      - drawings
+      - lines
+      - settings
+      - totals
+    QuoteSummary:
+      type: object
+      description: A quote in a list, without its lines and drawings.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        number:
+          type: integer
+          readOnly: true
+        customer_name:
+          type: string
+          readOnly: true
+        total_cents:
+          type: integer
+          readOnly: true
+        design_version:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - customer_name
+      - design_version
+      - id
+      - number
+      - total_cents
     RegisterRequest:
       type: object
       properties:
@@ -825,6 +1309,125 @@ components:
       required:
       - email
       - password
+    Settings:
+      type: object
+      properties:
+        markupBps:
+          type: integer
+          maximum: 100000
+          minimum: 0
+        discountBps:
+          type: integer
+          maximum: 10000
+          minimum: 0
+        taxBps:
+          type: integer
+          maximum: 100000
+          minimum: 0
+        currency:
+          $ref: '#/components/schemas/CurrencyEnum'
+      required:
+      - currency
+      - discountBps
+      - markupBps
+      - taxBps
+    SettingsRequest:
+      type: object
+      properties:
+        markupBps:
+          type: integer
+          maximum: 100000
+          minimum: 0
+        discountBps:
+          type: integer
+          maximum: 10000
+          minimum: 0
+        taxBps:
+          type: integer
+          maximum: 100000
+          minimum: 0
+        currency:
+          $ref: '#/components/schemas/CurrencyEnum'
+      required:
+      - currency
+      - discountBps
+      - markupBps
+      - taxBps
+    StaleDraft:
+      type: object
+      description: The body of a 409.
+      properties:
+        detail:
+          type: string
+        draft_revision:
+          type: integer
+      required:
+      - detail
+      - draft_revision
+    Totals:
+      type: object
+      properties:
+        subtotalCents:
+          type: integer
+          minimum: 0
+        markupCents:
+          type: integer
+          minimum: 0
+        discountCents:
+          type: integer
+          minimum: 0
+        taxableCents:
+          type: integer
+          minimum: 0
+        taxCents:
+          type: integer
+          minimum: 0
+        totalCents:
+          type: integer
+          minimum: 0
+      required:
+      - discountCents
+      - markupCents
+      - subtotalCents
+      - taxCents
+      - taxableCents
+      - totalCents
+    TotalsRequest:
+      type: object
+      properties:
+        subtotalCents:
+          type: integer
+          minimum: 0
+        markupCents:
+          type: integer
+          minimum: 0
+        discountCents:
+          type: integer
+          minimum: 0
+        taxableCents:
+          type: integer
+          minimum: 0
+        taxCents:
+          type: integer
+          minimum: 0
+        totalCents:
+          type: integer
+          minimum: 0
+      required:
+      - discountCents
+      - markupCents
+      - subtotalCents
+      - taxCents
+      - taxableCents
+      - totalCents
+    UnitEnum:
+      enum:
+      - each
+      - sqft
+      type: string
+      description: |-
+        * `each` - each
+        * `sqft` - sqft
     User:
       type: object
       properties:

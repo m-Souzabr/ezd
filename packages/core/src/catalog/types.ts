@@ -51,7 +51,17 @@ export type Finish = {
   target: FinishTarget;
   /** `#rrggbb`. */
   color: string;
+  /**
+   * What the finish does to the price of an item, in basis points: 10000 leaves it as it
+   * is and 11500 adds 15 percent. Defaults to 10000.
+   */
+  multiplierBps?: number;
+  /** Countertop finishes only: the price of one square foot. */
+  pricePerSqftCents?: number;
 };
+
+/** The price multiplier of a finish that does not set one: no change. */
+export const DEFAULT_MULTIPLIER_BPS = 10000;
 
 export type Catalog = { version: string; entries: CatalogEntry[]; finishes: Finish[] };
 
