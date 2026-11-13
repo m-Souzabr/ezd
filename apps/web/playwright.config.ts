@@ -14,13 +14,19 @@ const CI = Boolean(process.env.CI);
 // which is built first.
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: false,
+  // Each test signs up its own account and makes its own data, so tests run side by side.
+  fullyParallel: true,
+  workers: CI ? 2 : 4,
+  // The account flows sign up, save and reload several times; give them room under load.
+  timeout: 60_000,
   forbidOnly: CI,
-  retries: CI ? 1 : 0,
+  // A test passes on its first run or not at all: fix a flaky test, never retry it.
+  retries: 0,
   reporter: CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
   },
   projects: [
     {
@@ -39,6 +45,9 @@ export default defineConfig({
         DJANGO_LOG_LEVEL: 'WARNING',
         LLM_VENDOR: 'fake',
         LLM_FAKE_SCRIPT: resolve('e2e/llm-script.json'),
+        // Every test signs in from 127.0.0.1, in parallel.
+        API_THROTTLE_LOGIN_IP: '1000/min',
+        API_THROTTLE_AUTH_IP: '1000/min',
       },
       reuseExistingServer: !CI,
       timeout: 120_000,

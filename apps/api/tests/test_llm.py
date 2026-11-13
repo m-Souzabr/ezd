@@ -42,7 +42,7 @@ from llm.openai_client import (
 )
 from llm.prompt import check_tool_calls, tools
 
-KEY = "sk-test-0123456789abcdefWXYZ"
+KEY = "sk-test-0123456789abcdefWXYZ"  # gitleaks:allow
 MODELS = Models(router="router-model", default="default-model", escalation="top-model")
 
 
@@ -70,10 +70,10 @@ def test_the_key_is_encrypted_and_decrypts_back(settings: Any) -> None:
 
 
 def test_an_explicit_encryption_key_must_be_32_bytes(settings: Any) -> None:
-    settings.LLM_SECRET_KEY = "c2hvcnQ="
+    settings.LLM_SECRET_KEY = "c2hvcnQ="  # gitleaks:allow
     with pytest.raises(ValueError):
         secrets.encrypt(KEY)
-    settings.LLM_SECRET_KEY = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+    settings.LLM_SECRET_KEY = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="  # gitleaks:allow
     assert secrets.decrypt(secrets.encrypt(KEY)) == KEY
 
 

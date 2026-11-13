@@ -101,9 +101,9 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": ["config.api.UserThrottle"],
     "DEFAULT_THROTTLE_RATES": {
         "user": env.str("API_THROTTLE_USER", default="600/min"),
-        "login_ip": "5/min",
-        "login_email": "5/min",
-        "auth_ip": "20/min",
+        "login_ip": env.str("API_THROTTLE_LOGIN_IP", default="5/min"),
+        "login_email": env.str("API_THROTTLE_LOGIN_EMAIL", default="5/min"),
+        "auth_ip": env.str("API_THROTTLE_AUTH_IP", default="20/min"),
     },
     # How many proxies sit in front of the API, to find the client address for throttling.
     "NUM_PROXIES": env.int("DJANGO_NUM_PROXIES", default=0),

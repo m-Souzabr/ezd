@@ -42,6 +42,25 @@ select = ["E", "F", "W", "I", "UP", "B", "DJ"]
 dev = [
     "pip-licenses>=5.5.5",
     "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
     "pytest-django>=4.14.0",
     "ruff>=0.17.4",
 ]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "tests/*",
+    "*/migrations/*",
+    ".venv/*",
+    "manage.py",
+    "config/asgi.py",
+    "config/wsgi.py",
+    "config/settings/dev.py",
+    "config/settings/prod.py",
+]
+
+[tool.coverage.report]
+fail_under = 90
+skip_covered = true
+show_missing = true

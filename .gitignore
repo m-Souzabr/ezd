@@ -9,6 +9,7 @@ pnpm-debug.log*
 dist/
 build/
 coverage/
+licenses-report/
 playwright-report/
 test-results/
 
