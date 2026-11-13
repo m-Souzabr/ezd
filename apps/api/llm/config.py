@@ -79,7 +79,13 @@ def _scripted(path: str) -> ScriptedFakeClient:
     return ScriptedFakeClient(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
-def get_client() -> LLMClient:
+def vision_model() -> str:
+    """The model that reads photos: `LLM_MODEL_VISION`, or the chat's default model."""
+    return settings.LLM_MODEL_VISION or models().default
+
+
+def get_client(timeout_seconds: float | None = None) -> LLMClient:
+    """The configured client. `timeout_seconds` defaults to `LLM_TIMEOUT_SECONDS`."""
     vendor = settings.LLM_VENDOR
     if vendor == "fake":
         return _scripted(settings.LLM_FAKE_SCRIPT) if settings.LLM_FAKE_SCRIPT else _fake
@@ -87,4 +93,6 @@ def get_client() -> LLMClient:
     if not key:
         raise LLMNotConfigured()
     client_class = import_string(settings.LLM_CLIENTS[vendor])
-    return client_class(api_key=key, timeout_seconds=settings.LLM_TIMEOUT_SECONDS)
+    return client_class(
+        api_key=key, timeout_seconds=timeout_seconds or settings.LLM_TIMEOUT_SECONDS
+    )

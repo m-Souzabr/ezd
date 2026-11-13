@@ -1,0 +1,10 @@
+{
+  "shape": "single-wall",
+  "walls": [
+    {
+      "lengthIn": 132,
+      "openings": ["window"],
+      "items": ["base", "base", "range", "sink"]
+    }
+  ]
+}

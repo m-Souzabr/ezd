@@ -66,6 +66,30 @@ class ProposeResponse:
     model: str = ""
 
 
+@dataclass(frozen=True)
+class PhotoRequest:
+    """One look at a photo by a vision model, answered as JSON matching `schema`."""
+
+    system: str
+    image: bytes
+    # The image's media type, for example "image/jpeg".
+    media_type: str
+    # The JSON Schema of the answer. The vendor is asked for strict structured output.
+    schema: dict[str, Any]
+    schema_name: str
+    model: str
+    max_output_tokens: int
+
+
+@dataclass(frozen=True)
+class PhotoResponse:
+    # The answer as the model wrote it: a JSON text, not yet parsed or checked.
+    text: str
+    stop_reason: str
+    usage: Usage = field(default_factory=Usage)
+    model: str = ""
+
+
 class LLMUnavailable(Exception):
     """The vendor could not answer: a timeout, a network error, a refused key, an outage.
 
@@ -75,3 +99,7 @@ class LLMUnavailable(Exception):
 
 class LLMClient(Protocol):
     def propose(self, request: ProposeRequest) -> ProposeResponse: ...
+
+    def analyze_photo(self, request: PhotoRequest) -> PhotoResponse:
+        """Describes a kitchen photo as a draft room. The caller checks the answer."""
+        ...

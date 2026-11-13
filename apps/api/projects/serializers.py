@@ -1,3 +1,6 @@
+import uuid
+
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import Design, DesignVersion, Project
@@ -24,6 +27,8 @@ class DesignSummarySerializer(serializers.ModelSerializer):
 
 class DesignSerializer(serializers.ModelSerializer):
     draft_document = serializers.DictField(read_only=True)
+    # The photo the design was made from, shown in the editor as a reference.
+    source_photo = serializers.SerializerMethodField()
 
     class Meta:
         model = Design
@@ -34,10 +39,16 @@ class DesignSerializer(serializers.ModelSerializer):
             "draft_document",
             "draft_revision",
             "schema_version",
+            "source_photo",
             "created_at",
             "updated_at",
         )
         read_only_fields = tuple(field for field in fields if field != "name")
+
+    @extend_schema_field(serializers.UUIDField(allow_null=True))
+    def get_source_photo(self, design: Design) -> uuid.UUID | None:
+        draft = design.photo_drafts.only("photo_id").first()
+        return draft.photo_id if draft else None
 
 
 class DesignCreateSerializer(serializers.Serializer):

@@ -7,7 +7,8 @@ import { api, ApiError } from '../api/client';
 import { BUTTON } from '../editor/panels/fields';
 import { clearLocalDesign, createLocalRepository } from '../lib/repository';
 import { errorMessage, formatDate } from './format';
-import { FormError, InlineCreate, LINK, Page, RenameButton } from './ui';
+import { PhotoSection } from '../photos/PhotoSection';
+import { ConfirmButton, FormError, InlineCreate, LINK, Page, RenameButton } from './ui';
 
 const PROJECTS = ['projects'] as const;
 const project = (id: string) => ['projects', id] as const;
@@ -133,45 +134,6 @@ export function ProjectsPage() {
   );
 }
 
-/** A button that asks once more before it does something that cannot be undone here. */
-function ConfirmButton({
-  label,
-  what,
-  onConfirm,
-}: {
-  label: string;
-  what: string;
-  onConfirm(): void;
-}) {
-  const [asking, setAsking] = useState(false);
-  if (!asking) {
-    return (
-      <button type="button" className={BUTTON} onClick={() => setAsking(true)}>
-        {label}
-        <span className="sr-only"> {what}</span>
-      </button>
-    );
-  }
-  return (
-    <span className="flex items-center gap-1 text-sm">
-      <button
-        type="button"
-        className={`${BUTTON} border-red-300 text-red-800`}
-        onClick={() => {
-          setAsking(false);
-          onConfirm();
-        }}
-      >
-        Confirm {label.toLowerCase()}
-        <span className="sr-only"> {what}</span>
-      </button>
-      <button type="button" className={BUTTON} onClick={() => setAsking(false)}>
-        Cancel
-      </button>
-    </span>
-  );
-}
-
 export function ProjectDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
@@ -255,6 +217,7 @@ export function ProjectDetailPage() {
           ))}
         </ul>
       )}
+      {detail.data && <PhotoSection projectId={id} />}
     </Page>
   );
 }

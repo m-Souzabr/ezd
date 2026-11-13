@@ -13,7 +13,8 @@ logger = logging.getLogger("ezd.request")
 
 # The only attributes of a log record that are written, besides the message and level.
 REQUEST_FIELDS = ("request_id", "method", "path", "status", "duration_ms", "user_id")
-# And those of a call to the language model (`chat.services`). Never a key or a prompt.
+# And those of a call to the language model (`chat.services`, `photos.analysis`). Never a
+# key, a prompt or an image.
 LLM_FIELDS = (
     "model",
     "category",

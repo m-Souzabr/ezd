@@ -1,0 +1,10 @@
+{
+  "shape": "single-wall",
+  "walls": [
+    {
+      "lengthIn": 168,
+      "openings": ["window"],
+      "items": ["base", "base", "fridge", "microwave", "range", "sink", "wall"]
+    }
+  ]
+}

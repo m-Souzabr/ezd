@@ -316,6 +316,109 @@ export interface paths {
         patch: operations["llm_settings_partial_update"];
         trace?: never;
     };
+    "/api/photo-drafts/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["photo_drafts_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Saves the user's corrections. Only a `ready` draft can change. */
+        patch: operations["photo_drafts_partial_update"];
+        trace?: never;
+    };
+    "/api/photo-drafts/{id}/confirm/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Creates the design and its version 1 from the confirmed draft. Once only. */
+        post: operations["photo_drafts_confirm_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/photo-drafts/{id}/discard/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Marks the draft discarded. A confirmed draft cannot be discarded. */
+        post: operations["photo_drafts_discard_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/photos/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read, or delete with its file and drafts. Designs made from it are kept. */
+        get: operations["photos_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Read, or delete with its file and drafts. Designs made from it are kept. */
+        delete: operations["photos_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/photos/{id}/analyze/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Runs the vision model on the photo and stores a new draft: `ready` or `failed`. */
+        post: operations["photos_analyze_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/photos/{id}/file/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The photo itself, as a JPEG. Only its owner can read it. */
+        get: operations["photos_file_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/": {
         parameters: {
             query?: never;
@@ -371,6 +474,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{id}/photos/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The photos of a project, newest first, with the state of their newest analysis. */
+        get: operations["projects_photos_list"];
+        put?: never;
+        /** @description Uploads a JPEG, PNG or WebP photo. It is stored re-encoded, with no metadata. */
+        post: operations["projects_photos_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/quotes/{id}/": {
         parameters: {
             query?: never;
@@ -420,6 +541,8 @@ export interface components {
             };
             readonly draft_revision: number;
             readonly schema_version: number;
+            /** Format: uuid */
+            readonly source_photo: string | null;
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
@@ -636,8 +759,71 @@ export interface components {
             default_model?: string;
             escalation_model?: string;
         };
+        PatchedPhotoDraftUpdateRequest: {
+            draft?: {
+                [key: string]: unknown;
+            };
+        };
         PatchedProjectRequest: {
             name?: string;
+        };
+        Photo: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly project: string;
+            readonly width: number;
+            readonly height: number;
+            readonly bytes: number;
+            readonly latest_draft: components["schemas"]["PhotoDraftSummary"] | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        PhotoDraft: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly photo: string;
+            readonly status: components["schemas"]["PhotoDraftStatusEnum"];
+            readonly draft: {
+                [key: string]: unknown;
+            } | null;
+            readonly error: string;
+            /** Format: uuid */
+            readonly design: string | null;
+            readonly model: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        PhotoDraftConfirmRequest: {
+            document: {
+                [key: string]: unknown;
+            };
+            name?: string;
+        };
+        /**
+         * @description * `analyzing` - Analyzing
+         *     * `ready` - Ready
+         *     * `failed` - Failed
+         *     * `confirmed` - Confirmed
+         *     * `discarded` - Discarded
+         * @enum {string}
+         */
+        PhotoDraftStatusEnum: "analyzing" | "ready" | "failed" | "confirmed" | "discarded";
+        PhotoDraftSummary: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly status: components["schemas"]["PhotoDraftStatusEnum"];
+            /** Format: uuid */
+            readonly design: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        PhotoUploadRequest: {
+            /** Format: binary */
+            file: string;
         };
         Project: {
             /** Format: uuid */
@@ -1379,6 +1565,189 @@ export interface operations {
             };
         };
     };
+    photo_drafts_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoDraft"];
+                };
+            };
+        };
+    };
+    photo_drafts_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPhotoDraftUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoDraft"];
+                };
+            };
+        };
+    };
+    photo_drafts_confirm_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhotoDraftConfirmRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Design"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvalidDocument"];
+                };
+            };
+        };
+    };
+    photo_drafts_discard_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoDraft"];
+                };
+            };
+        };
+    };
+    photos_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Photo"];
+                };
+            };
+        };
+    };
+    photos_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    photos_analyze_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoDraft"];
+                };
+            };
+        };
+    };
+    photos_file_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                };
+            };
+        };
+    };
     projects_list: {
         parameters: {
             query?: never;
@@ -1537,6 +1906,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvalidDocument"];
+                };
+            };
+        };
+    };
+    projects_photos_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Photo"][];
+                };
+            };
+        };
+    };
+    projects_photos_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["PhotoUploadRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Photo"];
                 };
             };
         };

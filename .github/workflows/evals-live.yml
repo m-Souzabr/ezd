@@ -17,6 +17,9 @@ on:
       escalation_model:
         description: Escalation model (empty for the default)
         required: false
+      vision_model:
+        description: Vision model for the photo set (empty for the default)
+        required: false
 
 permissions:
   contents: read
@@ -58,11 +61,27 @@ jobs:
       - name: Eval report
         if: ${{ !cancelled() }}
         run: cat ../../evals/reports/live/report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Photo eval suite (live)
+        if: ${{ !cancelled() }}
+        env:
+          VENDOR: ${{ inputs.vendor }}
+          VISION_MODEL: ${{ inputs.vision_model }}
+          ESCALATION_MODEL: ${{ inputs.escalation_model }}
+        run: |
+          args=(--client live --vendor "$VENDOR" --record --out ../../evals/reports/live-photos)
+          [ -n "$VISION_MODEL" ] && args+=(--model "$VISION_MODEL")
+          [ -n "$ESCALATION_MODEL" ] && args+=(--escalation-model "$ESCALATION_MODEL")
+          uv run python manage.py run_photo_evals "${args[@]}"
+      - name: Photo eval report
+        if: ${{ !cancelled() }}
+        run: cat ../../evals/reports/live-photos/report.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: eval-report
           path: |
             evals/reports/live/
+            evals/reports/live-photos/
             evals/recordings/
+            evals/photos/recordings/
           retention-days: 30

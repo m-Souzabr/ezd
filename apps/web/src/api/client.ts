@@ -22,6 +22,8 @@ export type ChatMessage = Schemas['Message'];
 export type ChatConversation = Schemas['Conversation'];
 export type ChatUsage = Schemas['Usage'];
 export type LLMSettings = Schemas['LLMSettings'];
+export type Photo = Schemas['Photo'];
+export type PhotoDraft = Schemas['PhotoDraft'];
 export type LLMSettingsUpdate = Schemas['PatchedLLMSettingsUpdateRequest'];
 
 /** The server answered, but not with success. */
@@ -126,6 +128,47 @@ export async function request<T>(method: string, path: string, options: Options 
   throw new ApiError(response.status, body);
 }
 
+/**
+ * Sends a file as multipart form data and reads JSON, reporting how much was sent. The one
+ * place besides `request` that talks to the API: `fetch` cannot report upload progress.
+ */
+export async function upload<T>(
+  path: string,
+  file: Blob,
+  onProgress: (fraction: number) => void = () => {},
+): Promise<T> {
+  if (csrfToken() === null) await send(ME, { headers: { Accept: 'application/json' } });
+  const body = new FormData();
+  body.append('file', file);
+  return new Promise<T>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', path);
+    xhr.withCredentials = true;
+    xhr.setRequestHeader('Accept', 'application/json');
+    const token = csrfToken();
+    if (token !== null) xhr.setRequestHeader('X-CSRFToken', token);
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress(event.loaded / event.total);
+    };
+    xhr.onerror = () => reject(new NetworkError());
+    xhr.onload = () => {
+      let parsed: unknown = null;
+      try {
+        parsed = JSON.parse(xhr.responseText) as unknown;
+      } catch {
+        // No JSON body.
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(parsed as T);
+        return;
+      }
+      if (xhr.status === 401) onUnauthorized();
+      reject(new ApiError(xhr.status, parsed));
+    };
+    xhr.send(body);
+  });
+}
+
 const credentials = { allowUnauthorized: true };
 
 export const api = {
@@ -199,6 +242,27 @@ export const api = {
       body: { status },
     }),
   getChatUsage: () => request<ChatUsage>('GET', '/api/chat/usage/'),
+
+  listPhotos: (projectId: string) => request<Photo[]>('GET', `/api/projects/${projectId}/photos/`),
+  /** Stored re-encoded, with no metadata. `onProgress` gets the fraction sent. */
+  uploadPhoto: (projectId: string, file: Blob, onProgress?: (fraction: number) => void) =>
+    upload<Photo>(`/api/projects/${projectId}/photos/`, file, onProgress),
+  getPhoto: (id: string) => request<Photo>('GET', `/api/photos/${id}/`),
+  deletePhoto: (id: string) => request<void>('DELETE', `/api/photos/${id}/`),
+  /** The image itself, for an `<img>`: the browser sends the session cookie. */
+  photoFileUrl: (id: string) => `/api/photos/${id}/file/`,
+  /** Runs the vision model. The draft comes back `ready` or `failed`. */
+  analyzePhoto: (id: string) => request<PhotoDraft>('POST', `/api/photos/${id}/analyze/`),
+  getPhotoDraft: (id: string) => request<PhotoDraft>('GET', `/api/photo-drafts/${id}/`),
+  updatePhotoDraft: (id: string, draft: object) =>
+    request<PhotoDraft>('PATCH', `/api/photo-drafts/${id}/`, { body: { draft } }),
+  /** Creates the design and its version 1 from the document built from the draft. */
+  confirmPhotoDraft: (id: string, document: object, name?: string) =>
+    request<Design>('POST', `/api/photo-drafts/${id}/confirm/`, {
+      body: { document, ...(name && { name }) },
+    }),
+  discardPhotoDraft: (id: string) =>
+    request<PhotoDraft>('POST', `/api/photo-drafts/${id}/discard/`),
 
   /** Staff only. The answer never holds the key, only its last four characters. */
   getLLMSettings: () => request<LLMSettings>('GET', '/api/llm/settings/'),

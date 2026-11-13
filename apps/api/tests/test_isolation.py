@@ -5,10 +5,12 @@ from django.urls import URLPattern, URLResolver, get_resolver, reverse
 from rest_framework.test import APIClient
 
 from chat.models import Conversation, Message
+from photos.models import Photo, PhotoDraft
 from projects.models import Design, DesignVersion, Project
 from quotes.models import Quote
 
 from .conftest import core_fixture
+from .test_photos import ROOM_DRAFT, jpeg, stored_photo
 from .test_quotes import payload
 
 QUOTE = payload()
@@ -77,11 +79,30 @@ def _chat_message(design: Design) -> Message:
     return message
 
 
+def _photo_draft(design: Design) -> PhotoDraft:
+    photo = Photo.objects.filter(project=design.project).first() or stored_photo(
+        design.project, jpeg()
+    )
+    draft, _ = PhotoDraft.objects.get_or_create(
+        photo=photo, defaults={"status": PhotoDraft.Status.READY, "draft": ROOM_DRAFT}
+    )
+    return draft
+
+
 def _object_routes(design: Design, version: DesignVersion) -> dict[str, str]:
     """Every route with an owned object in its path, for the first user's objects."""
     project, number = design.project, version.number
     message = _chat_message(design)
+    draft = _photo_draft(design)
+    photo = draft.photo
     return {
+        "project-photo-list": reverse("project-photo-list", args=[project.id]),
+        "photo-detail": reverse("photo-detail", args=[photo.id]),
+        "photo-file": reverse("photo-file", args=[photo.id]),
+        "photo-analyze": reverse("photo-analyze", args=[photo.id]),
+        "photo-draft-detail": reverse("photo-draft-detail", args=[draft.id]),
+        "photo-draft-confirm": reverse("photo-draft-confirm", args=[draft.id]),
+        "photo-draft-discard": reverse("photo-draft-discard", args=[draft.id]),
         "design-chat": reverse("design-chat", args=[design.id]),
         "chat-message-retry": reverse("chat-message-retry", args=[message.id]),
         "chat-message-resolve": reverse("chat-message-resolve", args=[message.id]),
@@ -109,6 +130,7 @@ def _bodies(design: Design) -> list[dict]:
             "errors": ["x"],
             "status": "rejected",
         },
+        {"draft": ROOM_DRAFT, "document": document},
     ]
 
 
@@ -120,6 +142,8 @@ def _everything() -> tuple[list, ...]:
         list(Quote.objects.values()),
         list(Conversation.objects.values()),
         list(Message.objects.values()),
+        list(Photo.objects.values()),
+        list(PhotoDraft.objects.values()),
     )
 
 

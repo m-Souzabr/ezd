@@ -7,7 +7,9 @@ import {
   catalogIndexForLLM,
   commandsJsonSchema,
   designDocumentJsonSchema,
+  draftRoomJsonSchema,
   llmToolsJsonSchema,
+  roomDraftJsonSchema,
   SEED_CATALOG,
 } from '../dist/index.js';
 
@@ -18,6 +20,8 @@ const files = {
   'design-document.schema.json': designDocumentJsonSchema(),
   'commands.schema.json': commandsJsonSchema(),
   'llm-tools.schema.json': llmToolsJsonSchema(),
+  'draft-room.schema.json': draftRoomJsonSchema(),
+  'room-draft.schema.json': roomDraftJsonSchema(),
 };
 for (const [name, schema] of Object.entries(files)) {
   writeFileSync(join(outDir, name), `${JSON.stringify(schema, null, 2)}\n`);

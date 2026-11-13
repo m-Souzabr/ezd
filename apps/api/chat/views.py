@@ -1,11 +1,8 @@
 import uuid
-from datetime import date
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import F
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import APIException
@@ -15,11 +12,10 @@ from rest_framework.views import APIView
 
 from llm import config
 from llm.client import LLMClient, LLMUnavailable
-from llm.client import Usage as TokenUsage
 from projects.models import Design
 from projects.views import OwnedQuerysetMixin
 
-from .models import Conversation, Message, Usage
+from .models import Conversation, Message
 from .serializers import (
     ChatRequestSerializer,
     ConversationSerializer,
@@ -30,11 +26,7 @@ from .serializers import (
     UsageSerializer,
 )
 from .services import MAX_RETRIES, AttemptInput, AttemptResult, Turn, run_attempt
-
-
-class QuotaExceeded(APIException):
-    status_code = status.HTTP_429_TOO_MANY_REQUESTS
-    default_code = "quota_exceeded"
+from .usage import check_quota, record_usage, usage_for
 
 
 class AssistantUnavailable(APIException):
@@ -54,33 +46,6 @@ class NotPending(APIException):
     status_code = status.HTTP_409_CONFLICT
     default_detail = "This message has no pending proposal."
     default_code = "not_pending"
-
-
-def _month() -> date:
-    return timezone.now().date().replace(day=1)
-
-
-def _usage(user: object) -> Usage:
-    usage, _ = Usage.objects.get_or_create(user=user, month=_month())
-    return usage
-
-
-def _check_quota(user: object) -> None:
-    usage = _usage(user)
-    quota = settings.LLM_MONTHLY_TOKEN_QUOTA
-    if usage.tokens >= quota:
-        raise QuotaExceeded(
-            f"You have used this month's assistant allowance of {quota:,} tokens. "
-            "It renews on the first of next month."
-        )
-
-
-def _record_usage(user: object, tokens: TokenUsage) -> None:
-    Usage.objects.filter(pk=_usage(user).pk).update(
-        input_tokens=F("input_tokens") + tokens.input_tokens,
-        output_tokens=F("output_tokens") + tokens.output_tokens,
-        requests=F("requests") + 1,
-    )
 
 
 def _assistant_summary(message: Message | None) -> str:
@@ -125,7 +90,7 @@ def _attempt(client: LLMClient, user: object, input: AttemptInput) -> AttemptRes
         result = run_attempt(client, config.models(), input)
     except LLMUnavailable as error:
         raise AssistantUnavailable(str(error)) from error
-    _record_usage(user, result.usage)
+    record_usage(user, result.usage)
     return result
 
 
@@ -192,7 +157,7 @@ class DesignChatView(OwnedQuerysetMixin, APIView):
         serializer = ChatRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        _check_quota(request.user)
+        check_quota(request.user)
         client = config.get_client()
 
         if data.get("conversation_id"):
@@ -248,7 +213,7 @@ class MessageRetryView(OwnedQuerysetMixin, APIView):
             previous.status = Message.Status.INVALID
             previous.errors = [*previous.errors, *data["errors"]]
             previous.save(update_fields=["status", "errors"])
-        _check_quota(request.user)
+        check_quota(request.user)
         client = config.get_client()
 
         parent = previous.parent
@@ -300,7 +265,7 @@ class UsageView(APIView):
     @extend_schema(responses={200: UsageSerializer})
     def get(self, request: Request) -> Response:
         """This month's assistant usage of the signed-in user, and the monthly allowance."""
-        usage = _usage(request.user)
+        usage = usage_for(request.user)
         quota = settings.LLM_MONTHLY_TOKEN_QUOTA
         return Response(
             {

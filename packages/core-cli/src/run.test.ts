@@ -294,3 +294,63 @@ describe('llm-dry-run', () => {
     expect(run(['llm-dry-run'], '{').stdout).toContain('Invalid JSON');
   });
 });
+
+describe('normalize-draft', () => {
+  const answer = {
+    shape: 'single-wall',
+    ceilingHeightIn: null,
+    walls: [{ label: 'back', lengthIn: 120, visible: true, confidence: 'high' }],
+    openings: [],
+    items: [{ wall: 'back', category: 'base', offsetIn: 0, widthIn: 31, confidence: 'high' }],
+    notes: '',
+  };
+
+  it('prints the normalized draft', () => {
+    const result = run(['normalize-draft'], JSON.stringify(answer));
+    expect(result.exitCode).toBe(0);
+    const output = JSON.parse(result.stdout) as {
+      ok: boolean;
+      draft: { walls: { label: string }[]; items: { width: { value: number } }[] };
+    };
+    expect(output.ok).toBe(true);
+    expect(output.draft.walls[0]!.label).toBe('A');
+    expect(output.draft.items[0]!.width.value).toBe(30 * 16);
+  });
+
+  it('rejects an answer that does not match the draft schema, and bad JSON', () => {
+    const result = run(['normalize-draft'], JSON.stringify({ ...answer, shape: 'circle' }));
+    expect(result.exitCode).toBe(1);
+    expect((JSON.parse(result.stdout) as { errors: { path: string }[] }).errors[0]!.path).toBe(
+      'shape',
+    );
+    expect(run(['normalize-draft'], '{').stdout).toContain('Invalid JSON');
+  });
+});
+
+describe('draft-problems', () => {
+  const draft = (estimated: boolean) => ({
+    shape: 'single-wall',
+    ceilingHeight: { value: 1536, estimated: true },
+    walls: [{ label: 'A', length: { value: 1920, estimated }, visible: true, confidence: 'high' }],
+    galleyWidth: { value: null, estimated: false },
+    openings: [],
+    items: [],
+    notes: '',
+  });
+
+  it('prints what stops the draft from being confirmed', () => {
+    const result = run(['draft-problems'], JSON.stringify(draft(true)));
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      ok: false,
+      problems: ['Confirm the length of wall A, or type it.'],
+    });
+    expect(run(['draft-problems'], JSON.stringify(draft(false))).exitCode).toBe(0);
+  });
+
+  it('rejects a draft that does not match the schema, and bad JSON', () => {
+    const result = run(['draft-problems'], JSON.stringify({ shape: 'circle' }));
+    expect((JSON.parse(result.stdout) as { errors: unknown[] }).errors.length).toBeGreaterThan(0);
+    expect(run(['draft-problems'], '{').stdout).toContain('Invalid JSON');
+  });
+});

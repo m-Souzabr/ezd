@@ -13,4 +13,5 @@ export * from './snapping/index.js';
 export * from './scene/index.js';
 export * from './bom/index.js';
 export * from './llm/index.js';
+export * from './photo/index.js';
 export * from './schema/index.js';

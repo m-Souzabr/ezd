@@ -1,0 +1,15 @@
+{
+  "shape": "l-shape",
+  "walls": [
+    {
+      "lengthIn": 132,
+      "openings": ["window"],
+      "items": ["base", "base", "dishwasher", "sink"]
+    },
+    {
+      "lengthIn": 120,
+      "openings": ["door"],
+      "items": ["base", "base", "hood", "range"]
+    }
+  ]
+}

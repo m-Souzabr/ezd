@@ -251,3 +251,42 @@ export function RenameButton({
     </form>
   );
 }
+
+/** A button that asks once more before it does something that cannot be undone here. */
+export function ConfirmButton({
+  label,
+  what,
+  onConfirm,
+}: {
+  label: string;
+  what: string;
+  onConfirm(): void;
+}) {
+  const [asking, setAsking] = useState(false);
+  if (!asking) {
+    return (
+      <button type="button" className={BUTTON} onClick={() => setAsking(true)}>
+        {label}
+        <span className="sr-only"> {what}</span>
+      </button>
+    );
+  }
+  return (
+    <span className="flex items-center gap-1 text-sm">
+      <button
+        type="button"
+        className={`${BUTTON} border-red-300 text-red-800`}
+        onClick={() => {
+          setAsking(false);
+          onConfirm();
+        }}
+      >
+        Confirm {label.toLowerCase()}
+        <span className="sr-only"> {what}</span>
+      </button>
+      <button type="button" className={BUTTON} onClick={() => setAsking(false)}>
+        Cancel
+      </button>
+    </span>
+  );
+}

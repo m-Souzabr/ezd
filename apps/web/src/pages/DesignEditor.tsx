@@ -11,6 +11,7 @@ import { BUTTON } from '../editor/panels/fields';
 import { ConflictDialog, SaveStatus } from '../editor/panels/SaveStatus';
 import { VersionsDialog } from '../editor/panels/VersionsDialog';
 import { VersionPreview } from '../editor/VersionPreview';
+import { PhotoReference } from '../photos/PhotoReference';
 import { QuotesDialog } from '../quotes/QuotesDialog';
 import {
   type Autosave,
@@ -269,6 +270,7 @@ function DesignEditor({ designId }: { designId: string }) {
           return repository.revision();
         }}
       />
+      {design?.source_photo && <PhotoReference photoId={design.source_photo} />}
       <nav aria-label="Design" className="ml-auto flex items-center gap-3 pb-1 text-sm">
         {design && (
           <Link to={`/projects/${design.project}`} className={LINK}>
