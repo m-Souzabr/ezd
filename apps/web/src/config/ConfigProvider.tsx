@@ -17,8 +17,8 @@ import { applyViewportConfig } from '../editor/viewport';
 import { ConfigContext, QuoteDefaultsContext, RulesContext } from './useConfig';
 
 const STORAGE_KEY = 'ezd.config.v1';
-const RULES_KEY = 'ezd.rules.v1';
-const QUOTE_DEFAULTS_KEY = 'ezd.quote-defaults.v1';
+const RULES_STORE = 'ezd.rules.v1';
+const QUOTE_STORE = 'ezd.quote-defaults.v1';
 /** How long a first visit waits for the server before it opens with the defaults. */
 const FIRST_LOAD_WAIT_MS = 2000;
 
@@ -72,10 +72,10 @@ function apply(config: AppConfig): AppConfig {
 export function ConfigProvider({ children }: { children: ReactNode }) {
   const [cached] = useState(readCached);
   const [rules, setRules] = useState<RulesConfig>(
-    () => readSection(RULES_KEY, parseRulesConfig) ?? DEFAULT_RULES_CONFIG,
+    () => readSection(RULES_STORE, parseRulesConfig) ?? DEFAULT_RULES_CONFIG,
   );
   const [quoteDefaults, setQuoteDefaults] = useState<QuoteDefaults>(
-    () => readSection(QUOTE_DEFAULTS_KEY, parseQuoteDefaults) ?? DEFAULT_QUOTE_DEFAULTS,
+    () => readSection(QUOTE_STORE, parseQuoteDefaults) ?? DEFAULT_QUOTE_DEFAULTS,
   );
   const [config, setConfig] = useState<AppConfig>(() => apply(cached ?? DEFAULT_APP_CONFIG));
   // A first visit holds the screen briefly, so what the server hides is never flashed.
@@ -101,7 +101,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
               ? current
               : nextRules.value.config,
           );
-          writeCached(nextRules.value.config, RULES_KEY);
+          writeCached(nextRules.value.config, RULES_STORE);
         }
         const nextQuote = parseQuoteDefaults(published.quote_defaults);
         if (nextQuote.ok) {
@@ -110,7 +110,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
               ? current
               : nextQuote.value.config,
           );
-          writeCached(nextQuote.value.config, QUOTE_DEFAULTS_KEY);
+          writeCached(nextQuote.value.config, QUOTE_STORE);
         }
         setSettled(true);
       },
