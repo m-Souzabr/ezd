@@ -36,6 +36,8 @@ class Project(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     # Set when the user deletes the project. The row and its designs are kept.
     archived_at = models.DateTimeField(null=True, blank=True)
+    # The number of the newest quote of the project. A deleted quote's number is not reused.
+    last_quote_number = models.PositiveIntegerField(default=0)
 
     objects = ProjectQuerySet.as_manager()
 
@@ -94,3 +96,20 @@ class DesignVersion(models.Model):
 
     def __str__(self) -> str:
         return f"{self.design} v{self.number}"
+
+
+def snapshot_draft(design: Design, user: "User", label: str = "") -> DesignVersion:
+    """Stores the draft as the next version of the design.
+
+    `design` must have been read with `select_for_update` in the current transaction: the
+    lock makes concurrent snapshots take turns, so the numbers have no gaps or duplicates.
+    """
+    last = design.versions.aggregate(last=models.Max("number"))["last"] or 0
+    return DesignVersion.objects.create(
+        design=design,
+        number=last + 1,
+        label=label,
+        document=design.draft_document,
+        schema_version=design.schema_version,
+        created_by=user,
+    )

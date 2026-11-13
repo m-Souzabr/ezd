@@ -1,0 +1,123 @@
+{
+  "//": "Quote arithmetic, worked by hand. Read by packages/core/src/bom/quote.test.ts and by apps/api/tests/test_quote_math.py, so the TypeScript and the Python implementation cannot drift. Money is integer cents; rates are basis points; a quantity in sqft is in hundredths of a square foot.",
+  "cases": [
+    {
+      "name": "markup, discount and tax in that order",
+      "lines": [
+        { "quantity": 2, "unit": "each", "unitPriceCents": 30000, "lineTotalCents": 60000 },
+        { "quantity": 1, "unit": "each", "unitPriceCents": 21000, "lineTotalCents": 21000 }
+      ],
+      "settings": { "markupBps": 2000, "discountBps": 500, "taxBps": 825, "currency": "USD" },
+      "totals": {
+        "subtotalCents": 81000,
+        "markupCents": 16200,
+        "discountCents": 4860,
+        "taxableCents": 92340,
+        "taxCents": 7618,
+        "totalCents": 99958
+      }
+    },
+    {
+      "name": "zero rates leave the subtotal",
+      "lines": [
+        { "quantity": 1, "unit": "each", "unitPriceCents": 12345, "lineTotalCents": 12345 }
+      ],
+      "settings": { "markupBps": 0, "discountBps": 0, "taxBps": 0, "currency": "USD" },
+      "totals": {
+        "subtotalCents": 12345,
+        "markupCents": 0,
+        "discountCents": 0,
+        "taxableCents": 12345,
+        "taxCents": 0,
+        "totalCents": 12345
+      }
+    },
+    {
+      "name": "a 100 percent discount takes the markup too and leaves nothing to tax",
+      "lines": [
+        { "quantity": 5, "unit": "each", "unitPriceCents": 10000, "lineTotalCents": 50000 }
+      ],
+      "settings": { "markupBps": 1000, "discountBps": 10000, "taxBps": 700, "currency": "USD" },
+      "totals": {
+        "subtotalCents": 50000,
+        "markupCents": 5000,
+        "discountCents": 55000,
+        "taxableCents": 0,
+        "taxCents": 0,
+        "totalCents": 0
+      }
+    },
+    {
+      "name": "half a cent rounds up at each step",
+      "lines": [{ "quantity": 1, "unit": "each", "unitPriceCents": 5, "lineTotalCents": 5 }],
+      "settings": { "markupBps": 1000, "discountBps": 0, "taxBps": 2500, "currency": "USD" },
+      "totals": {
+        "subtotalCents": 5,
+        "markupCents": 1,
+        "discountCents": 0,
+        "taxableCents": 6,
+        "taxCents": 2,
+        "totalCents": 8
+      }
+    },
+    {
+      "name": "just under half a cent rounds down",
+      "lines": [{ "quantity": 3, "unit": "each", "unitPriceCents": 1, "lineTotalCents": 3 }],
+      "settings": { "markupBps": 1000, "discountBps": 5000, "taxBps": 4999, "currency": "USD" },
+      "totals": {
+        "subtotalCents": 3,
+        "markupCents": 0,
+        "discountCents": 2,
+        "taxableCents": 1,
+        "taxCents": 0,
+        "totalCents": 1
+      }
+    },
+    {
+      "name": "square feet in hundredths, each line rounded half up",
+      "lines": [
+        { "quantity": 2550, "unit": "sqft", "unitPriceCents": 6500, "lineTotalCents": 165750 },
+        { "quantity": 333, "unit": "sqft", "unitPriceCents": 4999, "lineTotalCents": 16647 },
+        { "quantity": 1, "unit": "sqft", "unitPriceCents": 50, "lineTotalCents": 1 },
+        { "quantity": 1, "unit": "sqft", "unitPriceCents": 49, "lineTotalCents": 0 }
+      ],
+      "settings": { "markupBps": 1500, "discountBps": 250, "taxBps": 600, "currency": "USD" },
+      "totals": {
+        "subtotalCents": 182398,
+        "markupCents": 27360,
+        "discountCents": 5244,
+        "taxableCents": 204514,
+        "taxCents": 12271,
+        "totalCents": 216785
+      }
+    },
+    {
+      "name": "no lines",
+      "lines": [],
+      "settings": { "markupBps": 2000, "discountBps": 500, "taxBps": 825, "currency": "USD" },
+      "totals": {
+        "subtotalCents": 0,
+        "markupCents": 0,
+        "discountCents": 0,
+        "taxableCents": 0,
+        "taxCents": 0,
+        "totalCents": 0
+      }
+    },
+    {
+      "name": "large amounts and rates of one basis point",
+      "lines": [
+        { "quantity": 1, "unit": "each", "unitPriceCents": 99999999, "lineTotalCents": 99999999 }
+      ],
+      "settings": { "markupBps": 3333, "discountBps": 1, "taxBps": 1, "currency": "USD" },
+      "totals": {
+        "subtotalCents": 99999999,
+        "markupCents": 33330000,
+        "discountCents": 13333,
+        "taxableCents": 133316666,
+        "taxCents": 13332,
+        "totalCents": 133329998
+      }
+    }
+  ]
+}

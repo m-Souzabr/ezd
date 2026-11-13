@@ -142,6 +142,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/designs/{id}/quotes/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The quotes of a design, newest first, without their lines and drawings. */
+        get: operations["designs_quotes_list"];
+        put?: never;
+        /** @description Snapshots the draft as a new version of the design and stores the quote for it. */
+        post: operations["designs_quotes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/designs/{id}/versions/": {
         parameters: {
             query?: never;
@@ -266,10 +284,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/quotes/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One quote with everything needed to render its PDF, or delete it. Never changed. */
+        get: operations["quotes_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description One quote with everything needed to render its PDF, or delete it. Never changed. */
+        delete: operations["quotes_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description * `USD` - USD
+         * @enum {string}
+         */
+        CurrencyEnum: "USD";
         Design: {
             /** Format: uuid */
             readonly id: string;
@@ -352,13 +393,80 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        Drawings: {
+            plan: string;
+            elevations: components["schemas"]["Elevation"][];
+        };
+        DrawingsRequest: {
+            plan: string;
+            elevations: components["schemas"]["ElevationRequest"][];
+        };
+        Elevation: {
+            wallId: string;
+            label: string;
+            image: string;
+        };
+        ElevationRequest: {
+            wallId: string;
+            label: string;
+            image: string;
+        };
         Health: {
             status: string;
+        };
+        /** @description The body of a 422. */
+        InconsistentQuote: {
+            detail: string;
+            errors: {
+                [key: string]: string;
+            }[];
         };
         /** @description The body of a 422. */
         InvalidDocument: {
             detail: string;
             errors: components["schemas"]["DocumentIssue"][];
+        };
+        /** @description One `BomLine` of core, plus the finish by name so the PDF needs no catalog. */
+        Line: {
+            key: string;
+            catalogId: string;
+            description: string;
+            width: number;
+            height: number;
+            depth: number;
+            finishId: string | null;
+            finishName: string;
+            options: {
+                [key: string]: unknown;
+            };
+            quantity: number;
+            unit: components["schemas"]["UnitEnum"];
+            /** Format: int64 */
+            unitPriceCents: number;
+            /** Format: int64 */
+            lineTotalCents: number;
+            itemIds: string[];
+        };
+        /** @description One `BomLine` of core, plus the finish by name so the PDF needs no catalog. */
+        LineRequest: {
+            key: string;
+            catalogId: string;
+            description: string;
+            width: number;
+            height: number;
+            depth: number;
+            finishId: string | null;
+            finishName: string;
+            options: {
+                [key: string]: unknown;
+            };
+            quantity: number;
+            unit: components["schemas"]["UnitEnum"];
+            /** Format: int64 */
+            unitPriceCents: number;
+            /** Format: int64 */
+            lineTotalCents: number;
+            itemIds: string[];
         };
         LoginRequest: {
             /** Format: email */
@@ -392,6 +500,54 @@ export interface components {
         ProjectRequest: {
             name: string;
         };
+        /** @description Everything the PDF is rendered from. */
+        Quote: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly number: number;
+            readonly project_name: string;
+            /** Format: uuid */
+            readonly design: string;
+            readonly design_name: string;
+            readonly design_version: number;
+            readonly customer_name: string;
+            /** Format: email */
+            readonly customer_email: string;
+            readonly customer_address: string;
+            readonly notes: string;
+            readonly catalog_version: string;
+            readonly settings: components["schemas"]["Settings"];
+            readonly lines: components["schemas"]["Line"][];
+            readonly totals: components["schemas"]["Totals"];
+            readonly drawings: components["schemas"]["Drawings"];
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        QuoteCreateRequest: {
+            draft_revision: number;
+            customer_name: string;
+            customer_email?: string;
+            /** @default  */
+            customer_address: string;
+            /** @default  */
+            notes: string;
+            catalog_version: string;
+            settings: components["schemas"]["SettingsRequest"];
+            lines: components["schemas"]["LineRequest"][];
+            totals: components["schemas"]["TotalsRequest"];
+            drawings: components["schemas"]["DrawingsRequest"];
+        };
+        /** @description A quote in a list, without its lines and drawings. */
+        QuoteSummary: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly number: number;
+            readonly customer_name: string;
+            readonly total_cents: number;
+            readonly design_version: number;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
         RegisterRequest: {
             /** Format: email */
             email: string;
@@ -399,6 +555,45 @@ export interface components {
             /** @default  */
             name: string;
         };
+        Settings: {
+            markupBps: number;
+            discountBps: number;
+            taxBps: number;
+            currency: components["schemas"]["CurrencyEnum"];
+        };
+        SettingsRequest: {
+            markupBps: number;
+            discountBps: number;
+            taxBps: number;
+            currency: components["schemas"]["CurrencyEnum"];
+        };
+        /** @description The body of a 409. */
+        StaleDraft: {
+            detail: string;
+            draft_revision: number;
+        };
+        Totals: {
+            subtotalCents: number;
+            markupCents: number;
+            discountCents: number;
+            taxableCents: number;
+            taxCents: number;
+            totalCents: number;
+        };
+        TotalsRequest: {
+            subtotalCents: number;
+            markupCents: number;
+            discountCents: number;
+            taxableCents: number;
+            taxCents: number;
+            totalCents: number;
+        };
+        /**
+         * @description * `each` - each
+         *     * `sqft` - sqft
+         * @enum {string}
+         */
+        UnitEnum: "each" | "sqft";
         User: {
             readonly id: number;
             /**
@@ -647,6 +842,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvalidDocument"];
+                };
+            };
+        };
+    };
+    designs_quotes_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuoteSummary"][];
+                };
+            };
+        };
+    };
+    designs_quotes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quote"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleDraft"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InconsistentQuote"];
                 };
             };
         };
@@ -919,6 +1176,47 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["InvalidDocument"];
                 };
+            };
+        };
+    };
+    quotes_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quote"];
+                };
+            };
+        };
+    };
+    quotes_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

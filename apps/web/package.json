@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@ezd/core": "workspace:*",
+    "@react-pdf/renderer": "catalog:",
     "@tanstack/react-query": "catalog:",
     "immer": "catalog:",
     "konva": "catalog:",
@@ -24,6 +25,7 @@
     "react-dom": "catalog:",
     "react-konva": "catalog:",
     "react-router": "catalog:",
+    "roboto-fontface": "catalog:",
     "zustand": "catalog:"
   },
   "devDependencies": {
