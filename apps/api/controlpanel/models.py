@@ -37,3 +37,48 @@ class AuditEntry(models.Model):
 
     def __str__(self) -> str:
         return f"{self.action} {self.object_type} {self.object_id}"
+
+
+class ConfigVersion(models.Model):
+    """One version of the app configuration the Control Panel edits.
+
+    At most one row is the draft and at most one is published. Publishing turns the draft
+    into the new published row, with the next `number`, and marks the previous published
+    row `superseded`; a published row is never changed again.
+    """
+
+    class Status(models.TextChoices):
+        DRAFT = "draft"
+        PUBLISHED = "published"
+        SUPERSEDED = "superseded"
+
+    # Null while a draft: the number is given when it is published.
+    number = models.PositiveIntegerField(null=True, blank=True, unique=True)
+    status = models.CharField(max_length=10, choices=Status.choices)
+    app_config = models.JSONField(default=dict)
+    # Counts the saves of a draft, so a stale save can be refused.
+    revision = models.PositiveIntegerField(default=1)
+    note = models.CharField(max_length=200, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-id",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["status"],
+                condition=models.Q(status="draft"),
+                name="one_config_draft",
+            ),
+            models.UniqueConstraint(
+                fields=["status"],
+                condition=models.Q(status="published"),
+                name="one_config_published",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"Config {self.number or 'draft'} ({self.status})"

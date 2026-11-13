@@ -31,6 +31,15 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testIgnore: /config\.spec/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      // The app configuration is global: publishing it changes every other test's editor, so
+      // these run alone, after the rest, and put it back as they found it.
+      name: 'config',
+      testMatch: /config\.spec/,
+      dependencies: ['chromium'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
   ],

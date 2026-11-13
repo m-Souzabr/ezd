@@ -2,6 +2,7 @@ import { type DesignDocument, proposeCountertops, wallLabel } from '@ezd/core';
 import { Dialog, Toolbar as RadixToolbar } from 'radix-ui';
 import { type ChangeEvent, useRef, useState } from 'react';
 
+import { useConfig } from '../../config/useConfig';
 import { downloadDocument, type ReadError, readDocument } from '../../lib/repository';
 import { useDesign, useDesignStore } from '../../store/context';
 import type { Tool } from '../../store/designStore';
@@ -33,6 +34,8 @@ export function Toolbar({
   onToggleMaterials(): void;
 }) {
   const store = useDesignStore();
+  const { toolbar, panels, features } = useConfig();
+  const { buttons } = toolbar;
   const doc = useDesign((state) => state.doc);
   const tool = useDesign((state) => state.tool);
   const openingKind = useDesign((state) => state.openingKind);
@@ -83,11 +86,13 @@ export function Toolbar({
             if (value) store.getState().setTool(value as Tool);
           }}
         >
-          {TOOLS.map(({ tool: value, name, hint }) => (
-            <RadixToolbar.ToggleItem key={value} value={value} title={hint} className={BUTTON}>
-              {name}
-            </RadixToolbar.ToggleItem>
-          ))}
+          {TOOLS.filter(({ tool: value }) => toolbar.tools[value]).map(
+            ({ tool: value, name, hint }) => (
+              <RadixToolbar.ToggleItem key={value} value={value} title={hint} className={BUTTON}>
+                {name}
+              </RadixToolbar.ToggleItem>
+            ),
+          )}
         </RadixToolbar.ToggleGroup>
 
         {tool === 'opening' && (
@@ -109,80 +114,102 @@ export function Toolbar({
           </RadixToolbar.ToggleGroup>
         )}
 
-        <RoomTemplateDialog
-          trigger={<RadixToolbar.Button className={BUTTON}>Room template</RadixToolbar.Button>}
-        />
+        {features.roomTemplates && (
+          <RoomTemplateDialog
+            trigger={<RadixToolbar.Button className={BUTTON}>Room template</RadixToolbar.Button>}
+          />
+        )}
 
-        <RadixToolbar.Separator className={separator} />
-        <RadixToolbar.Button
-          className={BUTTON}
-          disabled={!undoable}
-          onClick={() => store.getState().undo()}
-        >
-          Undo
-        </RadixToolbar.Button>
-        <RadixToolbar.Button
-          className={BUTTON}
-          disabled={!redoable}
-          onClick={() => store.getState().redo()}
-        >
-          Redo
-        </RadixToolbar.Button>
-
-        <RadixToolbar.Separator className={separator} />
-        <RadixToolbar.ToggleGroup
-          type="single"
-          aria-label="View"
-          className="flex gap-1"
-          value={view.kind === 'plan' ? PLAN : view.wallId}
-          onValueChange={(value) => {
-            if (!value) return;
-            store
-              .getState()
-              .setView(value === PLAN ? { kind: 'plan' } : { kind: 'elevation', wallId: value });
-          }}
-        >
-          <RadixToolbar.ToggleItem value={PLAN} className={BUTTON}>
-            Plan
-          </RadixToolbar.ToggleItem>
-          {doc.room.walls.map((wall) => (
-            <RadixToolbar.ToggleItem
-              key={wall.id}
-              value={wall.id}
+        {buttons.undoRedo && (
+          <>
+            <RadixToolbar.Separator className={separator} />
+            <RadixToolbar.Button
               className={BUTTON}
-              aria-label={`Elevation ${wallLabel(doc, wall.id)}`}
-              title={`Elevation of wall ${wallLabel(doc, wall.id)}`}
+              disabled={!undoable}
+              onClick={() => store.getState().undo()}
             >
-              {wallLabel(doc, wall.id)}
-            </RadixToolbar.ToggleItem>
-          ))}
-        </RadixToolbar.ToggleGroup>
-        <RadixToolbar.Button className={BUTTON} onClick={fit} title="Frame the whole view">
-          Fit
-        </RadixToolbar.Button>
+              Undo
+            </RadixToolbar.Button>
+            <RadixToolbar.Button
+              className={BUTTON}
+              disabled={!redoable}
+              onClick={() => store.getState().redo()}
+            >
+              Redo
+            </RadixToolbar.Button>
+          </>
+        )}
 
         <RadixToolbar.Separator className={separator} />
-        <RadixToolbar.Button className={BUTTON} onClick={generateCountertops}>
-          Generate countertops
-        </RadixToolbar.Button>
-        <RadixToolbar.Button
-          className={BUTTON}
-          aria-pressed={materialsOpen}
-          data-state={materialsOpen ? 'on' : 'off'}
-          onClick={onToggleMaterials}
-        >
-          Materials
-        </RadixToolbar.Button>
-        <RadixToolbar.Button
-          className={BUTTON}
-          onClick={() => downloadDocument(store.getState().doc)}
-        >
-          Export JSON
-        </RadixToolbar.Button>
-        <RadixToolbar.Button className={BUTTON} onClick={() => fileInput.current?.click()}>
-          Import JSON
-        </RadixToolbar.Button>
-        <HelpDialog trigger={<RadixToolbar.Button className={BUTTON}>Help</RadixToolbar.Button>} />
+        {buttons.views && (
+          <RadixToolbar.ToggleGroup
+            type="single"
+            aria-label="View"
+            className="flex gap-1"
+            value={view.kind === 'plan' ? PLAN : view.wallId}
+            onValueChange={(value) => {
+              if (!value) return;
+              store
+                .getState()
+                .setView(value === PLAN ? { kind: 'plan' } : { kind: 'elevation', wallId: value });
+            }}
+          >
+            <RadixToolbar.ToggleItem value={PLAN} className={BUTTON}>
+              Plan
+            </RadixToolbar.ToggleItem>
+            {doc.room.walls.map((wall) => (
+              <RadixToolbar.ToggleItem
+                key={wall.id}
+                value={wall.id}
+                className={BUTTON}
+                aria-label={`Elevation ${wallLabel(doc, wall.id)}`}
+                title={`Elevation of wall ${wallLabel(doc, wall.id)}`}
+              >
+                {wallLabel(doc, wall.id)}
+              </RadixToolbar.ToggleItem>
+            ))}
+          </RadixToolbar.ToggleGroup>
+        )}
+        {buttons.fit && (
+          <RadixToolbar.Button className={BUTTON} onClick={fit} title="Frame the whole view">
+            Fit
+          </RadixToolbar.Button>
+        )}
+
+        <RadixToolbar.Separator className={separator} />
+        {buttons.countertops && (
+          <RadixToolbar.Button className={BUTTON} onClick={generateCountertops}>
+            Generate countertops
+          </RadixToolbar.Button>
+        )}
+        {panels.materials.visible && (
+          <RadixToolbar.Button
+            className={BUTTON}
+            aria-pressed={materialsOpen}
+            data-state={materialsOpen ? 'on' : 'off'}
+            onClick={onToggleMaterials}
+          >
+            Materials
+          </RadixToolbar.Button>
+        )}
+        {features.jsonImportExport && (
+          <>
+            <RadixToolbar.Button
+              className={BUTTON}
+              onClick={() => downloadDocument(store.getState().doc)}
+            >
+              Export JSON
+            </RadixToolbar.Button>
+            <RadixToolbar.Button className={BUTTON} onClick={() => fileInput.current?.click()}>
+              Import JSON
+            </RadixToolbar.Button>
+          </>
+        )}
+        {buttons.help && (
+          <HelpDialog
+            trigger={<RadixToolbar.Button className={BUTTON}>Help</RadixToolbar.Button>}
+          />
+        )}
       </RadixToolbar.Root>
 
       <input

@@ -1,8 +1,27 @@
-import type { ItemKind, Pt, Severity } from '@ezd/core';
+import type { AppConfig, ItemKind, Pt, Severity } from '@ezd/core';
 
-// Colours for the plan and the elevation.
+// Colours for the plan and the elevation. The opaque ones are the app config's `theme`
+// section, set by `applyTheme` before an editor opens; the translucent ones stay here.
 
-export const COLORS = {
+type ColorName =
+  | keyof AppConfig['theme']['plan']
+  | 'countertop'
+  | 'ghost'
+  | 'ghostError'
+  | 'backsplash'
+  | 'proposalAdded'
+  | 'proposalAddedLine'
+  | 'proposalRemoved'
+  | 'proposalRemovedLine';
+
+/** `#rrggbbaa` as `rgba()`, which every canvas colour parser reads. */
+export const cssColor = (color: string): string => {
+  if (color.length !== 9) return color;
+  const [r, g, b, a] = [1, 3, 5, 7].map((i) => parseInt(color.slice(i, i + 2), 16));
+  return `rgba(${r}, ${g}, ${b}, ${Number(((a ?? 255) / 255).toFixed(2))})`;
+};
+
+export const COLORS: Record<string, string> & Record<ColorName, string> = {
   gridMinor: '#eef2f6',
   gridMajor: '#dbe2ea',
   floor: '#faf8f4',
@@ -26,7 +45,7 @@ export const COLORS = {
   error: '#dc2626',
   warning: '#d97706',
   backsplash: 'rgba(14, 165, 233, 0.08)',
-} as const;
+};
 
 export const ITEM_FILL: Record<ItemKind, string> = {
   base: '#dbeafe',
@@ -37,6 +56,13 @@ export const ITEM_FILL: Record<ItemKind, string> = {
   filler: '#f1f5f9',
   panel: '#f1f5f9',
 };
+
+export function applyTheme(theme: AppConfig['theme']): void {
+  Object.assign(COLORS, theme.plan);
+  for (const kind of Object.keys(ITEM_FILL) as ItemKind[]) {
+    ITEM_FILL[kind] = cssColor(theme.itemFill[kind]);
+  }
+}
 
 /** The outline colour for an item with violations: red for errors, amber for warnings. */
 export const severityColor = (severity: Severity | undefined): string | undefined =>

@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 import {
+  appConfigJsonSchema,
   catalogIndexForLLM,
   commandsJsonSchema,
   designDocumentJsonSchema,
@@ -22,6 +23,7 @@ const files = {
   'llm-tools.schema.json': llmToolsJsonSchema(),
   'draft-room.schema.json': draftRoomJsonSchema(),
   'room-draft.schema.json': roomDraftJsonSchema(),
+  'app-config.schema.json': appConfigJsonSchema(),
 };
 for (const [name, schema] of Object.entries(files)) {
   writeFileSync(join(outDir, name), `${JSON.stringify(schema, null, 2)}\n`);

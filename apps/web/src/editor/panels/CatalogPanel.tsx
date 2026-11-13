@@ -1,28 +1,12 @@
-import {
-  allowedWidths,
-  type CatalogEntry,
-  formatLength,
-  type ItemKind,
-  type Len,
-  parseLength,
-} from '@ezd/core';
+import { allowedWidths, type CatalogEntry, formatLength, type Len, parseLength } from '@ezd/core';
 import { useId, useState } from 'react';
 
+import { useConfig } from '../../config/useConfig';
 import { useDesign, useDesignStore } from '../../store/context';
 import { freeSpot, newItem } from '../edits';
 import { newId } from '../ids';
 import { itemCode } from '../labels';
 import { BUTTON, PanelSection } from './fields';
-
-const GROUPS: { kind: ItemKind; title: string }[] = [
-  { kind: 'base', title: 'Base cabinets' },
-  { kind: 'wall', title: 'Wall cabinets' },
-  { kind: 'tall', title: 'Tall cabinets' },
-  { kind: 'corner', title: 'Corner cabinets' },
-  { kind: 'appliance', title: 'Appliances' },
-  { kind: 'filler', title: 'Fillers' },
-  { kind: 'panel', title: 'Panels' },
-];
 
 /** The seed names say how a corner cabinet is measured, in brackets. Leave that out. */
 const shortName = (entry: CatalogEntry): string => entry.name.replace(/\s*\(.*\)$/, '');
@@ -139,6 +123,7 @@ function CatalogRow({ entry }: { entry: CatalogEntry }) {
 /** The catalog, grouped by kind and filtered by the search box. Entries drag onto the canvas. */
 export function CatalogPanel() {
   const catalog = useDesign((state) => state.catalog);
+  const { order, groups: groupConfig } = useConfig().panels.catalog;
   const [query, setQuery] = useState('');
   const searchId = useId();
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
@@ -146,10 +131,14 @@ export function CatalogPanel() {
     const text = `${entry.name} ${entry.id} ${entry.kind}`.toLowerCase();
     return words.every((word) => text.includes(word));
   };
-  const groups = GROUPS.map((group) => ({
-    ...group,
-    entries: catalog.entries.filter((entry) => entry.kind === group.kind && matches(entry)),
-  })).filter((group) => group.entries.length > 0);
+  const groups = order
+    .filter((kind) => groupConfig[kind].visible)
+    .map((kind) => ({ kind, title: groupConfig[kind].title }))
+    .map((group) => ({
+      ...group,
+      entries: catalog.entries.filter((entry) => entry.kind === group.kind && matches(entry)),
+    }))
+    .filter((group) => group.entries.length > 0);
 
   return (
     <PanelSection title="Catalog">

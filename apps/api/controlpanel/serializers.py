@@ -104,3 +104,40 @@ class AuditEntrySerializer(serializers.ModelSerializer):
             "created_at",
         )
         read_only_fields = fields
+
+
+class AppConfigSerializer(serializers.Serializer):
+    """The published configuration, as the web app reads it."""
+
+    version = serializers.IntegerField(allow_null=True)
+    config = serializers.JSONField()
+
+
+class ConfigDraftSerializer(serializers.Serializer):
+    # 0 while no draft has been saved: the config is then the published one.
+    revision = serializers.IntegerField()
+    app_config = serializers.JSONField()
+    based_on = serializers.IntegerField(allow_null=True)
+    updated_at = serializers.DateTimeField(allow_null=True)
+
+
+class ConfigDraftUpdateSerializer(serializers.Serializer):
+    revision = serializers.IntegerField(min_value=0)
+    app_config = serializers.JSONField()
+
+
+class ConfigPublishSerializer(serializers.Serializer):
+    revision = serializers.IntegerField(min_value=1)
+    note = serializers.CharField(max_length=200, allow_blank=True, required=False, default="")
+
+
+class ConfigRollbackSerializer(serializers.Serializer):
+    note = serializers.CharField(max_length=200, allow_blank=True, required=False, default="")
+
+
+class ConfigVersionSerializer(serializers.Serializer):
+    number = serializers.IntegerField()
+    status = serializers.ChoiceField(choices=("published", "superseded"))
+    note = serializers.CharField()
+    created_by = serializers.CharField()
+    created_at = serializers.DateTimeField()
