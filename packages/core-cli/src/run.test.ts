@@ -1,6 +1,14 @@
 import { readFileSync } from 'node:fs';
 
-import { type Command, createEmptyDocument, inches, VERSION } from '@ezd/core';
+import {
+  type Catalog,
+  type Command,
+  createEmptyDocument,
+  getEntry,
+  inches,
+  SEED_CATALOG,
+  VERSION,
+} from '@ezd/core';
 import { describe, expect, it } from 'vitest';
 
 import { readsStdin, run, type ValidateOutput } from './run.js';
@@ -352,5 +360,141 @@ describe('draft-problems', () => {
     const result = run(['draft-problems'], JSON.stringify({ shape: 'circle' }));
     expect((JSON.parse(result.stdout) as { errors: unknown[] }).errors.length).toBeGreaterThan(0);
     expect(run(['draft-problems'], '{').stdout).toContain('Invalid JSON');
+  });
+});
+
+describe('the catalog', () => {
+  const doc = () => JSON.parse(fixture('valid')) as object;
+  type Json = Record<string, unknown>;
+
+  /** The seed with `base.standard` copied as `base.custom`, which only comes in 24 in. */
+  const custom = (): Catalog => {
+    const catalog = JSON.parse(JSON.stringify(SEED_CATALOG)) as Catalog;
+    const base = getEntry(catalog, 'base.standard')!;
+    catalog.entries.push({
+      ...base,
+      id: 'base.custom',
+      name: 'Custom base',
+      width: { values: [inches(24)] },
+      defaultSize: { ...base.defaultSize, width: inches(24) },
+    });
+    catalog.version = 'custom-1';
+    return catalog;
+  };
+  const addCustom: Command = {
+    type: 'item.add',
+    item: {
+      id: 'item-custom-01',
+      catalogId: 'base.custom',
+      kind: 'base',
+      width: inches(24),
+      height: inches(34.5),
+      depth: inches(24),
+      elevation: 0,
+      placement: { type: 'free', x: inches(10), y: inches(60), rotation: 0 },
+      options: {},
+    },
+  };
+  const out = (stdout: string): Json => JSON.parse(stdout) as Json;
+
+  it('is the seed until one is given, and validate takes it on stdin or as a file', () => {
+    const seed = out(
+      run(['validate'], JSON.stringify({ document: doc(), commands: [addCustom] })).stdout,
+    );
+    expect(seed.ok).toBe(false);
+    expect((seed.commandError as { message: string }).message).toContain('base.custom');
+
+    const stdin = run(
+      ['validate'],
+      JSON.stringify({ document: doc(), commands: [addCustom], catalog: custom() }),
+    );
+    expect(stdin.exitCode).toBe(0);
+
+    const file = run(['validate'], JSON.stringify({ document: doc(), commands: [addCustom] }), {
+      catalogFile: JSON.stringify(custom()),
+    });
+    expect(file.exitCode).toBe(0);
+
+    const none = run(['validate'], JSON.stringify({ document: doc(), catalog: custom() }));
+    expect(none.exitCode).toBe(0);
+  });
+
+  it('refuses a catalog that is not valid, naming where it came from', () => {
+    const broken = custom();
+    broken.entries[0]!.price.baseCents = -1;
+    const stdin = out(
+      run(['validate'], JSON.stringify({ document: doc(), catalog: broken })).stdout,
+    );
+    expect(stdin.ok).toBe(false);
+    expect((stdin.errors as { path: string }[])[0]!.path).toBe('catalog.entries.0.price.baseCents');
+
+    const file = out(
+      run(['llm-summary'], JSON.stringify({ document: doc() }), {
+        catalogFile: JSON.stringify(broken),
+      }).stdout,
+    );
+    expect((file.errors as { path: string }[])[0]!.path).toBe(
+      '--catalog.entries.0.price.baseCents',
+    );
+
+    const text = out(
+      run(['llm-summary'], JSON.stringify({ document: doc() }), { catalogFile: '{' }).stdout,
+    );
+    expect((text.errors as { message: string }[])[0]!.message).toContain('Invalid JSON');
+
+    const shape = out(run(['validate'], JSON.stringify({ document: doc(), catalog: 5 })).stdout);
+    expect((shape.errors as { path: string }[])[0]!.path).toBe('catalog');
+  });
+
+  it('is used by llm-summary and llm-dry-run', () => {
+    const summary = run(['llm-summary'], JSON.stringify({ document: doc(), catalog: custom() }));
+    expect(summary.exitCode).toBe(0);
+
+    const call = {
+      name: 'add_item',
+      arguments: { catalogId: 'base.custom', widthIn: 24, free: { xIn: 10, yIn: 60, rotation: 0 } },
+    };
+    const input = { document: doc(), toolCalls: [call], aliases: {} };
+    const seed = out(run(['llm-dry-run'], JSON.stringify(input)).stdout);
+    expect(seed.ok).toBe(false);
+    const withCatalog = out(
+      run(['llm-dry-run'], JSON.stringify({ ...input, catalog: custom() })).stdout,
+    );
+    expect(withCatalog.ok).toBe(true);
+
+    const refused = out(
+      run(['llm-dry-run'], JSON.stringify({ ...input, catalog: { version: 1 } })).stdout,
+    );
+    expect(refused.ok).toBe(false);
+    expect((refused.errors as { message: string }[])[0]!.message).toContain('catalog');
+  });
+
+  it('is used by normalize-draft, which takes the draft bare or as { draft, catalog }', () => {
+    const draft = {
+      shape: 'single-wall',
+      ceilingHeightIn: null,
+      walls: [{ label: 'back', lengthIn: 120, visible: true, confidence: 'high' }],
+      openings: [],
+      items: [{ wall: 'back', category: 'base', offsetIn: 0, widthIn: 31, confidence: 'high' }],
+      notes: '',
+    };
+    const width = (stdout: string) =>
+      (out(stdout).draft as { items: { width: { value: number } }[] }).items[0]!.width.value;
+    const catalog = custom();
+    getEntry(catalog, 'base.standard')!.width = { values: [inches(24)] };
+    getEntry(catalog, 'base.standard')!.defaultSize.width = inches(24);
+
+    expect(width(run(['normalize-draft'], JSON.stringify(draft)).stdout)).toBe(inches(30));
+    expect(width(run(['normalize-draft'], JSON.stringify({ draft, catalog })).stdout)).toBe(
+      inches(24),
+    );
+    expect(
+      width(
+        run(['normalize-draft'], JSON.stringify(draft), { catalogFile: JSON.stringify(catalog) })
+          .stdout,
+      ),
+    ).toBe(inches(24));
+    const bad = run(['normalize-draft'], JSON.stringify({ draft, catalog: {} }));
+    expect(bad.exitCode).toBe(1);
   });
 });
