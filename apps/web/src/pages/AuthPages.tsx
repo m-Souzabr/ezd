@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type FormEvent, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 
+import { useConfig } from '../config/useConfig';
 import { api, type User } from '../api/client';
 import { nextPath, SESSION_KEY, useSession } from '../auth/session';
 import { fieldErrors } from './format';
@@ -27,6 +28,7 @@ function useAlreadySignedIn(): string | null {
 }
 
 export function LoginPage() {
+  const registrationOpen = useConfig().features.registrationOpen;
   const enter = useEnter();
   const { search } = useLocation();
   const signedIn = useAlreadySignedIn();
@@ -64,9 +66,13 @@ export function LoginPage() {
         </button>
       </form>
       <p className="mt-4 flex justify-between text-sm">
-        <Link to={`/register${search}`} className={LINK}>
-          Create an account
-        </Link>
+        {registrationOpen ? (
+          <Link to={`/register${search}`} className={LINK}>
+            Create an account
+          </Link>
+        ) : (
+          <span />
+        )}
         <Link to="/forgot-password" className={LINK}>
           Forgot password?
         </Link>
@@ -82,9 +88,22 @@ export function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const registrationOpen = useConfig().features.registrationOpen;
   const register = useMutation({ mutationFn: api.register, onSuccess: enter });
 
   if (signedIn && !register.isSuccess) return <Navigate to={signedIn} replace />;
+  if (!registrationOpen) {
+    return (
+      <Page title="Create an account" narrow>
+        <p className="rounded-lg bg-white p-5 text-sm text-slate-700 shadow-sm">
+          Registration is closed.{' '}
+          <Link to="/login" className={LINK}>
+            Sign in
+          </Link>
+        </p>
+      </Page>
+    );
+  }
   const submit = (event: FormEvent) => {
     event.preventDefault();
     register.mutate({ name, email, password });

@@ -40,6 +40,108 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedAuditEntryList'
           description: ''
+  /api/admin/config/draft/:
+    get:
+      operationId: admin_config_draft_retrieve
+      description: The configuration being edited. Without a saved draft it is the
+        published one.
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigDraft'
+          description: ''
+    put:
+      operationId: admin_config_draft_update
+      description: Saves the draft if `revision` is the one the editor loaded, else
+        409.
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigDraftUpdateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigDraft'
+          description: ''
+  /api/admin/config/publish/:
+    post:
+      operationId: admin_config_publish_create
+      description: Makes the draft the new published version, which is never changed
+        again.
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigPublishRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigVersion'
+          description: ''
+  /api/admin/config/versions/:
+    get:
+      operationId: admin_config_versions_list
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConfigVersion'
+          description: ''
+  /api/admin/config/versions/{number}/rollback/:
+    post:
+      operationId: admin_config_versions_rollback_create
+      description: Publishes a copy of an old version as a new one. The old rows stay
+        as they were.
+      parameters:
+      - in: path
+        name: number
+        schema:
+          type: integer
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigRollbackRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigVersion'
+          description: ''
   /api/admin/roles/:
     get:
       operationId: admin_roles_list
@@ -280,7 +382,7 @@ paths:
   /api/auth/register/:
     post:
       operationId: auth_register_create
-      description: Creates an account and signs it in.
+      description: Creates an account and signs it in, unless registration is closed.
       tags:
       - auth
       requestBody:
@@ -372,6 +474,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Usage'
+          description: ''
+  /api/config/:
+    get:
+      operationId: config_retrieve
+      description: 'The published configuration. Anyone may read it: the editor at
+        `/` needs no session.'
+      tags:
+      - config
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppConfig'
           description: ''
   /api/designs/{id}/:
     get:
@@ -1349,6 +1467,17 @@ components:
             maxLength: 150
       required:
       - email
+    AppConfig:
+      type: object
+      description: The published configuration, as the web app reads it.
+      properties:
+        version:
+          type: integer
+          nullable: true
+        config: {}
+      required:
+      - config
+      - version
     AuditEntry:
       type: object
       properties:
@@ -1407,6 +1536,81 @@ components:
       required:
       - message
       - summary
+    ConfigDraft:
+      type: object
+      properties:
+        revision:
+          type: integer
+        app_config: {}
+        based_on:
+          type: integer
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - app_config
+      - based_on
+      - revision
+      - updated_at
+    ConfigDraftUpdateRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 0
+        app_config: {}
+      required:
+      - app_config
+      - revision
+    ConfigPublishRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+        note:
+          type: string
+          default: ''
+          maxLength: 200
+      required:
+      - revision
+    ConfigRollbackRequest:
+      type: object
+      properties:
+        note:
+          type: string
+          default: ''
+          maxLength: 200
+    ConfigVersion:
+      type: object
+      properties:
+        number:
+          type: integer
+        status:
+          $ref: '#/components/schemas/ConfigVersionStatusEnum'
+        note:
+          type: string
+        created_by:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - created_by
+      - note
+      - number
+      - status
+    ConfigVersionStatusEnum:
+      enum:
+      - published
+      - superseded
+      type: string
+      description: |-
+        * `published` - published
+        * `superseded` - superseded
     Conversation:
       type: object
       properties:

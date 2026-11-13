@@ -5,8 +5,7 @@ import {
   boundsOf,
   fitBounds,
   gridStep,
-  MAX_SCALE,
-  MIN_SCALE,
+  viewportSettings,
   panBy,
   pixels,
   toDrawing,
@@ -16,6 +15,8 @@ import {
   zoomAt,
 } from './viewport';
 
+const MIN_SCALE = viewportSettings.minScale;
+const MAX_SCALE = viewportSettings.maxScale;
 const ZOOMS = [MIN_SCALE, 1, 2.5, 4, 7.3, 16, MAX_SCALE];
 
 describe('coordinate conversion', () => {

@@ -1,6 +1,7 @@
 import { type DesignDocument, itemLabel, wallLabel } from '@ezd/core';
 import { type ReactNode, useEffect, useState } from 'react';
 
+import { useConfig } from '../config/useConfig';
 import { handleGlobalKey, isTyping } from '../lib/shortcuts';
 import { useDesign, useDesignStore } from '../store/context';
 import type { DesignStore } from '../store/designStore';
@@ -55,18 +56,23 @@ export function Editor({
   const notice = useDesign((state) => state.notice);
   const previewDoc = useDesign((state) => state.proposal?.doc);
   const selected = useDesign(announcement);
+  const { panels, features, toolbar } = useConfig();
   const [materialsOpen, setMaterialsOpen] = useState(false);
+  // Only a properties window that starts collapsed can be opened and closed.
+  const [propertiesOpen, setPropertiesOpen] = useState(!panels.properties.defaultCollapsed);
+  const showAssistant = features.assistant && assistant;
+  const showRight = panels.properties.visible || panels.validation.visible;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       // A text field keeps its own editing keys, and a dialog its own Escape.
       if (event.key !== 'Escape' && isTyping(event.target)) return;
       if (document.querySelector('[role="dialog"]')) return;
-      if (handleGlobalKey(event, store)) event.preventDefault();
+      if (handleGlobalKey(event, store, toolbar.buttons)) event.preventDefault();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [store]);
+  }, [store, toolbar.buttons]);
 
   return (
     <div className="flex h-screen flex-col bg-slate-100 text-slate-900">
@@ -80,9 +86,11 @@ export function Editor({
         onToggleMaterials={() => setMaterialsOpen((open) => !open)}
       />
       <div className="flex min-h-0 flex-1">
-        <aside className="flex w-64 shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white">
-          <CatalogPanel />
-        </aside>
+        {panels.catalog.visible && (
+          <aside className="flex w-64 shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white">
+            <CatalogPanel />
+          </aside>
+        )}
         <main className="relative flex min-w-0 flex-1 flex-col">
           <div className="relative min-h-0 flex-1">
             {view.kind === 'plan' ? (
@@ -91,7 +99,7 @@ export function Editor({
               <ElevationCanvas wallId={view.wallId} previewDoc={previewDoc} />
             )}
           </div>
-          {materialsOpen && (
+          {materialsOpen && panels.materials.visible && (
             <div className="flex max-h-[40%] min-h-0 flex-col border-t border-slate-200 bg-white">
               <BomPanel />
             </div>
@@ -117,15 +125,45 @@ export function Editor({
             </div>
           )}
         </main>
-        <aside className="flex w-72 shrink-0 flex-col border-l border-slate-200 bg-white">
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <PropertiesPanel />
-          </div>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-slate-200">
-            <ValidationPanel />
-          </div>
-        </aside>
-        {assistant && (
+        {showRight && (
+          <aside className="flex w-72 shrink-0 flex-col border-l border-slate-200 bg-white">
+            {panels.properties.visible &&
+              (panels.properties.defaultCollapsed && !propertiesOpen ? (
+                <button
+                  type="button"
+                  aria-expanded={false}
+                  className={`${BUTTON} m-2 justify-between`}
+                  onClick={() => setPropertiesOpen(true)}
+                >
+                  Show properties
+                </button>
+              ) : (
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                  {panels.properties.defaultCollapsed && (
+                    <button
+                      type="button"
+                      aria-expanded
+                      className={`${BUTTON} m-2 justify-between`}
+                      onClick={() => setPropertiesOpen(false)}
+                    >
+                      Hide properties
+                    </button>
+                  )}
+                  <PropertiesPanel />
+                </div>
+              ))}
+            {panels.validation.visible && (
+              <div
+                className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
+                  panels.properties.visible ? 'border-t border-slate-200' : ''
+                }`}
+              >
+                <ValidationPanel />
+              </div>
+            )}
+          </aside>
+        )}
+        {showAssistant && (
           <aside className="flex w-80 shrink-0 flex-col border-l border-slate-200 bg-white">
             {assistant}
           </aside>

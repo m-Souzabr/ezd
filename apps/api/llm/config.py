@@ -61,6 +61,11 @@ def api_key() -> tuple[str, KeySource]:
     return "", "none"
 
 
+def is_configured() -> bool:
+    """Whether a model call can be made: a key is set, or the vendor is the test fake."""
+    return bool(api_key()[0]) or settings.LLM_VENDOR == "fake"
+
+
 # The one fake every request shares when `LLM_VENDOR` is "fake". Tests script it.
 _fake = FakeClient()
 

@@ -88,6 +88,11 @@ def matrix(target: User) -> list[tuple[str, str, dict | None, str]]:
         ("patch", f"/api/admin/users/{target.pk}/", {"name": "X"}, "users.manage"),
         ("post", f"/api/admin/users/{target.pk}/reset-password/", None, "users.manage"),
         ("get", "/api/llm/settings/", None, "llm.settings.edit"),
+        ("get", "/api/admin/config/draft/", None, "config.app.edit"),
+        ("put", "/api/admin/config/draft/", {"revision": 0, "app_config": {}}, "config.app.edit"),
+        ("post", "/api/admin/config/publish/", {"revision": 1}, "config.app.edit"),
+        ("get", "/api/admin/config/versions/", None, "config.app.edit"),
+        ("post", "/api/admin/config/versions/1/rollback/", {}, "config.app.edit"),
     ]
 
 

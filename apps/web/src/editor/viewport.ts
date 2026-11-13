@@ -1,4 +1,4 @@
-import { IN, type Len, type Pt, STEP } from '@ezd/core';
+import { type AppConfig, IN, type Len, type Pt, STEP } from '@ezd/core';
 
 /**
  * How a drawing is placed on the screen. `scale` is pixels per inch; the offsets are the
@@ -12,17 +12,29 @@ export type Viewport = { scale: number; offsetX: number; offsetY: number };
 export type Size = { width: number; height: number };
 export type Bounds = { minX: number; minY: number; maxX: number; maxY: number };
 
-export const MIN_SCALE = 0.5;
-export const MAX_SCALE = 40;
+/**
+ * The limits and defaults of the view. They are the app config's `viewport` section, set by
+ * `applyViewportConfig` before an editor opens; these values are the config's own defaults.
+ */
+export const viewportSettings = { minScale: 0.5, maxScale: 40, defaultScale: 4, gridStep: STEP };
+
+export function applyViewportConfig(config: AppConfig['viewport']): void {
+  Object.assign(viewportSettings, config);
+}
 /** At this scale or above the grid is drawn every 3 in; below it, every 12 in. */
 export const FINE_GRID_MIN_SCALE = 4;
 /** `fitBounds` never zooms in past this, so a single cabinet does not fill the screen. */
 export const MAX_FIT_SCALE = 12;
 const FIT_PADDING = 72;
 
-export const DEFAULT_VIEWPORT: Viewport = { scale: 4, offsetX: 80, offsetY: 80 };
+export const defaultViewport = (): Viewport => ({
+  scale: viewportSettings.defaultScale,
+  offsetX: 80,
+  offsetY: 80,
+});
 
-const clampScale = (scale: number): number => Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
+const clampScale = (scale: number): number =>
+  Math.min(viewportSettings.maxScale, Math.max(viewportSettings.minScale, scale));
 
 export const toScreen = (viewport: Viewport, point: Pt): Pt => ({
   x: (point.x / IN) * viewport.scale + viewport.offsetX,
@@ -94,4 +106,4 @@ export function visibleBounds(viewport: Viewport, size: Size): Bounds {
 
 /** Grid lines every 3 in when zoomed in, every 12 in when zoomed out. */
 export const gridStep = (viewport: Viewport): Len =>
-  viewport.scale >= FINE_GRID_MIN_SCALE ? STEP : 12 * IN;
+  viewport.scale >= FINE_GRID_MIN_SCALE ? viewportSettings.gridStep : 12 * IN;

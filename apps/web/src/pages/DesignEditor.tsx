@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router';
 
 import { api, ApiError, type DesignVersionSummary } from '../api/client';
 import { versionsKey } from '../api/keys';
+import { useConfig } from '../config/useConfig';
 import { ChatPanel } from '../editor/chat/ChatPanel';
 import { Editor } from '../editor/Editor';
 import { BUTTON } from '../editor/panels/fields';
@@ -143,6 +144,7 @@ export function DesignEditorPage() {
 function DesignEditor({ designId }: { designId: string }) {
   const queryClient = useQueryClient();
   const { repository, session, failure, open, reloadTheirs } = useDesignSession(designId);
+  const { features } = useConfig();
   const [preview, setPreview] = useState<Preview | null>(null);
   const [restoring, setRestoring] = useState(false);
   useUnsavedWarning(session?.autosave);
@@ -239,37 +241,41 @@ function DesignEditor({ designId }: { designId: string }) {
         {design?.name}
       </span>
       <SaveStatus autosave={autosave} />
-      <VersionsDialog
-        designId={designId}
-        trigger={
-          <button type="button" className={BUTTON}>
-            Versions
-          </button>
-        }
-        beforeSave={async () => {
-          await autosave.flush();
-          if (autosave.hasUnsavedChanges()) {
-            throw new Error('The design has changes that could not be saved yet.');
+      {features.versions && (
+        <VersionsDialog
+          designId={designId}
+          trigger={
+            <button type="button" className={BUTTON}>
+              Versions
+            </button>
           }
-        }}
-        onPreview={(version) => void showPreview(version)}
-        onRestore={(version) => restore(version.number)}
-      />
-      <QuotesDialog
-        designId={designId}
-        trigger={
-          <button type="button" className={BUTTON}>
-            Quotes
-          </button>
-        }
-        beforeQuote={async () => {
-          await autosave.flush();
-          if (autosave.hasUnsavedChanges()) {
-            throw new Error('The design has changes that could not be saved yet.');
+          beforeSave={async () => {
+            await autosave.flush();
+            if (autosave.hasUnsavedChanges()) {
+              throw new Error('The design has changes that could not be saved yet.');
+            }
+          }}
+          onPreview={(version) => void showPreview(version)}
+          onRestore={(version) => restore(version.number)}
+        />
+      )}
+      {features.quotes && (
+        <QuotesDialog
+          designId={designId}
+          trigger={
+            <button type="button" className={BUTTON}>
+              Quotes
+            </button>
           }
-          return repository.revision();
-        }}
-      />
+          beforeQuote={async () => {
+            await autosave.flush();
+            if (autosave.hasUnsavedChanges()) {
+              throw new Error('The design has changes that could not be saved yet.');
+            }
+            return repository.revision();
+          }}
+        />
+      )}
       {design?.source_photo && <PhotoReference photoId={design.source_photo} />}
       <nav aria-label="Design" className="ml-auto flex items-center gap-3 pb-1 text-sm">
         {design && (

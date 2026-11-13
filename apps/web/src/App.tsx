@@ -1,7 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router';
 
+import { useConfig } from './config/useConfig';
 import { RequireSession, SessionExpiry } from './auth/SessionGate';
 import { AdminHome } from './admin/AdminHome';
+import { AppSettingsPage } from './admin/AppSettings';
 import { AdminLayout } from './admin/AdminLayout';
 import { AISettingsPage } from './admin/AISettings';
 import { AuditPage } from './admin/AuditPage';
@@ -20,11 +22,21 @@ import { AccountLinks } from './pages/ui';
  * account. Projects and the designs in them belong to an account and need a session.
  */
 export function App() {
+  const { localEditor } = useConfig().features;
   return (
     <>
       <SessionExpiry />
       <Routes>
-        <Route path="/" element={<LocalEditor header={<AccountLinks />} />} />
+        <Route
+          path="/"
+          element={
+            localEditor ? (
+              <LocalEditor header={<AccountLinks />} />
+            ) : (
+              <Navigate to="/projects" replace />
+            )
+          }
+        />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -81,6 +93,7 @@ export function App() {
           }
         >
           <Route index element={<AdminHome />} />
+          <Route path="app" element={<AppSettingsPage />} />
           <Route path="ai" element={<AISettingsPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="audit" element={<AuditPage />} />

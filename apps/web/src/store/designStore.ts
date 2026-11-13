@@ -23,7 +23,7 @@ import { createStore, type StoreApi } from 'zustand/vanilla';
 
 import { type Drag, dragCommand, type DragUpdate } from '../editor/dragging';
 import type { OpeningToolKind } from '../editor/tools/opening';
-import { DEFAULT_VIEWPORT, type Size, type Viewport } from '../editor/viewport';
+import { defaultViewport, type Size, type Viewport } from '../editor/viewport';
 
 export type Tool = 'select' | 'wall' | 'opening' | 'pan';
 
@@ -130,7 +130,7 @@ export function createDesignStore(
         tool: 'select',
         openingKind: 'door',
         view: { kind: 'plan' },
-        viewport: DEFAULT_VIEWPORT,
+        viewport: defaultViewport(),
         canvasSize: null,
         drag: null,
         wallDraft: [],

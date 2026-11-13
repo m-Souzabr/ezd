@@ -16,6 +16,7 @@ import {
   toIssues,
   type ToolCall,
   validate,
+  validateAppConfig,
   validateCommand,
   type Violation,
 } from '@ezd/core';
@@ -52,6 +53,8 @@ Commands:
   draft-problems     read a stored room draft as JSON on stdin and print
                      { ok, problems, errors }: what still stops it from being
                      confirmed; exits 0 when it can be confirmed
+  validate-config    read an app config as JSON on stdin and print { ok, config, errors }:
+                     the config with every default filled in; exits 0 when it is valid
 
 Options:
   -V, --version  print the CLI and core versions
@@ -67,6 +70,7 @@ export const readsStdin = (argv: readonly string[]): boolean =>
     'llm-dry-run',
     'normalize-draft',
     'draft-problems',
+    'validate-config',
   ].includes(argv[0] ?? '');
 
 function validateDocument(stdin: string): CliResult {
@@ -283,6 +287,19 @@ function draftProblemsInput(stdin: string): CliResult {
   return printed(problems.length === 0, { problems, errors: [] });
 }
 
+function validateConfigInput(stdin: string): CliResult {
+  let input: unknown;
+  try {
+    input = JSON.parse(stdin);
+  } catch (error) {
+    const errors = [{ path: '', message: `Invalid JSON: ${(error as Error).message}` }];
+    return printed(false, { config: null, errors });
+  }
+  const checked = validateAppConfig(input);
+  if (!checked.ok) return printed(false, { config: null, errors: checked.error });
+  return printed(true, { config: checked.value, errors: [] });
+}
+
 /** Runs the CLI for the given arguments (without `node` and the script path). */
 export function run(argv: readonly string[], stdin = ''): CliResult {
   const [first] = argv;
@@ -293,6 +310,7 @@ export function run(argv: readonly string[], stdin = ''): CliResult {
   if (first === 'llm-dry-run') return llmDryRun(stdin);
   if (first === 'normalize-draft') return normalizeDraftInput(stdin);
   if (first === 'draft-problems') return draftProblemsInput(stdin);
+  if (first === 'validate-config') return validateConfigInput(stdin);
   if (first === '--version' || first === '-V') {
     return {
       exitCode: 0,

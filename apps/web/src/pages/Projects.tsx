@@ -7,6 +7,7 @@ import { api, ApiError } from '../api/client';
 import { BUTTON } from '../editor/panels/fields';
 import { clearLocalDesign, createLocalRepository } from '../lib/repository';
 import { errorMessage, formatDate } from './format';
+import { useConfig } from '../config/useConfig';
 import { PhotoSection } from '../photos/PhotoSection';
 import { ConfirmButton, FormError, InlineCreate, LINK, Page, RenameButton } from './ui';
 
@@ -135,6 +136,7 @@ export function ProjectsPage() {
 }
 
 export function ProjectDetailPage() {
+  const photoImport = useConfig().features.photoImport;
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -217,7 +219,7 @@ export function ProjectDetailPage() {
           ))}
         </ul>
       )}
-      {detail.data && <PhotoSection projectId={id} />}
+      {detail.data && photoImport && <PhotoSection projectId={id} />}
     </Page>
   );
 }

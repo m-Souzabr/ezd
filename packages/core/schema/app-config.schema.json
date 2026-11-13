@@ -1,0 +1,521 @@
+{
+  "title": "EZDesign app config",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "default": {},
+  "type": "object",
+  "properties": {
+    "panels": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "properties": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "visible": {
+              "default": true,
+              "type": "boolean"
+            },
+            "defaultCollapsed": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "validation": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "visible": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "materials": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "visible": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "catalog": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "visible": {
+              "default": true,
+              "type": "boolean"
+            },
+            "order": {
+              "default": [
+                "base",
+                "wall",
+                "tall",
+                "corner",
+                "appliance",
+                "filler",
+                "panel"
+              ],
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "base",
+                  "wall",
+                  "tall",
+                  "corner",
+                  "appliance",
+                  "filler",
+                  "panel"
+                ]
+              }
+            },
+            "groups": {
+              "default": {},
+              "type": "object",
+              "properties": {
+                "base": {
+                  "default": {},
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "default": "Base cabinets",
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
+                    },
+                    "visible": {
+                      "default": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "wall": {
+                  "default": {},
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "default": "Wall cabinets",
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
+                    },
+                    "visible": {
+                      "default": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "tall": {
+                  "default": {},
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "default": "Tall cabinets",
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
+                    },
+                    "visible": {
+                      "default": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "corner": {
+                  "default": {},
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "default": "Corner cabinets",
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
+                    },
+                    "visible": {
+                      "default": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "appliance": {
+                  "default": {},
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "default": "Appliances",
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
+                    },
+                    "visible": {
+                      "default": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "filler": {
+                  "default": {},
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "default": "Fillers",
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
+                    },
+                    "visible": {
+                      "default": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "panel": {
+                  "default": {},
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "default": "Panels",
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
+                    },
+                    "visible": {
+                      "default": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "features": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "assistant": {
+          "default": true,
+          "type": "boolean"
+        },
+        "photoImport": {
+          "default": true,
+          "type": "boolean"
+        },
+        "quotes": {
+          "default": true,
+          "type": "boolean"
+        },
+        "versions": {
+          "default": true,
+          "type": "boolean"
+        },
+        "roomTemplates": {
+          "default": true,
+          "type": "boolean"
+        },
+        "jsonImportExport": {
+          "default": true,
+          "type": "boolean"
+        },
+        "localEditor": {
+          "default": true,
+          "type": "boolean"
+        },
+        "registrationOpen": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "toolbar": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "tools": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "select": {
+              "default": true,
+              "type": "boolean"
+            },
+            "wall": {
+              "default": true,
+              "type": "boolean"
+            },
+            "opening": {
+              "default": true,
+              "type": "boolean"
+            },
+            "pan": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "buttons": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "undoRedo": {
+              "default": true,
+              "type": "boolean"
+            },
+            "views": {
+              "default": true,
+              "type": "boolean"
+            },
+            "fit": {
+              "default": true,
+              "type": "boolean"
+            },
+            "countertops": {
+              "default": true,
+              "type": "boolean"
+            },
+            "help": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "viewport": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "defaultScale": {
+          "default": 4,
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 200
+        },
+        "gridStep": {
+          "default": 48,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 192
+        },
+        "minScale": {
+          "default": 0.5,
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 200
+        },
+        "maxScale": {
+          "default": 40,
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 200
+        }
+      },
+      "additionalProperties": false
+    },
+    "theme": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "plan": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "gridMinor": {
+              "default": "#eef2f6",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "gridMajor": {
+              "default": "#dbe2ea",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "floor": {
+              "default": "#faf8f4",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "wall": {
+              "default": "#475569",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "opening": {
+              "default": "#ffffff",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "openingLine": {
+              "default": "#64748b",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "countertopLine": {
+              "default": "#94a3b8",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "itemLine": {
+              "default": "#334155",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "label": {
+              "default": "#0f172a",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "dimension": {
+              "default": "#64748b",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "selection": {
+              "default": "#0284c7",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "guide": {
+              "default": "#c026d3",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "error": {
+              "default": "#dc2626",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "warning": {
+              "default": "#d97706",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "itemFill": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "base": {
+              "default": "#dbeafe",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "wall": {
+              "default": "#fef08a8c",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "tall": {
+              "default": "#dcfce7",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "corner": {
+              "default": "#e0e7ff",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "appliance": {
+              "default": "#e2e8f0",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "filler": {
+              "default": "#f1f5f9",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "panel": {
+              "default": "#f1f5f9",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "help": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "steps": {
+          "default": [
+            {
+              "title": "Make the room",
+              "text": "Room template makes a rectangle, L or U room from its inside dimensions. Or pick the Wall tool and click each corner; double-click to finish."
+            },
+            {
+              "title": "Add doors and windows",
+              "text": "Pick the Opening tool, choose Door or Window, and click a wall. Change sizes and offsets in the properties on the right."
+            },
+            {
+              "title": "Place cabinets and appliances",
+              "text": "Drag them from the catalog onto a wall; they snap to the wall and to their neighbours. Or select the canvas and use Add, then the arrow keys."
+            },
+            {
+              "title": "Fix what the checks find",
+              "text": "The validation panel lists overlaps, blocked doors, gaps and clearances. Click one to see it; Apply fixes those that have a fix."
+            },
+            {
+              "title": "Finish and price it",
+              "text": "Generate countertops, open Materials for the bill of materials, and create a quote from Quotes."
+            }
+          ],
+          "minItems": 1,
+          "maxItems": 10,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 400
+              }
+            },
+            "required": [
+              "title",
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

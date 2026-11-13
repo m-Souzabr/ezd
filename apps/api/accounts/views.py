@@ -8,13 +8,14 @@ from django.utils.http import urlsafe_base64_decode
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from config.api import AuthIpThrottle, LoginEmailThrottle, LoginIpThrottle
+from controlpanel import appconfig
 
 from .emails import send_reset_email
 from .serializers import (
@@ -44,7 +45,9 @@ class AnonymousView(APIView):
 class RegisterView(AnonymousView):
     @extend_schema(request=RegisterSerializer, responses={201: UserSerializer})
     def post(self, request: Request) -> Response:
-        """Creates an account and signs it in."""
+        """Creates an account and signs it in, unless registration is closed."""
+        if not appconfig.flag("features", "registrationOpen"):
+            raise PermissionDenied("Registration is closed.")
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()

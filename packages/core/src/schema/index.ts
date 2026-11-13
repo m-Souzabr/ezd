@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { SEED_CATALOG } from '../catalog/index.js';
+import { AppConfigSchema } from '../config/index.js';
 import { CommandSchema } from '../commands/index.js';
 import { DesignDocumentSchema } from '../document/index.js';
 import { llmToolDefinitions } from '../llm/index.js';
@@ -45,4 +46,10 @@ export const draftRoomJsonSchema = (): JsonSchema => {
 export const roomDraftJsonSchema = (): JsonSchema => ({
   title: 'EZDesign room draft',
   ...z.toJSONSchema(RoomDraftSchema),
+});
+
+/** The Control Panel's app configuration. Every field is optional: defaults fill the rest. */
+export const appConfigJsonSchema = (): JsonSchema => ({
+  title: 'EZDesign app config',
+  ...z.toJSONSchema(AppConfigSchema, { io: 'input' }),
 });

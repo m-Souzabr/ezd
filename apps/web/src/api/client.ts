@@ -29,6 +29,9 @@ export type AdminUserCreate = Schemas['AdminUserCreateRequest'];
 export type AdminUserUpdate = Schemas['PatchedAdminUserUpdateRequest'];
 export type AuditEntry = Schemas['AuditEntry'];
 export type Role = Schemas['Role'];
+export type PublicConfig = Schemas['AppConfig'];
+export type ConfigDraft = Schemas['ConfigDraft'];
+export type ConfigVersion = Schemas['ConfigVersion'];
 export type LLMSettingsUpdate = Schemas['PatchedLLMSettingsUpdateRequest'];
 
 /** The server answered, but not with success. */
@@ -330,6 +333,20 @@ export const api = {
   listRoles: () => request<Role[]>('GET', '/api/admin/roles/'),
   listAudit: (params: AuditListParams) =>
     requestPage<AuditEntry>(`/api/admin/audit/${queryString(params)}`),
+
+  /** The published app configuration. Needs no session. */
+  getConfig: () => request<PublicConfig>('GET', '/api/config/', { allowUnauthorized: true }),
+  getConfigDraft: () => request<ConfigDraft>('GET', '/api/admin/config/draft/'),
+  /** A stale `revision` is a 409; an invalid config is a 422 with `errors`. */
+  saveConfigDraft: (revision: number, appConfig: object) =>
+    request<ConfigDraft>('PUT', '/api/admin/config/draft/', {
+      body: { revision, app_config: appConfig },
+    }),
+  publishConfig: (revision: number, note: string) =>
+    request<ConfigVersion>('POST', '/api/admin/config/publish/', { body: { revision, note } }),
+  listConfigVersions: () => request<ConfigVersion[]>('GET', '/api/admin/config/versions/'),
+  rollbackConfig: (number: number) =>
+    request<ConfigVersion>('POST', `/api/admin/config/versions/${number}/rollback/`, { body: {} }),
 
   /** Staff only. The answer never holds the key, only its last four characters. */
   getLLMSettings: () => request<LLMSettings>('GET', '/api/llm/settings/'),

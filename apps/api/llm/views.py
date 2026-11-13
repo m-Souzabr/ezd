@@ -22,7 +22,7 @@ def _payload() -> dict[str, Any]:
     current = config.models()
     return {
         "vendor": settings.LLM_VENDOR,
-        "configured": bool(key) or settings.LLM_VENDOR == "fake",
+        "configured": config.is_configured(),
         "key_source": source,
         "api_key_last4": row.api_key_last4 if source == "settings" else "",
         "models": vars(current),

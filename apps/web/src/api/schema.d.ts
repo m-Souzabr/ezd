@@ -20,6 +20,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/config/draft/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The configuration being edited. Without a saved draft it is the published one. */
+        get: operations["admin_config_draft_retrieve"];
+        /** @description Saves the draft if `revision` is the one the editor loaded, else 409. */
+        put: operations["admin_config_draft_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/config/publish/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Makes the draft the new published version, which is never changed again. */
+        post: operations["admin_config_publish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/config/versions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_config_versions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/config/versions/{number}/rollback/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Publishes a copy of an old version as a new one. The old rows stay as they were. */
+        post: operations["admin_config_versions_rollback_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/roles/": {
         parameters: {
             query?: never;
@@ -183,7 +251,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Creates an account and signs it in. */
+        /** @description Creates an account and signs it in, unless registration is closed. */
         post: operations["auth_register_create"];
         delete?: never;
         options?: never;
@@ -234,6 +302,23 @@ export interface paths {
         };
         /** @description This month's assistant usage of the signed-in user, and the monthly allowance. */
         get: operations["chat_usage_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The published configuration. Anyone may read it: the editor at `/` needs no session. */
+        get: operations["config_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -656,6 +741,11 @@ export interface components {
             is_staff: boolean;
             roles?: string[];
         };
+        /** @description The published configuration, as the web app reads it. */
+        AppConfig: {
+            version: number | null;
+            config: unknown;
+        };
         AuditEntry: {
             readonly id: number;
             readonly actor: number | null;
@@ -674,6 +764,40 @@ export interface components {
             /** Format: uuid */
             conversation_id?: string | null;
         };
+        ConfigDraft: {
+            revision: number;
+            app_config: unknown;
+            based_on: number | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        ConfigDraftUpdateRequest: {
+            revision: number;
+            app_config: unknown;
+        };
+        ConfigPublishRequest: {
+            revision: number;
+            /** @default  */
+            note: string;
+        };
+        ConfigRollbackRequest: {
+            /** @default  */
+            note: string;
+        };
+        ConfigVersion: {
+            number: number;
+            status: components["schemas"]["ConfigVersionStatusEnum"];
+            note: string;
+            created_by: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        /**
+         * @description * `published` - published
+         *     * `superseded` - superseded
+         * @enum {string}
+         */
+        ConfigVersionStatusEnum: "published" | "superseded";
         Conversation: {
             /** Format: uuid */
             conversation_id: string | null;
@@ -1218,6 +1342,115 @@ export interface operations {
             };
         };
     };
+    admin_config_draft_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigDraft"];
+                };
+            };
+        };
+    };
+    admin_config_draft_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfigDraftUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigDraft"];
+                };
+            };
+        };
+    };
+    admin_config_publish_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfigPublishRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigVersion"];
+                };
+            };
+        };
+    };
+    admin_config_versions_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigVersion"][];
+                };
+            };
+        };
+    };
+    admin_config_versions_rollback_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ConfigRollbackRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigVersion"];
+                };
+            };
+        };
+    };
     admin_roles_list: {
         parameters: {
             query?: never;
@@ -1550,6 +1783,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Usage"];
+                };
+            };
+        };
+    };
+    config_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppConfig"];
                 };
             };
         };

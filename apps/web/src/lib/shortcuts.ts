@@ -1,3 +1,5 @@
+import type { AppConfig } from '@ezd/core';
+
 import { duplicateCommand, isArrowKey, nudgeCommand, removeCommand } from '../editor/edits';
 import { newId } from '../editor/ids';
 import { findTarget, nextInTabOrder } from '../editor/tools/select';
@@ -44,7 +46,12 @@ export function duplicateSelection(store: DesignStoreApi): void {
 }
 
 /** Shortcuts that work wherever the focus is, outside text fields. */
-export function handleGlobalKey(event: Key, store: DesignStoreApi): boolean {
+export function handleGlobalKey(
+  event: Key,
+  store: DesignStoreApi,
+  /** Undo and redo keys go with the Undo and Redo buttons when the toolbar hides them. */
+  buttons: Pick<AppConfig['toolbar']['buttons'], 'undoRedo'> = { undoRedo: true },
+): boolean {
   const state = store.getState();
   const mod = event.ctrlKey || event.metaKey;
   const key = event.key.toLowerCase();
@@ -55,12 +62,12 @@ export function handleGlobalKey(event: Key, store: DesignStoreApi): boolean {
     state.setTool('select');
     return active;
   }
-  if (mod && key === 'z') {
+  if (mod && key === 'z' && buttons.undoRedo) {
     if (event.shiftKey) state.redo();
     else state.undo();
     return true;
   }
-  if (mod && key === 'y') {
+  if (mod && key === 'y' && buttons.undoRedo) {
     state.redo();
     return true;
   }

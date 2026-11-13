@@ -306,6 +306,21 @@ normalize-draft`) snaps cabinets to the catalog and marks every model length as 
   administrator and a support user (`apps/api/tests/fixtures/staff.json`, password as
   `PASSWORD` in `e2e/helpers.ts`); their password hash needs a full-length salt, or Django
   rehashes it on login and ends the sessions of parallel logins.
+- **App config.** `AppConfigSchema` (`packages/core/src/config/`) is the Control Panel's
+  configuration: panels, features, toolbar, viewport, theme and help text. Every field is
+  optional and has a default equal to the app's behavior before configuration existed
+  (`DEFAULT_APP_CONFIG`). `validateAppConfig` is strict (the server and the settings form use
+  it); `parseAppConfig` never refuses an object and drops what is not valid field by field
+  (the browser uses it on what it received). The API stores versions in `ConfigVersion`
+  (at most one draft and one published; a published row never changes; rollback publishes a
+  copy as a new number), validates through `ezd-core validate-config`, and serves the
+  published one at `GET /api/config/` with no session, adding whether the assistant is
+  effectively on (its flag and a configured key). `ConfigProvider` fetches it once, keeps a
+  copy in `localStorage` and falls back to the defaults; read it with `useConfig()`. A flag
+  that is off removes its UI and its keyboard shortcut, never a document's content. The colors
+  and viewport limits are applied to `editor/style.ts` and `editor/viewport.ts` before an
+  editor opens. The e2e `config` project runs after the others, because publishing changes
+  every editor.
 - **Django settings** are `config.settings.dev` (default for `manage.py`),
   `config.settings.test` (pytest) and `config.settings.prod` (default for WSGI/ASGI). All
   read environment variables; every variable is listed in `apps/api/.env.example`.
