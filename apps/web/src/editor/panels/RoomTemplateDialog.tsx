@@ -132,7 +132,7 @@ export function RoomTemplateDialog({ trigger }: { trigger: ReactNode }) {
               </Dialog.Close>
               <button
                 type="submit"
-                className={`${BUTTON} border-sky-600 bg-sky-600 text-white hover:bg-sky-700`}
+                className={`${BUTTON} border-sky-700 bg-sky-700 text-white hover:bg-sky-800`}
               >
                 Create room
               </button>

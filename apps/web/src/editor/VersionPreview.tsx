@@ -14,7 +14,7 @@ function PreviewViews() {
 
   // The canvas frames the view itself when it changes.
   const show = (next: View) => store.getState().setView(next);
-  const pressed = (on: boolean) => `${BUTTON} ${on ? 'border-sky-600 bg-sky-600 text-white' : ''}`;
+  const pressed = (on: boolean) => `${BUTTON} ${on ? 'border-sky-700 bg-sky-700 text-white' : ''}`;
 
   return (
     <>

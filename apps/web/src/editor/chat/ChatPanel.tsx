@@ -9,8 +9,8 @@ import { askAssistant, type ChatApi } from './assistant';
 import { type Entry, historyEntries, outcomeEntry, STATUS_TEXT } from './entries';
 
 const PRIMARY =
-  'inline-flex items-center justify-center rounded border border-sky-600 bg-sky-600 px-3 py-1 ' +
-  'text-sm font-medium text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-45 ' +
+  'inline-flex items-center justify-center rounded border border-sky-700 bg-sky-700 px-3 py-1 ' +
+  'text-sm font-medium text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-45 ' +
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500';
 
 function UsageMeter() {

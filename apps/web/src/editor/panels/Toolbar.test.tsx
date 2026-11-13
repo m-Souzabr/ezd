@@ -208,3 +208,13 @@ describe('room template', () => {
     expect(store.getState().history.past).toHaveLength(0);
   });
 });
+
+describe('the help', () => {
+  it('opens a guide to a first design that says checks are not building code', async () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Help' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Your first design' });
+    expect(dialog).toHaveTextContent('Make the room');
+    expect(dialog).toHaveTextContent('not building-code compliance');
+  });
+});

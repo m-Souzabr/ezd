@@ -6,6 +6,7 @@ from django.test import override_settings
 from rest_framework.test import APIClient
 
 from config.api import MAX_BODY_BYTES, BodyTooLarge, LimitedJSONParser, exception_handler
+from projects.documents import validate_document
 from projects.models import Design
 
 from .conftest import core_fixture
@@ -49,7 +50,18 @@ def test_every_invalid_core_fixture_is_covered() -> None:
     from .conftest import FIXTURES
 
     names = {path.stem for path in FIXTURES.glob("*.json")}
-    assert names == {"valid", *INVALID_FIXTURES}
+    assert names == {*VALID_FIXTURES, *INVALID_FIXTURES}
+
+
+# The large fixtures are generated (packages/core/scripts/write-fixtures.mjs); v1/ holds a
+# document saved by an earlier release, never edited.
+VALID_FIXTURES = ("valid", "kitchen-200", "kitchen-500")
+
+
+@pytest.mark.parametrize("name", [*VALID_FIXTURES, "v1/kitchen"])
+def test_valid_core_fixtures_are_accepted(name: str) -> None:
+    document = core_fixture(name, "design-0001")
+    assert validate_document(document, "design-0001") == document
 
 
 @pytest.mark.parametrize("version", [0, 2, 99, "1", None, True, 1.5])

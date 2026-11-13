@@ -20,7 +20,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --coverage && vitest run --config vitest.perf.config.ts",
     "build": "tsc -p tsconfig.build.json",
-    "schema": "tsc -p tsconfig.build.json && node scripts/export-schema.mjs && node scripts/write-fixtures.mjs"
+    "schema": "tsc -p tsconfig.build.json && node scripts/export-schema.mjs && node scripts/write-fixtures.mjs && node scripts/write-rules-doc.mjs"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "catalog:",

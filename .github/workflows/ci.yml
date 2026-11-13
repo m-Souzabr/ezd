@@ -40,12 +40,12 @@ jobs:
       - name: No TODO or FIXME without a linked issue
         if: ${{ !cancelled() }}
         run: pnpm run todos
-      - name: JSON Schema files and fixtures match the code that generates them
+      - name: JSON Schema files, fixtures and docs/RULES.md match the code that generates them
         if: ${{ !cancelled() }}
         run: |
           pnpm --filter @ezd/core schema
-          git add --intent-to-add packages/core/schema packages/core/src/document/fixtures
-          git diff --exit-code -- packages/core/schema packages/core/src/document/fixtures
+          git add --intent-to-add packages/core/schema packages/core/src/document/fixtures docs/RULES.md
+          git diff --exit-code -- packages/core/schema packages/core/src/document/fixtures docs/RULES.md
 
   # The editor driven in a real browser. Kept apart from `js` so the browser download does
   # not slow the unit tests down. Playwright starts the web dev server and the API, which

@@ -233,7 +233,7 @@ export function QuoteForm({
         </button>
         <button
           type="submit"
-          className={`${BUTTON} border-sky-600 bg-sky-600 text-white hover:bg-sky-700`}
+          className={`${BUTTON} border-sky-700 bg-sky-700 text-white hover:bg-sky-800`}
           disabled={pending || blocked || !totals || !fields.customerName.trim()}
         >
           {pending ? 'Creating…' : 'Create quote'}

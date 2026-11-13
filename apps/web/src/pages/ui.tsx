@@ -10,8 +10,8 @@ import { errorMessage } from './format';
 // What the pages outside the editor share: the page frame, form fields and buttons.
 
 export const PRIMARY =
-  'inline-flex items-center justify-center rounded border border-sky-600 bg-sky-600 px-3 py-1.5 ' +
-  'text-sm font-medium text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-45 ' +
+  'inline-flex items-center justify-center rounded border border-sky-700 bg-sky-700 px-3 py-1.5 ' +
+  'text-sm font-medium text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-45 ' +
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500';
 export const LINK =
   'text-sky-700 underline underline-offset-2 hover:text-sky-900 ' +

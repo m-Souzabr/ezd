@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "id": "v1-kitchen-0001",
+  "name": "Kitchen saved at schema version 1",
+  "room": {
+    "ceilingHeight": 1536,
+    "walls": [
+      {
+        "id": "wall-a-0001",
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "end": {
+          "x": 2304,
+          "y": 0
+        },
+        "thickness": 72
+      },
+      {
+        "id": "wall-b-0001",
+        "start": {
+          "x": 2304,
+          "y": 0
+        },
+        "end": {
+          "x": 2304,
+          "y": 1920
+        },
+        "thickness": 72
+      },
+      {
+        "id": "wall-c-0001",
+        "start": {
+          "x": 2304,
+          "y": 1920
+        },
+        "end": {
+          "x": 0,
+          "y": 1920
+        },
+        "thickness": 72
+      },
+      {
+        "id": "wall-d-0001",
+        "start": {
+          "x": 0,
+          "y": 1920
+        },
+        "end": {
+          "x": 0,
+          "y": 0
+        },
+        "thickness": 72
+      }
+    ],
+    "openings": [
+      {
+        "id": "door-0001",
+        "wallId": "wall-c-0001",
+        "kind": "door",
+        "offset": 384,
+        "width": 512,
+        "height": 1280,
+        "sillHeight": 0,
+        "swing": "in-left"
+      },
+      {
+        "id": "window-0001",
+        "wallId": "wall-a-0001",
+        "kind": "window",
+        "offset": 672,
+        "width": 480,
+        "height": 576,
+        "sillHeight": 672
+      }
+    ]
+  },
+  "items": [
+    {
+      "id": "item-base-0001",
+      "catalogId": "base.standard",
+      "kind": "base",
+      "width": 480,
+      "height": 552,
+      "depth": 384,
+      "elevation": 0,
+      "placement": {
+        "type": "wall",
+        "wallId": "wall-a-0001",
+        "offset": 0
+      },
+      "options": {
+        "doors": 2,
+        "topDrawer": true
+      },
+      "finishId": "cabinet.navy"
+    },
+    {
+      "id": "item-sink-0001",
+      "catalogId": "base.sink",
+      "kind": "base",
+      "width": 576,
+      "height": 552,
+      "depth": 384,
+      "elevation": 0,
+      "placement": {
+        "type": "wall",
+        "wallId": "wall-a-0001",
+        "offset": 624
+      },
+      "options": {}
+    },
+    {
+      "id": "item-dw-00001",
+      "catalogId": "appliance.dishwasher",
+      "kind": "appliance",
+      "width": 384,
+      "height": 552,
+      "depth": 384,
+      "elevation": 0,
+      "placement": {
+        "type": "wall",
+        "wallId": "wall-a-0001",
+        "offset": 1200
+      },
+      "options": {}
+    },
+    {
+      "id": "item-wall-0001",
+      "catalogId": "wall.standard",
+      "kind": "wall",
+      "width": 480,
+      "height": 480,
+      "depth": 192,
+      "elevation": 864,
+      "placement": {
+        "type": "wall",
+        "wallId": "wall-a-0001",
+        "offset": 0
+      },
+      "options": {}
+    },
+    {
+      "id": "item-isle-0001",
+      "catalogId": "base.drawers",
+      "kind": "base",
+      "width": 576,
+      "height": 552,
+      "depth": 384,
+      "elevation": 0,
+      "placement": {
+        "type": "free",
+        "x": 864,
+        "y": 960,
+        "rotation": 90
+      },
+      "options": {}
+    }
+  ],
+  "countertops": [
+    {
+      "id": "top-a-000001",
+      "wallId": "wall-a-0001",
+      "startOffset": 0,
+      "endOffset": 1584,
+      "depth": 408,
+      "thickness": 24,
+      "elevation": 552,
+      "finishId": "countertop.butcher"
+    }
+  ],
+  "finishes": {
+    "cabinet": "cabinet.white",
+    "countertop": "countertop.white",
+    "wall": "wall.greige",
+    "floor": "floor.oak"
+  }
+}

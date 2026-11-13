@@ -189,4 +189,4 @@ export const BUTTON =
   'inline-flex items-center justify-center gap-1 rounded border border-slate-300 bg-white px-2.5 py-1 ' +
   'text-sm text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-45 ' +
   'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500 ' +
-  'data-[state=on]:border-sky-600 data-[state=on]:bg-sky-600 data-[state=on]:text-white';
+  'data-[state=on]:border-sky-700 data-[state=on]:bg-sky-700 data-[state=on]:text-white';

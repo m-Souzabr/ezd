@@ -49,6 +49,8 @@ export default defineConfig({
         API_THROTTLE_LOGIN_IP: '1000/min',
         API_THROTTLE_AUTH_IP: '1000/min',
         API_THROTTLE_LLM: '1000/min',
+        // Password reset emails, which the reset test reads.
+        EMAIL_FILE_PATH: resolve('test-results/emails'),
       },
       reuseExistingServer: !CI,
       timeout: 120_000,
