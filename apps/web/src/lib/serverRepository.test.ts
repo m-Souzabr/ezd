@@ -15,6 +15,7 @@ const design = (document: object, revision: number): Design => ({
   draft_document: document as Design['draft_document'],
   draft_revision: revision,
   schema_version: 1,
+  source_photo: null,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
 });

@@ -5,6 +5,7 @@ import { AISettingsPage } from './pages/AISettings';
 import { ForgotPasswordPage, LoginPage, RegisterPage, ResetPasswordPage } from './pages/AuthPages';
 import { DesignEditorPage } from './pages/DesignEditor';
 import { LocalEditor } from './pages/LocalEditor';
+import { PhotoDraftPage } from './photos/PhotoDraftPage';
 import { ProjectDetailPage, ProjectsPage } from './pages/Projects';
 import { QuotePage } from './pages/QuotePage';
 import { AccountLinks } from './pages/ui';
@@ -44,6 +45,14 @@ export function App() {
           element={
             <RequireSession>
               <DesignEditorPage />
+            </RequireSession>
+          }
+        />
+        <Route
+          path="/photo-drafts/:id"
+          element={
+            <RequireSession>
+              <PhotoDraftPage />
             </RequireSession>
           }
         />

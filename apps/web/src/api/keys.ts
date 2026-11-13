@@ -17,3 +17,9 @@ export const chatKey = (designId: string) => ['designs', designId, 'chat'] as co
 
 /** The site's assistant settings (staff only). */
 export const llmSettingsKey = ['llm', 'settings'] as const;
+
+/** The photos of a project. */
+export const photosKey = (projectId: string) => ['projects', projectId, 'photos'] as const;
+
+/** One photo draft. */
+export const photoDraftKey = (id: string) => ['photo-drafts', id] as const;

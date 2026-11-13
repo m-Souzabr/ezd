@@ -1,16 +1,87 @@
 {
   "Add a 30 inch base cabinet on wall A": [
     {
-      "tool_calls": [{ "name": "classify_request", "arguments": { "category": "simple_edit" } }]
+      "tool_calls": [
+        {
+          "name": "classify_request",
+          "arguments": {
+            "category": "simple_edit"
+          }
+        }
+      ]
     },
     {
       "text": "Adding a 30 inch base cabinet at the start of wall A.",
       "tool_calls": [
         {
           "name": "add_item",
-          "arguments": { "catalogId": "base.standard", "widthIn": 30, "wall": "A", "offsetIn": 0 }
+          "arguments": {
+            "catalogId": "base.standard",
+            "widthIn": 30,
+            "wall": "A",
+            "offsetIn": 0
+          }
         }
       ]
+    }
+  ],
+  "(photo)": [
+    {
+      "draft": {
+        "shape": "l-shape",
+        "ceilingHeightIn": 96,
+        "walls": [
+          {
+            "label": "back",
+            "lengthIn": 140,
+            "visible": true,
+            "confidence": "high"
+          },
+          {
+            "label": "right",
+            "lengthIn": 120,
+            "visible": true,
+            "confidence": "medium"
+          }
+        ],
+        "openings": [
+          {
+            "wall": "back",
+            "kind": "window",
+            "offsetIn": 40,
+            "widthIn": 30,
+            "heightIn": 36,
+            "sillIn": 42,
+            "confidence": "high"
+          },
+          {
+            "wall": "right",
+            "kind": "door",
+            "offsetIn": 88,
+            "widthIn": 30,
+            "heightIn": 80,
+            "sillIn": null,
+            "confidence": "medium"
+          }
+        ],
+        "items": [
+          {
+            "wall": "back",
+            "category": "base",
+            "offsetIn": 0,
+            "widthIn": 31,
+            "confidence": "high"
+          },
+          {
+            "wall": "back",
+            "category": "sink",
+            "offsetIn": 36,
+            "widthIn": 36,
+            "confidence": "high"
+          }
+        ],
+        "notes": "Lengths are estimated from standard cabinet sizes."
+      }
     }
   ]
 }

@@ -52,7 +52,7 @@ ezd/
   packages/core-cli/  @ezd/core-cli  Node CLI wrapping core (validate, apply) for Python callers
   apps/web/           @ezd/web       React + Vite app: the 2D editor, and its Playwright tests in e2e/
   apps/api/           Django project (Python)
-  evals/              LLM eval cases, their documents and recorded responses
+  evals/              LLM eval cases, their documents and recorded responses; photos/ for photo import
   scripts/            repository tooling (license check)
   .github/workflows/  CI
 ```
@@ -143,6 +143,8 @@ Run from the root with a filter, or `cd` into the package and drop the filter.
 
 | Eval suite (fake) | `uv run python manage.py run_evals --client fake` |
 | Eval suite (live) | `uv run python manage.py run_evals --client live --record` |
+| Photo evals (fake) | `uv run python manage.py run_photo_evals --client fake` |
+| Photo evals (live) | `uv run python manage.py run_photo_evals --client live --record` |
 
 There is no Python typecheck or build step yet. pytest needs PostgreSQL running, and the
 built CLI (`pnpm --filter @ezd/core-cli build`), which the API runs to validate documents.
@@ -271,6 +273,26 @@ settings)` (`bom/`) are the only pricing code; the browser runs them. Money is i
   `config.settings.prod`) and `web` (`apps/web/Dockerfile`: Caddy serves the build and proxies
   `/api` to `API_UPSTREAM`, so the browser sees one origin). Django sits behind the host's
   edge and Caddy, so `DJANGO_NUM_PROXIES=2`, and Caddy tells it the request was https.
+- **Photo import.** The vision model only recognises the layout; the user supplies every
+  real dimension. Core's `photo/` has two schemas: `DraftRoom`, the model's answer in inches
+  (strict structured output, exported as `draft-room.schema.json`), and `RoomDraft`, the
+  stored and edited draft in `Len` (`room-draft.schema.json`), where each length is
+  `{ value, estimated }`. `normalizeDraft` (run on the server through `ezd-core
+normalize-draft`) snaps cabinets to the catalog and marks every model length as an
+  estimate; `draftProblems` lists what blocks confirmation, an estimated wall length
+  included; `draftToCommands` builds the design as one `batch`. `photos.analysis.analyze`
+  is the one code path for a photo call, used by the analyze endpoint and
+  `run_photo_evals`: an answer that fails the schema is retried on the same model, then on
+  the escalation model, then the draft is `failed`. Confirm runs `ezd-core draft-problems`
+  on the stored draft, whatever the browser sends, and creates the design and version 1
+  in one transaction, once. Uploads are decoded and re-encoded with Pillow
+  (`photos/images.py`): type from content, EXIF orientation applied, metadata stripped,
+  long edge at most `PHOTO_MAX_EDGE`, pixel count capped. Photos are stored through
+  Django's storage (`STORAGE_BACKEND`: `filesystem` or a private `s3` bucket) and served
+  only by `/api/photos/{id}/file/` to their owner.
+- **Photo test set.** `evals/photos/` holds each photo with its ground truth (`<name>.json`),
+  its source and right in `SOURCES.md`, and a recorded fake answer under
+  `recordings/fake/`. CI requires every recorded answer to convert.
 - **Relative imports in `packages/core` and `packages/core-cli`** carry a `.js` extension
   (`./units.js`), so the emitted ESM runs in Node unchanged.
 - **Django settings** are `config.settings.dev` (default for `manage.py`),
