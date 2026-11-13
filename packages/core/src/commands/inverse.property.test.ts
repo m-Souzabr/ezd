@@ -42,5 +42,6 @@ describe('applyCommand properties', () => {
     );
     // The run exercised every command type.
     expect(seen.size).toBe(18);
-  });
+    // 1500 runs take about a second, several under coverage on a busy machine.
+  }, 30_000);
 });
