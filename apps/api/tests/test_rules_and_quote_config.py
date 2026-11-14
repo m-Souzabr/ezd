@@ -1,6 +1,7 @@
 """The rules configuration and the quote defaults: their sections of the config version."""
 
 import base64
+import io
 import json
 from pathlib import Path
 from typing import Any
@@ -8,12 +9,14 @@ from typing import Any
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import Permission
+from PIL import Image
 from rest_framework.test import APIClient
 
 from accounts.models import User
 from controlpanel import appconfig
 from controlpanel.catalogs import core
 from controlpanel.codes import APP_EDIT, QUOTE_EDIT, RULES_EDIT
+from controlpanel.logo import process_logo
 from controlpanel.models import AuditEntry, ConfigVersion
 from projects.models import Design
 from quotes.models import Quote
@@ -37,9 +40,20 @@ BRANDING = {
     "contact": "555-0100",
     "footerText": "Prices good for 30 days.",
 }
+
+
 # A 1 by 1 RGB PNG and a tiny JPEG, as data URIs.
-PIXEL = png_url(png_bytes(64))
-JPEG = "data:image/jpeg;base64," + base64.b64encode(b"\xff\xd8\xff\xe0" + b"\x00" * 40).decode()
+def image_url(fmt: str, mode: str = "RGB", size: tuple[int, int] = (24, 12)) -> str:
+    """A real image as a data URI, which the server decodes and re-encodes."""
+    out = io.BytesIO()
+    Image.new(mode, size, "red").save(out, fmt)
+    mime = "image/png" if fmt == "PNG" else "image/jpeg"
+    return f"data:{mime};base64,{base64.b64encode(out.getvalue()).decode()}"
+
+
+# What the server stores for these: its own re-encoding, which re-encoding does not change.
+PIXEL = process_logo(image_url("PNG"))
+JPEG = process_logo(image_url("JPEG"))
 
 
 def staff_holding(*codes: str, email: str = "holder@example.com") -> APIClient:
@@ -171,11 +185,15 @@ def test_a_logo_must_be_a_jpeg_or_a_png_without_an_alpha_channel(admin: APIClien
     assert save(PIXEL).status_code == 200
     ConfigVersion.objects.all().delete()
     for bad, message in [
-        (png_url(png_bytes(64, color_type=6)), "alpha"),
+        (image_url("PNG", "RGBA"), "alpha"),
         (png_url(b"not a png at all, just text"), "not a PNG"),
         ("data:image/jpeg;base64," + base64.b64encode(b"nope" * 20).decode(), "not a JPEG"),
+        # A JPEG that says it is a PNG: the type is read from the content.
+        (image_url("JPEG").replace("image/jpeg", "image/png"), "not a PNG"),
+        ("data:image/gif;base64,R0lGODlhAQABAAAAACw=", "PNG or JPEG"),
         ("data:image/png;base64,AAAAA", "base64"),
         (png_url(png_bytes(160_000)), "150 KB"),
+        (image_url("PNG", size=(3000, 3000)), "too many pixels"),
     ]:
         response = save(bad)
         assert response.status_code == 422, (message, response.content)
@@ -183,6 +201,23 @@ def test_a_logo_must_be_a_jpeg_or_a_png_without_an_alpha_channel(admin: APIClien
         assert error["path"] == "branding.logo"
         if message != "150 KB":
             assert message in error["message"]
+
+
+def test_a_logo_is_re_encoded_shrunk_and_stripped_of_metadata(admin: APIClient) -> None:
+    big = io.BytesIO()
+    image = Image.new("RGB", (1600, 400), "blue")
+    image.save(big, "JPEG", exif=Image.Exif())
+    uploaded = "data:image/jpeg;base64," + base64.b64encode(big.getvalue()).decode()
+
+    response = put(admin, 0, quote_defaults={"branding": {"logo": uploaded}})
+
+    assert response.status_code == 200, response.content
+    stored = response.json()["quote_defaults"]["branding"]["logo"]
+    assert stored != uploaded
+    decoded = Image.open(io.BytesIO(base64.b64decode(stored.split(",", 1)[1])))
+    assert decoded.format == "JPEG"
+    assert decoded.size == (800, 200)
+    assert not decoded.getexif()
 
 
 # --- permissions ------------------------------------------------------------------------

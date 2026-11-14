@@ -133,6 +133,24 @@ class UploadThrottledMixin(PostThrottledMixin):
     post_throttle = UploadThrottle
 
 
+class AdminThrottle(UserThrottle):
+    """Every Control Panel route (`admin-*`), per signed-in user.
+
+    It sits in the default throttles and lets other routes through, so a new admin route is
+    limited without declaring anything.
+    """
+
+    scope = "admin"
+
+    def allow_request(self, request: Request, view: Any) -> bool:
+        match = getattr(request, "resolver_match", None) or getattr(
+            request._request, "resolver_match", None
+        )
+        if not (match and (match.url_name or "").startswith("admin-")):
+            return True
+        return super().allow_request(request, view)
+
+
 class LoginIpThrottle(_ScopedRateThrottle):
     scope = "login_ip"
 
@@ -168,4 +186,7 @@ def exception_handler(exc: Exception, context: dict[str, Any]) -> Response | Non
     errors = getattr(exc, "errors", None)
     if response is not None and isinstance(errors, list) and isinstance(response.data, dict):
         response.data["errors"] = errors
+    extra = getattr(exc, "extra", None)
+    if response is not None and isinstance(extra, dict) and isinstance(response.data, dict):
+        response.data.update(extra)
     return response

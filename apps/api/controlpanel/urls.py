@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import catalog_views, config_views, views
+from . import bundle_views, catalog_views, config_views, views
 
 urlpatterns = [
     path("admin/users/", views.UserListView.as_view(), name="admin-user-list"),
@@ -11,7 +11,37 @@ urlpatterns = [
         name="admin-user-reset-password",
     ),
     path("admin/roles/", views.RoleListView.as_view(), name="admin-role-list"),
+    path("admin/roles/<int:pk>/", views.RoleDetailView.as_view(), name="admin-role-detail"),
     path("admin/audit/", views.AuditListView.as_view(), name="admin-audit-list"),
+    path("admin/audit/export/", views.AuditExportView.as_view(), name="admin-audit-export"),
+    path("admin/audit/types/", views.AuditTypesView.as_view(), name="admin-audit-types"),
+    path(
+        "admin/config/export/", bundle_views.ConfigExportView.as_view(), name="admin-config-export"
+    ),
+    path(
+        "admin/config/import/", bundle_views.ConfigImportView.as_view(), name="admin-config-import"
+    ),
+    path("admin/config/reset/", bundle_views.ConfigResetView.as_view(), name="admin-config-reset"),
+    path(
+        "admin/config/dry-run/",
+        bundle_views.ConfigDryRunView.as_view(),
+        name="admin-config-dry-run",
+    ),
+    path(
+        "admin/config/versions/diff/",
+        bundle_views.ConfigVersionDiffView.as_view(),
+        name="admin-config-version-diff",
+    ),
+    path(
+        "admin/catalog/dry-run/",
+        bundle_views.CatalogDryRunView.as_view(),
+        name="admin-catalog-dry-run",
+    ),
+    path(
+        "admin/catalog/versions/diff/",
+        bundle_views.CatalogVersionDiffView.as_view(),
+        name="admin-catalog-version-diff",
+    ),
     path("config/", config_views.PublicConfigView.as_view(), name="app-config"),
     path("admin/config/draft/", config_views.ConfigDraftView.as_view(), name="admin-config-draft"),
     path(

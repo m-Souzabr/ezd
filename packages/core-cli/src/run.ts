@@ -96,6 +96,10 @@ read as the app reads it: that value takes its default.
                      being stored (it is not a catalog at all), problems are the rules it
                      breaks, which stop it from being published; exits 0 when there is
                      neither
+  compare-designs    read { designs: [{ id, document }], before?, after? } as JSON on stdin,
+                     where before and after are { catalog?, rules? } (the seed and the
+                     defaults when left out), and print { ok, results, errors }: for each
+                     design, its violations under each. Used for the dry run before a publish
   llm-tools          read a catalog as JSON on stdin and print { ok, tools, index,
                      errors }: the assistant's tool schemas and catalog index for it
 
@@ -120,6 +124,7 @@ export const readsStdin = (argv: readonly string[]): boolean =>
     'validate-quote-defaults',
     'validate-catalog',
     'llm-tools',
+    'compare-designs',
   ].includes(argv[0] ?? '');
 
 function validateDocument(stdin: string): CliResult {
@@ -497,6 +502,59 @@ function llmToolsInput(stdin: string): CliResult {
   });
 }
 
+/** What `compare-designs` prints for one design. */
+export interface ComparedDesign {
+  id: string;
+  /** Why the design could not be checked, or null. */
+  error: string | null;
+  before: Violation[];
+  after: Violation[];
+}
+
+/** The designs' violations under two configurations, in one process. */
+function compareDesigns(stdin: string): CliResult {
+  const fail = (errors: Issue[]): CliResult => printed(false, { results: [], errors });
+  let input: Input;
+  try {
+    input = JSON.parse(stdin) as Input;
+  } catch (error) {
+    return fail([{ path: '', message: `Invalid JSON: ${(error as Error).message}` }]);
+  }
+  if (!Array.isArray(input?.designs)) {
+    return fail([{ path: 'designs', message: 'Expected an array of designs' }]);
+  }
+  const variants: { catalog: Catalog; rules: RulesConfig }[] = [];
+  for (const side of ['before', 'after'] as const) {
+    const given = (input[side] ?? {}) as Input;
+    const resolved = resolveCatalog(given.catalog, {});
+    if (!resolved.ok) {
+      return fail(resolved.errors.map((e) => ({ ...e, path: `${side}.${e.path}` })));
+    }
+    const configured = resolveRules(given.rules, {});
+    if (!configured.ok) {
+      return fail(configured.errors.map((e) => ({ ...e, path: `${side}.${e.path}` })));
+    }
+    variants.push({ catalog: resolved.catalog, rules: configured.rules });
+  }
+  const [before, after] = variants as [(typeof variants)[0], (typeof variants)[0]];
+  const results: ComparedDesign[] = (input.designs as { id?: unknown; document?: unknown }[]).map(
+    (entry) => {
+      const id = String(entry?.id ?? '');
+      const parsed = parseDocument(entry?.document);
+      if (!parsed.ok) {
+        return { id, error: 'The document is not valid.', before: [], after: [] };
+      }
+      return {
+        id,
+        error: null,
+        before: validate(parsed.value, before.catalog, before.rules),
+        after: validate(parsed.value, after.catalog, after.rules),
+      };
+    },
+  );
+  return printed(true, { results, errors: [] });
+}
+
 /** Runs the CLI for the given arguments (without `node` and the script path). */
 export function run(argv: readonly string[], stdin = '', options: RunOptions = {}): CliResult {
   const [first] = argv;
@@ -512,6 +570,7 @@ export function run(argv: readonly string[], stdin = '', options: RunOptions = {
   if (first === 'validate-quote-defaults') return validateSection(stdin, validateQuoteDefaults);
   if (first === 'validate-catalog') return validateCatalogInput(stdin);
   if (first === 'llm-tools') return llmToolsInput(stdin);
+  if (first === 'compare-designs') return compareDesigns(stdin);
   if (first === '--version' || first === '-V') {
     return {
       exitCode: 0,

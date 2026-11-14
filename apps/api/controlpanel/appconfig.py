@@ -5,10 +5,9 @@ The shape of a configuration, its defaults and its rules live in core. The API r
 configuration with every default filled in.
 """
 
-import base64
-import binascii
 import json
 import subprocess
+from functools import cache
 from typing import Any
 
 from django.conf import settings
@@ -17,14 +16,12 @@ from rest_framework.exceptions import APIException
 
 from llm import config as llm_config
 
+from .conflict import conflict_extra
+from .logo import InvalidLogo, process_logo
 from .models import ConfigVersion
 
 Issue = dict[str, str]
 CLI_TIMEOUT_SECONDS = 10
-MAX_LOGO_BYTES = 150_000
-PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
-PNG_RGB = b"\x02"
-JPEG_SIGNATURE = b"\xff\xd8\xff"
 EMPTY_BRANDING = {
     "numberPrefix": "",
     "companyName": "",
@@ -55,6 +52,10 @@ class StaleDraft(APIException):
     status_code = status.HTTP_409_CONFLICT
     default_detail = "The draft was changed by someone else. Reload it and try again."
     default_code = "stale_draft"
+
+    def __init__(self, detail: str | None = None, *, draft: Any = None) -> None:
+        super().__init__(detail)
+        self.extra = conflict_extra(draft)
 
 
 def _run_core(command: str, config: Any) -> dict[str, Any]:
@@ -106,34 +107,14 @@ def validate_rules_config(config: Any) -> dict[str, Any]:
     return _checked("validate-rules-config", config)
 
 
-def _check_logo(logo: str) -> None:
-    """A logo is a JPEG, or a PNG with no alpha channel, so the PDF is the same every time."""
-    problem = None
-    try:
-        encoded = logo.split(",", 1)[1]
-        image = base64.b64decode(encoded, validate=True)
-    except (IndexError, binascii.Error, ValueError):
-        problem = "The logo is not valid base64."
-    else:
-        if len(image) > MAX_LOGO_BYTES:
-            problem = "The logo is larger than 150 KB."
-        elif logo.startswith("data:image/png"):
-            is_png = image.startswith(PNG_SIGNATURE) and image[12:16] == b"IHDR"
-            if not is_png:
-                problem = "The logo is not a PNG image."
-            elif image[25:26] != PNG_RGB:
-                problem = "The logo is an RGB PNG without an alpha channel, or a JPEG."
-        elif not image.startswith(JPEG_SIGNATURE):
-            problem = "The logo is not a JPEG image."
-    if problem:
-        raise InvalidConfig([{"path": "branding.logo", "message": problem}])
-
-
 def validate_quote_defaults(config: Any) -> dict[str, Any]:
     """The quote defaults with their defaults filled in, or raises `InvalidConfig`."""
     filled = _checked("validate-quote-defaults", config)
     if filled["branding"]["logo"]:
-        _check_logo(filled["branding"]["logo"])
+        try:
+            filled["branding"]["logo"] = process_logo(filled["branding"]["logo"])
+        except InvalidLogo as error:
+            raise InvalidConfig([{"path": "branding.logo", "message": str(error)}]) from error
     return filled
 
 
@@ -192,3 +173,32 @@ def public_quote_defaults(defaults: dict[str, Any]) -> dict[str, Any]:
     if not branding or "logo" not in branding:
         return defaults
     return {**defaults, "branding": {**branding, "logo": ""}}
+
+
+def health() -> str:
+    """Whether the published configuration exists and parses: `ok`, `defaults` or `invalid`.
+
+    `defaults` means nothing has been published, so the compiled-in defaults apply; `unknown`
+    that `ezd-core` could not be run. A published row never changes, so a probe does not start
+    `ezd-core` more than once for it.
+    """
+    row = published()
+    if row is None:
+        return "defaults"
+    try:
+        return _parses(row.pk)
+    except ConfigValidationUnavailable:
+        return "unknown"
+
+
+@cache
+def _parses(pk: int) -> str:
+    # A published row never changes, so the answer is kept for the life of the process.
+    row = ConfigVersion.objects.get(pk=pk)
+    try:
+        validate_config(row.app_config)
+        validate_rules_config(row.rules_config)
+        validate_quote_defaults(row.quote_defaults)
+    except InvalidConfig:
+        return "invalid"
+    return "ok"

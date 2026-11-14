@@ -27,7 +27,12 @@ def test_health_returns_ok(client: Client) -> None:
 
 @pytest.mark.django_db
 def test_ready_checks_the_database(client: Client) -> None:
-    assert client.get("/api/ready/").json() == {"status": "ok"}
+    assert client.get("/api/ready/").json() == {
+        "status": "ok",
+        "config": "defaults",
+        # The seed is published by a migration.
+        "catalog": "ok",
+    }
     with mock.patch("config.views.connection.cursor", side_effect=DatabaseError("down")):
         response = client.get("/api/ready/")
     assert response.status_code == 503

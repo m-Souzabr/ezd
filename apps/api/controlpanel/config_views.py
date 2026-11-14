@@ -3,6 +3,7 @@ from typing import Any
 from django.db import IntegrityError, transaction
 from django.db.models import F, Max
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
@@ -70,6 +71,11 @@ def _sections(row: ConfigVersion | None) -> dict[str, Any]:
     return {name: getattr(row, name) if row else {} for name in SECTIONS}
 
 
+def _editor(row: ConfigVersion | None) -> str:
+    editor = (row.updated_by or row.created_by) if row else None
+    return editor.email if editor else ""
+
+
 def _draft_payload(row: ConfigVersion | None) -> dict[str, Any]:
     base = appconfig.published()
     return {
@@ -77,6 +83,7 @@ def _draft_payload(row: ConfigVersion | None) -> dict[str, Any]:
         **_sections(row or base),
         "based_on": base.number if base else None,
         "updated_at": row.updated_at if row else None,
+        "updated_by": _editor(row),
     }
 
 
@@ -117,6 +124,31 @@ def _require_for_changes(user: Any, before: ConfigVersion | None, after: dict[st
             )
 
 
+def save_sections(user: Any, revision: int, values: dict[str, Any]) -> ConfigVersion:
+    """Saves sections to the draft if `revision` is the saved one, else 409.
+
+    One UPDATE on the row's own columns, so two saves cannot both succeed.
+    """
+    if revision == 0:
+        # A section that is not given starts from what is published, not from nothing.
+        start = {**_sections(appconfig.published()), **values}
+        try:
+            with transaction.atomic():
+                return ConfigVersion.objects.create(
+                    status=Status.DRAFT, created_by=user, updated_by=user, **start
+                )
+        except IntegrityError as error:
+            raise appconfig.StaleDraft(draft=appconfig.draft()) from error
+    changed = ConfigVersion.objects.filter(status=Status.DRAFT, revision=revision).update(
+        **values, revision=F("revision") + 1, updated_by=user, updated_at=timezone.now()
+    )
+    if not changed:
+        raise appconfig.StaleDraft(draft=appconfig.draft())
+    row = appconfig.draft()
+    assert row is not None
+    return row
+
+
 class ConfigDraftView(APIView):
     """The configuration being edited. Without a saved draft it is the published one.
 
@@ -126,6 +158,8 @@ class ConfigDraftView(APIView):
 
     permission_classes = (HasControlPanelPerm,)
     control_panel_perm = {"GET": ANY_SECTION, "PUT": ANY_SECTION}
+    # Three sections and a logo of at most 150 KB.
+    max_body_bytes = 512 * 1024
 
     @extend_schema(responses={200: ConfigDraftSerializer})
     def get(self, request: Request) -> Response:
@@ -142,27 +176,8 @@ class ConfigDraftView(APIView):
             if not can(request.user, SECTIONS[name]):
                 raise PermissionDenied(f"You do not have permission to edit {SECTION_NAMES[name]}.")
         values = {name: CHECKS[name](data[name]) for name in given}
-        revision = data["revision"]
         before = appconfig.draft()
-        # One UPDATE on the row's own columns, so two saves cannot both succeed.
-        if revision == 0:
-            # A section that is not given starts from what is published, not from nothing.
-            start = {**_sections(appconfig.published()), **values}
-            try:
-                with transaction.atomic():
-                    row = ConfigVersion.objects.create(
-                        status=Status.DRAFT, created_by=request.user, **start
-                    )
-            except IntegrityError as error:
-                raise appconfig.StaleDraft() from error
-        else:
-            changed = ConfigVersion.objects.filter(status=Status.DRAFT, revision=revision).update(
-                **values, revision=F("revision") + 1
-            )
-            if not changed:
-                raise appconfig.StaleDraft()
-            row = appconfig.draft()
-            assert row is not None
+        row = save_sections(request.user, data["revision"], values)
         audit.record(
             request.user,
             "config.draft.save",
@@ -190,7 +205,7 @@ class ConfigPublishView(APIView):
         with transaction.atomic():
             draft = ConfigVersion.objects.select_for_update().filter(status=Status.DRAFT).first()
             if draft is None or draft.revision != serializer.validated_data["revision"]:
-                raise appconfig.StaleDraft()
+                raise appconfig.StaleDraft(draft=draft)
             filled = {name: CHECKS[name](getattr(draft, name)) for name in SECTIONS}
             previous = appconfig.published()
             _require_for_changes(request.user, previous, filled)

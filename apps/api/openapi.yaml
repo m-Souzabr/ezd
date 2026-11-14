@@ -17,12 +17,27 @@ paths:
         schema:
           type: string
         description: An actor's id or part of their email.
+      - in: query
+        name: date_from
+        schema:
+          type: string
+        description: The first day, as YYYY-MM-DD.
+      - in: query
+        name: date_to
+        schema:
+          type: string
+        description: The last day, as YYYY-MM-DD.
       - name: limit
         required: false
         in: query
         description: Number of results to return per page.
         schema:
           type: integer
+      - in: query
+        name: object_type
+        schema:
+          type: string
+        description: The kind of object changed.
       - name: offset
         required: false
         in: query
@@ -39,6 +54,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedAuditEntryList'
+          description: ''
+  /api/admin/audit/export/:
+    get:
+      operationId: admin_audit_export_retrieve
+      description: The entries matching the filters as CSV, with the secrets masked.
+      parameters:
+      - in: query
+        name: action
+        schema:
+          type: string
+        description: An action, or the start of one.
+      - in: query
+        name: actor
+        schema:
+          type: string
+        description: An actor's id or part of their email.
+      - in: query
+        name: date_from
+        schema:
+          type: string
+        description: The first day, as YYYY-MM-DD.
+      - in: query
+        name: date_to
+        schema:
+          type: string
+        description: The last day, as YYYY-MM-DD.
+      - in: query
+        name: object_type
+        schema:
+          type: string
+        description: The kind of object changed.
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            text/csv:
+              schema:
+                type: string
+          description: ''
+  /api/admin/audit/types/:
+    get:
+      operationId: admin_audit_types_retrieve
+      description: The kinds of object the log has entries for, for the filter.
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
           description: ''
   /api/admin/catalog/draft/:
     get:
@@ -79,6 +152,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogDraft'
+          description: ''
+  /api/admin/catalog/dry-run/:
+    post:
+      operationId: admin_catalog_dry_run_create
+      description: Which designs and quotes the draft catalog would change.
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DryRunResult'
           description: ''
   /api/admin/catalog/entries/:
     post:
@@ -372,6 +460,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/CatalogVersion'
           description: ''
+  /api/admin/catalog/versions/diff/:
+    get:
+      operationId: admin_catalog_versions_diff_retrieve
+      description: What changed between two published catalog versions, by entry and
+        finish id.
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: to
+        schema:
+          type: integer
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionDiff'
+          description: ''
   /api/admin/config/draft/:
     get:
       operationId: admin_config_draft_retrieve
@@ -412,6 +527,76 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConfigDraft'
           description: ''
+  /api/admin/config/dry-run/:
+    post:
+      operationId: admin_config_dry_run_create
+      description: Which designs would be checked differently under the draft's rules.
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DryRunResult'
+          description: ''
+  /api/admin/config/export/:
+    get:
+      operationId: admin_config_export_retrieve
+      description: |-
+        A published version of every section as one JSON file.
+
+        A section is left out for a user who may not read it, so an export never shows more
+        than the pages do.
+      parameters:
+      - in: query
+        name: catalog
+        schema:
+          type: string
+        description: 'A catalog version. Default: current.'
+      - in: query
+        name: number
+        schema:
+          type: integer
+        description: 'A config version. Default: published.'
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Export'
+          description: ''
+  /api/admin/config/import/:
+    post:
+      operationId: admin_config_import_create
+      description: |-
+        Checks a file made by the export and saves what it holds as the draft.
+
+        Nothing is published. Every section is checked before any is saved, so a file with
+        one invalid section changes nothing, and the sections need their own permissions.
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+          description: ''
   /api/admin/config/publish/:
     post:
       operationId: admin_config_publish_create
@@ -436,6 +621,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConfigVersion'
+          description: ''
+  /api/admin/config/reset/:
+    post:
+      operationId: admin_config_reset_create
+      description: Saves the compiled-in defaults of one section as the draft. Nothing
+        is published.
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
           description: ''
   /api/admin/config/versions/:
     get:
@@ -482,10 +689,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConfigVersion'
           description: ''
+  /api/admin/config/versions/diff/:
+    get:
+      operationId: admin_config_versions_diff_retrieve
+      description: |-
+        What changed between two published versions, section by section.
+
+        Only the sections the user may edit are compared.
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: to
+        schema:
+          type: integer
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionDiff'
+          description: ''
   /api/admin/roles/:
     get:
       operationId: admin_roles_list
-      description: The roles and the permission codes each one holds. Read-only.
+      description: The roles and the permission codes each one holds.
       tags:
       - admin
       security:
@@ -499,6 +735,69 @@ paths:
                 items:
                   $ref: '#/components/schemas/Role'
           description: ''
+    post:
+      operationId: admin_roles_create
+      description: Creates a role. It cannot hold a permission its creator does not.
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleWriteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+  /api/admin/roles/{id}/:
+    patch:
+      operationId: admin_roles_partial_update
+      description: Renames a role or changes its permissions. Takes effect on its
+        members' next request.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRoleWriteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+    delete:
+      operationId: admin_roles_destroy
+      description: Deletes a role. Whoever held it loses what it gave, on their next
+        request.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/admin/users/:
     get:
       operationId: admin_users_list
@@ -1741,7 +2040,8 @@ paths:
   /api/ready/:
     get:
       operationId: ready_retrieve
-      description: 'Readiness probe: the API can reach its database.'
+      description: 'Readiness probe: the API can reach its database, and what the
+        published config says.'
       tags:
       - ready
       responses:
@@ -1884,10 +2184,14 @@ components:
           readOnly: true
         before:
           readOnly: true
-          nullable: true
         after:
           readOnly: true
-          nullable: true
+        changes:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -1898,6 +2202,7 @@ components:
       - actor_email
       - after
       - before
+      - changes
       - created_at
       - id
       - object_id
@@ -1949,11 +2254,14 @@ components:
           type: string
           format: date-time
           nullable: true
+        updated_by:
+          type: string
       required:
       - based_on
       - catalog
       - revision
       - updated_at
+      - updated_by
     CatalogDraftUpdateRequest:
       type: object
       properties:
@@ -2060,6 +2368,18 @@ components:
       - note
       - number
       - version
+    Change:
+      type: object
+      properties:
+        path:
+          type: string
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        before: {}
+        after: {}
+      required:
+      - kind
+      - path
     ChatRequestRequest:
       type: object
       properties:
@@ -2091,6 +2411,8 @@ components:
           type: string
           format: date-time
           nullable: true
+        updated_by:
+          type: string
       required:
       - app_config
       - based_on
@@ -2098,6 +2420,7 @@ components:
       - revision
       - rules_config
       - updated_at
+      - updated_by
     ConfigDraftUpdateRequest:
       type: object
       properties:
@@ -2402,6 +2725,35 @@ components:
       required:
       - elevations
       - plan
+    DryRun:
+      type: object
+      properties:
+        total:
+          type: integer
+        sampled:
+          type: integer
+        changed:
+          type: integer
+        samples:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - changed
+      - sampled
+      - samples
+      - total
+    DryRunResult:
+      type: object
+      properties:
+        designs:
+          $ref: '#/components/schemas/DryRun'
+        quotes:
+          $ref: '#/components/schemas/DryRun'
+      required:
+      - designs
+      - quotes
     Elevation:
       type: object
       properties:
@@ -2435,6 +2787,18 @@ components:
       - image
       - label
       - wallId
+    Export:
+      type: object
+      properties:
+        format:
+          type: string
+        formatVersion:
+          type: integer
+        config: {}
+        catalog: {}
+      required:
+      - format
+      - formatVersion
     Health:
       type: object
       properties:
@@ -2442,6 +2806,32 @@ components:
           type: string
       required:
       - status
+    ImportRequest:
+      type: object
+      properties:
+        data: {}
+        replace:
+          type: boolean
+          default: false
+      required:
+      - data
+    ImportResult:
+      type: object
+      properties:
+        sections:
+          type: array
+          items:
+            type: string
+        config_revision:
+          type: integer
+          nullable: true
+        catalog_revision:
+          type: integer
+          nullable: true
+      required:
+      - catalog_revision
+      - config_revision
+      - sections
     InconsistentQuote:
       type: object
       description: The body of a 422.
@@ -2480,6 +2870,16 @@ components:
         * `settings` - settings
         * `environment` - environment
         * `none` - none
+    KindEnum:
+      enum:
+      - added
+      - removed
+      - changed
+      type: string
+      description: |-
+        * `added` - added
+        * `removed` - removed
+        * `changed` - changed
     LLMSettings:
       type: object
       description: What staff see. The key itself is never in it, only its last four
@@ -2877,6 +3277,43 @@ components:
           type: string
           minLength: 1
           maxLength: 200
+    PatchedRoleWriteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionsEnum'
+    PermissionsEnum:
+      enum:
+      - config.catalog.edit
+      - config.catalog.publish
+      - config.rules.edit
+      - config.app.edit
+      - config.quote.edit
+      - llm.settings.edit
+      - users.view
+      - users.manage
+      - users.roles.assign
+      - users.roles.manage
+      - audit.view
+      type: string
+      description: |-
+        * `config.catalog.edit` - config.catalog.edit
+        * `config.catalog.publish` - config.catalog.publish
+        * `config.rules.edit` - config.rules.edit
+        * `config.app.edit` - config.app.edit
+        * `config.quote.edit` - config.quote.edit
+        * `llm.settings.edit` - llm.settings.edit
+        * `users.view` - users.view
+        * `users.manage` - users.manage
+        * `users.roles.assign` - users.roles.assign
+        * `users.roles.manage` - users.roles.manage
+        * `audit.view` - audit.view
     Photo:
       type: object
       properties:
@@ -3255,7 +3692,13 @@ components:
       properties:
         status:
           type: string
+        config:
+          type: string
+        catalog:
+          type: string
       required:
+      - catalog
+      - config
       - status
     RegisterRequest:
       type: object
@@ -3277,6 +3720,17 @@ components:
       required:
       - email
       - password
+    ResetRequest:
+      type: object
+      properties:
+        section:
+          $ref: '#/components/schemas/SectionEnum'
+        revision:
+          type: integer
+          minimum: 0
+      required:
+      - revision
+      - section
     ResolveRequestRequest:
       type: object
       description: '`invalid` reports a proposal the browser could not use after the
@@ -3315,15 +3769,24 @@ components:
     Role:
       type: object
       properties:
+        id:
+          type: integer
         name:
           type: string
         permissions:
           type: array
           items:
             type: string
+        protected:
+          type: boolean
+        members:
+          type: integer
       required:
+      - id
+      - members
       - name
       - permissions
+      - protected
     RoleEnum:
       enum:
       - user
@@ -3332,6 +3795,29 @@ components:
       description: |-
         * `user` - User
         * `assistant` - Assistant
+    RoleWriteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionsEnum'
+    SectionEnum:
+      enum:
+      - app
+      - rules
+      - quotes
+      - catalog
+      type: string
+      description: |-
+        * `app` - app
+        * `rules` - rules
+        * `quotes` - quotes
+        * `catalog` - catalog
     Settings:
       type: object
       properties:
@@ -3524,6 +4010,17 @@ components:
       - is_superuser
       - name
       - permissions
+    VersionDiff:
+      type: object
+      properties:
+        sections:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/Change'
+      required:
+      - sections
   securitySchemes:
     cookieAuth:
       type: apiKey
