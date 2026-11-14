@@ -14,7 +14,7 @@ function Boom(): never {
 afterEach(() => vi.restoreAllMocks());
 
 describe('ErrorBoundary', () => {
-  it('reports the crash and offers the open design for download', () => {
+  it('reports the crash and offers the open design for download', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const reported = vi.fn();
     const restore = setErrorReporter(reported);
@@ -27,7 +27,9 @@ describe('ErrorBoundary', () => {
         <Boom />
       </ErrorBoundary>,
     );
-    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong');
+    expect(await screen.findByRole('alert', {}, { timeout: 10_000 })).toHaveTextContent(
+      'Something went wrong',
+    );
     expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Download my design (JSON)' }));
     expect(download).toHaveBeenCalledWith(doc);
@@ -38,7 +40,7 @@ describe('ErrorBoundary', () => {
     restore();
   });
 
-  it('does not offer a download when no design can be read', () => {
+  it('does not offer a download when no design can be read', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     registerRecoverySource(() => {
       throw new Error('gone');
@@ -48,6 +50,9 @@ describe('ErrorBoundary', () => {
         <Boom />
       </ErrorBoundary>,
     );
+    expect(
+      await screen.findByRole('button', { name: 'Reload' }, { timeout: 10_000 }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Download/ })).not.toBeInTheDocument();
   });
 });

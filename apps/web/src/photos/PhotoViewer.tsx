@@ -1,6 +1,7 @@
 import { type PointerEvent, useRef, useState } from 'react';
 
-import { BUTTON } from '../editor/panels/fields';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 6;
@@ -46,11 +47,12 @@ export function PhotoViewer({
   };
 
   return (
-    <figure className={`flex min-h-0 flex-col gap-2 ${className}`}>
+    <figure className={cn('flex min-h-0 flex-col gap-2', className)}>
       <div
-        className={`relative min-h-0 flex-1 overflow-hidden rounded-lg bg-slate-900 ${
-          view.zoom > MIN_ZOOM ? 'cursor-grab active:cursor-grabbing' : ''
-        }`}
+        className={cn(
+          'relative min-h-0 flex-1 overflow-hidden rounded-lg bg-muted',
+          view.zoom > MIN_ZOOM && 'cursor-grab touch-none active:cursor-grabbing',
+        )}
         onWheel={(event) => zoomBy(event.deltaY < 0 ? STEP : 1 / STEP)}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -68,31 +70,31 @@ export function PhotoViewer({
           }}
         />
       </div>
-      <figcaption className="flex items-center gap-2 text-xs text-slate-600">
-        <button
+      <figcaption className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <Button
           type="button"
-          className={BUTTON}
+          variant="outline"
           onClick={() => zoomBy(STEP)}
           disabled={view.zoom >= MAX_ZOOM}
         >
           Zoom in
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={BUTTON}
+          variant="outline"
           onClick={() => zoomBy(1 / STEP)}
           disabled={view.zoom <= MIN_ZOOM}
         >
           Zoom out
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={BUTTON}
+          variant="outline"
           onClick={() => setView(FIT)}
           disabled={view.zoom === MIN_ZOOM}
         >
           Fit
-        </button>
+        </Button>
         <span>Scroll to zoom, drag to move.</span>
       </figcaption>
     </figure>

@@ -29,6 +29,8 @@ import { cn } from '@/lib/utils';
 type AppShellProps = {
   items: NavItem[];
   appName?: string;
+  /** Dark mode is not reachable yet on every screen, so a caller can hide the toggle. */
+  themeToggle?: boolean;
 };
 
 /** The account in the sidebar footer: who is signed in and the way out, or the way in. */
@@ -99,7 +101,7 @@ function HeaderAccount() {
  * icon-only sidebar and a desktop a full sidebar that the trigger collapses. The caller passes
  * the items; the shell hides the ones the user lacks the permission for.
  */
-export function AppShell({ items, appName = 'EZDesign' }: AppShellProps) {
+export function AppShell({ items, appName = 'EZDesign', themeToggle = true }: AppShellProps) {
   const isLgUp = useMediaQuery(LG_UP);
   const [expanded, setExpanded] = useState(true);
   const { pathname } = useLocation();
@@ -142,7 +144,7 @@ export function AppShell({ items, appName = 'EZDesign' }: AppShellProps) {
         </SidebarContent>
         <SidebarFooter>
           <SidebarAccount />
-          <ThemeToggle />
+          {themeToggle && <ThemeToggle />}
         </SidebarFooter>
       </Sidebar>
 
@@ -152,7 +154,7 @@ export function AppShell({ items, appName = 'EZDesign' }: AppShellProps) {
           <span className="font-semibold md:hidden">{appName}</span>
           <div className="ml-auto flex items-center gap-1 md:hidden">
             <HeaderAccount />
-            <ThemeToggle />
+            {themeToggle && <ThemeToggle />}
           </div>
         </header>
         {/* SidebarInset is already the page's `main` landmark; this is the skip link's target. */}

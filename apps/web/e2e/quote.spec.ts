@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { expect, type Page, test } from '@playwright/test';
 
-import { dragFromCatalog, getDoc } from './helpers';
+import { createDesignInUi, createProjectInUi, dragFromCatalog, getDoc } from './helpers';
 
 // The phase 7 scenario: a small kitchen, its bill of materials, a quote and its PDF.
 
@@ -17,11 +17,9 @@ async function openNewDesign(page: Page) {
   await page.getByLabel('Email').fill(`e2e-quote-${Date.now()}-${Math.random()}@example.com`);
   await page.getByLabel('Password').fill(PASSWORD);
   await page.getByRole('button', { name: 'Create account' }).click();
-  await page.getByLabel('New project').fill('Lake house');
-  await page.getByRole('button', { name: 'Create project' }).click();
+  await createProjectInUi(page, 'Lake house');
   await page.getByRole('link', { name: 'Lake house' }).click();
-  await page.getByLabel('New design').fill('Kitchen');
-  await page.getByRole('button', { name: 'Create design' }).click();
+  await createDesignInUi(page, 'Kitchen');
   await expect(page).toHaveURL(/\/designs\/[0-9a-f-]{36}$/);
   await saved(page);
 }

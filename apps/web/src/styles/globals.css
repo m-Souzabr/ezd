@@ -7,10 +7,6 @@
 
 @theme inline {
   --font-heading: var(--font-sans);
-  /* Keeps the page font as it was until Phase 18; preflight would otherwise follow --font-sans. */
-  --default-font-family:
-    ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-    'Noto Color Emoji';
   --font-sans: Roboto, ui-sans-serif, system-ui, sans-serif;
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
@@ -148,13 +144,22 @@
 }
 
 /*
- * Phase 16 keeps the shadcn base rules (default border color, body background and text color,
- * font-sans on html and body) out, because the screens that exist still use fixed slate classes
- * and must look as before. Phase 18 adds them back screen by screen; see CHANGELOG.md.
+ * The shadcn base rules: the default border color, the page's background and text color, and
+ * the font. Phase 18 turns them on with the first screens built on the tokens; the editor and
+ * the Control Panel set their own colors and move in Phases 19 and 20.
  */
 @layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
+    @apply font-sans;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
   }
 
   @media (pointer: coarse) {

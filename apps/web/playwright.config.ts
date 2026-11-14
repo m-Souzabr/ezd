@@ -32,7 +32,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: /(config|catalog|rules)\.spec/,
+      testIgnore: /(config|catalog|rules|account-layout)\.spec/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     {
@@ -50,6 +50,23 @@ export default defineConfig({
       testMatch: /rules\.spec/,
       dependencies: ['config'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+    // The layout specs run on a phone, a tablet and a desktop. The `chromium` project at 1440 px
+    // stays for everything else; Phase 21 adds the other specs to these.
+    {
+      name: 'phone',
+      testMatch: /account-layout\.spec/,
+      use: { ...devices['Pixel 5'], viewport: { width: 375, height: 812 } },
+    },
+    {
+      name: 'tablet',
+      testMatch: /account-layout\.spec/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 768, height: 1024 }, hasTouch: true },
+    },
+    {
+      name: 'desktop',
+      testMatch: /account-layout\.spec/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
     },
   ],
   webServer: [

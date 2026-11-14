@@ -1,22 +1,30 @@
 import type { DesignDocument } from '@ezd/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 
-import { api, ApiError } from '../api/client';
-import { BUTTON } from '../editor/panels/fields';
-import { clearLocalDesign, createLocalRepository } from '../lib/repository';
+import { api, ApiError } from '@/api/client';
+import { FormError } from '@/components/form-error';
+import { ConfirmDialog } from '@/components/patterns/confirm-dialog';
+import { DataList, type DataListColumn } from '@/components/patterns/data-list';
+import { PageHeader } from '@/components/patterns/page-header';
+import { ResponsiveMenu } from '@/components/patterns/responsive-menu';
+import { EmptyState, ErrorState, LoadingState } from '@/components/patterns/state-views';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
+import { useConfig } from '@/config/useConfig';
+import { clearLocalDesign, createLocalRepository } from '@/lib/repository';
+import { PhotoSection } from '@/photos/PhotoSection';
 import { errorMessage, formatDate } from './format';
-import { useConfig } from '../config/useConfig';
-import { PhotoSection } from '../photos/PhotoSection';
-import { ConfirmButton, FormError, InlineCreate, LINK, Page, RenameButton } from './ui';
+import { NameDialog } from './NameDialog';
 
 const PROJECTS = ['projects'] as const;
 const project = (id: string) => ['projects', id] as const;
 const designs = (projectId: string) => ['projects', projectId, 'designs'] as const;
 
-const ROW = 'flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3 last:border-b-0';
-const LIST = 'rounded-lg bg-white shadow-sm';
+const ROW_LINK = 'text-primary underline-offset-4 hover:underline';
 
 /**
  * Offers to move the design made without an account, which is kept in this browser, into
@@ -53,34 +61,89 @@ function ImportLocalDesign() {
 
   if (!local) return null;
   return (
-    <section
-      aria-label="Design in this browser"
-      className="mb-6 flex flex-col gap-2 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm"
-    >
-      <p>
-        <strong>{local.name}</strong> is saved in this browser only. Import it to keep it in your
-        account and open it on other machines.
-      </p>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          className={BUTTON}
-          disabled={importIt.isPending}
-          onClick={() => importIt.mutate(local)}
-        >
-          Import into account
-        </button>
-        <Link to="/" className={LINK}>
-          Open it here
-        </Link>
-      </div>
-      <FormError error={importIt.error} />
-    </section>
+    <Card aria-label="Design in this browser" role="region">
+      <CardContent className="flex flex-col gap-3 text-sm">
+        <p>
+          <strong>{local.name}</strong> is saved in this browser only. Import it to keep it in your
+          account and open it on other machines.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            disabled={importIt.isPending}
+            onClick={() => importIt.mutate(local)}
+          >
+            {importIt.isPending ? <Spinner aria-hidden="true" /> : null}
+            Import into account
+          </Button>
+          <Link to="/" className={buttonVariants({ variant: 'link' })}>
+            Open it here
+          </Link>
+        </div>
+        <FormError error={importIt.error} />
+      </CardContent>
+    </Card>
   );
+}
+
+type Named = { id: string; name: string };
+
+/** What the list of projects or designs needs: the rows, and the dialogs their actions open. */
+function useNamedActions<T extends Named>(options: {
+  what: string;
+  rename: (row: T, name: string) => Promise<unknown>;
+  remove: (row: T) => void;
+}) {
+  const [renaming, setRenaming] = useState<T | null>(null);
+  const [deleting, setDeleting] = useState<T | null>(null);
+  const actions = (row: T) => (
+    <ResponsiveMenu
+      label={`Actions for ${options.what} ${row.name}`}
+      actions={[
+        {
+          id: 'rename',
+          label: 'Rename',
+          icon: <PencilIcon aria-hidden="true" />,
+          onSelect: () => setRenaming(row),
+        },
+        {
+          id: 'delete',
+          label: 'Delete',
+          icon: <Trash2Icon aria-hidden="true" />,
+          destructive: true,
+          onSelect: () => setDeleting(row),
+        },
+      ]}
+    />
+  );
+  const dialogs = (
+    <>
+      <NameDialog
+        open={renaming !== null}
+        onOpenChange={(open) => !open && setRenaming(null)}
+        title={`Rename ${options.what}`}
+        description={`Choose a new name for ${renaming?.name ?? 'it'}.`}
+        label="New name"
+        submitLabel="Save"
+        initial={renaming?.name}
+        onSubmit={(name) => (renaming ? options.rename(renaming, name) : Promise.resolve())}
+      />
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title={`Delete ${options.what}?`}
+        description={`${deleting?.name ?? 'It'} will be removed from your account.`}
+        confirmLabel={`Delete ${options.what}`}
+        onConfirm={() => deleting && options.remove(deleting)}
+      />
+    </>
+  );
+  return { actions, dialogs };
 }
 
 export function ProjectsPage() {
   const queryClient = useQueryClient();
+  const [creating, setCreating] = useState(false);
   const list = useQuery({ queryKey: PROJECTS, queryFn: api.listProjects });
   const refresh = () => queryClient.invalidateQueries({ queryKey: PROJECTS });
   const create = useMutation({ mutationFn: api.createProject, onSuccess: refresh });
@@ -89,49 +152,76 @@ export function ProjectsPage() {
     onSuccess: refresh,
   });
   const archive = useMutation({ mutationFn: api.archiveProject, onSuccess: refresh });
+  type Row = NonNullable<typeof list.data>[number];
+
+  const { actions, dialogs } = useNamedActions<Row>({
+    what: 'project',
+    rename: (row, name) => rename.mutateAsync({ id: row.id, name }),
+    remove: (row) => archive.mutate(row.id),
+  });
+  const columns: DataListColumn<Row>[] = [
+    {
+      id: 'name',
+      header: 'Name',
+      primary: true,
+      cell: (row) => (
+        <Link to={`/projects/${row.id}`} className={ROW_LINK}>
+          {row.name}
+        </Link>
+      ),
+    },
+    { id: 'created', header: 'Created', cell: (row) => formatDate(row.created_at) },
+  ];
+  const newProject = (
+    <Button onClick={() => setCreating(true)}>
+      <PlusIcon aria-hidden="true" />
+      New project
+    </Button>
+  );
 
   return (
-    <Page title="Projects">
+    <div className="space-y-6">
+      <PageHeader
+        title="Projects"
+        description="Each project holds the designs, photos and quotes for one job."
+        actions={newProject}
+      />
       <ImportLocalDesign />
-      <div className="mb-6">
-        <InlineCreate
-          label="New project"
-          button="Create project"
-          placeholder="Lake house"
-          pending={create.isPending}
-          error={create.error}
-          onSubmit={(name) => create.mutateAsync(name)}
+      <FormError error={rename.error ?? archive.error} />
+      {list.isPending ? (
+        <LoadingState label="Loading projects" />
+      ) : list.error ? (
+        <ErrorState
+          title="The projects could not be loaded"
+          description={errorMessage(list.error)}
+          onRetry={() => void list.refetch()}
         />
-      </div>
-      <FormError error={list.error ?? rename.error ?? archive.error} />
-      {list.data?.length === 0 && (
-        <p className="text-sm text-slate-600">No projects yet. Create one to start a design.</p>
+      ) : list.data.length === 0 ? (
+        <EmptyState
+          title="No projects"
+          description="No projects yet. Create one to start a design."
+          action={<Button onClick={() => setCreating(true)}>Create your first project</Button>}
+        />
+      ) : (
+        <DataList
+          caption="Projects"
+          rows={list.data}
+          columns={columns}
+          getRowId={(row) => row.id}
+          rowActions={actions}
+        />
       )}
-      {list.data && list.data.length > 0 && (
-        <ul aria-label="Projects" className={LIST}>
-          {list.data.map((item) => (
-            <li key={item.id} className={ROW}>
-              <Link to={`/projects/${item.id}`} className={`${LINK} font-medium`}>
-                {item.name}
-              </Link>
-              <span className="mr-auto text-xs text-slate-500">
-                created {formatDate(item.created_at)}
-              </span>
-              <RenameButton
-                name={item.name}
-                what={`project ${item.name}`}
-                onRename={(name) => rename.mutate({ id: item.id, name })}
-              />
-              <ConfirmButton
-                label="Delete"
-                what={`project ${item.name}`}
-                onConfirm={() => archive.mutate(item.id)}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-    </Page>
+      <NameDialog
+        open={creating}
+        onOpenChange={setCreating}
+        title="New project"
+        description="Name the job. You can rename it later."
+        label="Project name"
+        submitLabel="Create project"
+        onSubmit={(name) => create.mutateAsync(name)}
+      />
+      {dialogs}
+    </div>
   );
 }
 
@@ -140,6 +230,7 @@ export function ProjectDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [creating, setCreating] = useState(false);
   const detail = useQuery({
     queryKey: project(id),
     queryFn: () => api.getProject(id),
@@ -160,66 +251,93 @@ export function ProjectDetailPage() {
     onSuccess: refresh,
   });
   const remove = useMutation({ mutationFn: api.deleteDesign, onSuccess: refresh });
+  type Row = NonNullable<typeof list.data>[number];
+
+  const { actions, dialogs } = useNamedActions<Row>({
+    what: 'design',
+    rename: (row, name) => rename.mutateAsync({ id: row.id, name }),
+    remove: (row) => remove.mutate(row.id),
+  });
+  const columns: DataListColumn<Row>[] = [
+    {
+      id: 'name',
+      header: 'Name',
+      primary: true,
+      cell: (row) => (
+        <Link to={`/designs/${row.id}`} className={ROW_LINK}>
+          {row.name}
+        </Link>
+      ),
+    },
+    { id: 'changed', header: 'Changed', cell: (row) => formatDate(row.updated_at) },
+  ];
+
+  const back = (
+    <Link to="/projects" className={buttonVariants({ variant: 'link', className: 'px-0' })}>
+      All projects
+    </Link>
+  );
 
   if (detail.error instanceof ApiError && detail.error.status === 404) {
     return (
-      <Page title="Project not found">
-        <p className="text-sm text-slate-600">
-          This project does not exist or was deleted.{' '}
-          <Link to="/projects" className={LINK}>
-            Back to projects
-          </Link>
-        </p>
-      </Page>
+      <div className="space-y-6">
+        <PageHeader
+          title="Project not found"
+          description="This project does not exist or was deleted."
+          actions={back}
+        />
+      </div>
     );
   }
 
   return (
-    <Page title={detail.data?.name ?? (detail.error ? errorMessage(detail.error) : 'Project')}>
-      <p className="-mt-2 mb-6 text-sm">
-        <Link to="/projects" className={LINK}>
-          All projects
-        </Link>
-      </p>
-      <div className="mb-6">
-        <InlineCreate
-          label="New design"
-          button="Create design"
-          placeholder="Kitchen"
-          pending={create.isPending}
-          error={create.error}
-          onSubmit={(name) => create.mutateAsync(name)}
+    <div className="space-y-6">
+      {back}
+      <PageHeader
+        title={detail.data?.name ?? (detail.error ? errorMessage(detail.error) : 'Project')}
+        description="The designs in this project."
+        actions={
+          <Button onClick={() => setCreating(true)}>
+            <PlusIcon aria-hidden="true" />
+            New design
+          </Button>
+        }
+      />
+      <FormError error={rename.error ?? remove.error} />
+      {list.isPending ? (
+        <LoadingState label="Loading designs" />
+      ) : list.error ? (
+        <ErrorState
+          title="The designs could not be loaded"
+          description={errorMessage(list.error)}
+          onRetry={() => void list.refetch()}
         />
-      </div>
-      <FormError error={list.error ?? rename.error ?? remove.error} />
-      {list.data?.length === 0 && (
-        <p className="text-sm text-slate-600">No designs in this project yet.</p>
-      )}
-      {list.data && list.data.length > 0 && (
-        <ul aria-label="Designs" className={LIST}>
-          {list.data.map((item) => (
-            <li key={item.id} className={ROW}>
-              <Link to={`/designs/${item.id}`} className={`${LINK} font-medium`}>
-                {item.name}
-              </Link>
-              <span className="mr-auto text-xs text-slate-500">
-                changed {formatDate(item.updated_at)}
-              </span>
-              <RenameButton
-                name={item.name}
-                what={`design ${item.name}`}
-                onRename={(name) => rename.mutate({ id: item.id, name })}
-              />
-              <ConfirmButton
-                label="Delete"
-                what={`design ${item.name}`}
-                onConfirm={() => remove.mutate(item.id)}
-              />
-            </li>
-          ))}
-        </ul>
+      ) : list.data.length === 0 ? (
+        <EmptyState
+          title="No designs"
+          description="No designs in this project yet."
+          action={<Button onClick={() => setCreating(true)}>Create your first design</Button>}
+        />
+      ) : (
+        <DataList
+          caption="Designs"
+          rows={list.data}
+          columns={columns}
+          getRowId={(row) => row.id}
+          rowActions={actions}
+        />
       )}
       {detail.data && photoImport && <PhotoSection projectId={id} />}
-    </Page>
+      <NameDialog
+        open={creating}
+        onOpenChange={setCreating}
+        title="New design"
+        description="Name the design. It opens in the editor."
+        label="Design name"
+        submitLabel="Create design"
+        onSubmit={(name) => create.mutateAsync(name)}
+      />
+      {dialogs}
+    </div>
   );
 }

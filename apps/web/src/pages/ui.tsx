@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, useId, useState } from 'react';
+import { type ReactNode, useId, useState } from 'react';
 import { Link } from 'react-router';
 
 import { ApiError } from '../api/client';
@@ -7,7 +7,9 @@ import { useSignOut } from '../auth/useSignOut';
 import { BUTTON } from '../editor/panels/fields';
 import { errorMessage } from './format';
 
-// What the pages outside the editor share: the page frame, form fields and buttons.
+// What the Control Panel and the editor's own pages still share: the page frame, a form field and
+// buttons. The account pages use the patterns in components/patterns instead; Phases 19 and 20
+// move the rest, and this file goes with them.
 
 export const PRIMARY =
   'inline-flex items-center justify-center rounded border border-sky-700 bg-sky-700 px-3 py-1.5 ' +
@@ -142,103 +144,6 @@ export function FormError({ error, fields = [] }: { error: unknown; fields?: str
     >
       {errorMessage(error)}
     </p>
-  );
-}
-
-/** One text field and a button in a row, such as "New project". Clears after success. */
-export function InlineCreate({
-  label,
-  button,
-  placeholder,
-  pending,
-  error,
-  onSubmit,
-}: {
-  label: string;
-  button: string;
-  placeholder?: string;
-  pending: boolean;
-  error: unknown;
-  onSubmit(name: string): Promise<unknown>;
-}) {
-  const id = useId();
-  const [name, setName] = useState('');
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    void onSubmit(trimmed).then(
-      () => setName(''),
-      () => undefined,
-    );
-  };
-  return (
-    <form onSubmit={submit} className="flex flex-col gap-2">
-      <div className="flex items-end gap-2">
-        <div className="flex flex-1 flex-col gap-1">
-          <label htmlFor={id} className="text-sm font-medium text-slate-700">
-            {label}
-          </label>
-          <input
-            id={id}
-            className={INPUT}
-            value={name}
-            placeholder={placeholder}
-            maxLength={200}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </div>
-        <button type="submit" className={PRIMARY} disabled={pending || !name.trim()}>
-          {button}
-        </button>
-      </div>
-      <FormError error={error} />
-    </form>
-  );
-}
-
-/** A name that turns into a text field to rename the thing in a list. */
-export function RenameButton({
-  name,
-  what,
-  onRename,
-}: {
-  name: string;
-  /** For the accessible names: "project Lake house". */
-  what: string;
-  onRename(name: string): void;
-}) {
-  const [draft, setDraft] = useState<string | null>(null);
-  if (draft === null) {
-    return (
-      <button type="button" className={BUTTON} onClick={() => setDraft(name)}>
-        Rename<span className="sr-only"> {what}</span>
-      </button>
-    );
-  }
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    const trimmed = draft.trim();
-    if (trimmed && trimmed !== name) onRename(trimmed);
-    setDraft(null);
-  };
-  return (
-    <form onSubmit={submit} className="flex items-center gap-1">
-      <input
-        autoFocus
-        aria-label={`New name for ${what}`}
-        className={`${INPUT} w-48`}
-        value={draft}
-        maxLength={200}
-        onChange={(event) => setDraft(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') setDraft(null);
-        }}
-      />
-      <button type="submit" className={BUTTON}>
-        Save
-      </button>
-    </form>
   );
 }
 

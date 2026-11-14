@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 import {
+  createDesignInUi,
+  createProjectInUi,
   getDoc,
   getPreviewDoc,
   historyLength,
@@ -22,11 +24,9 @@ test('ask the assistant for a cabinet, accept the preview, undo it once', async 
     await page.getByLabel('Email').fill(`e2e-chat-${Date.now()}-${Math.random()}@example.com`);
     await page.getByLabel('Password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Create account' }).click();
-    await page.getByLabel('New project').fill('Chat house');
-    await page.getByRole('button', { name: 'Create project' }).click();
+    await createProjectInUi(page, 'Chat house');
     await page.getByRole('link', { name: 'Chat house' }).click();
-    await page.getByLabel('New design').fill('Kitchen');
-    await page.getByRole('button', { name: 'Create design' }).click();
+    await createDesignInUi(page, 'Kitchen');
     await expect(page).toHaveURL(/\/designs\/[0-9a-f-]{36}$/);
     await page.getByRole('button', { name: 'Room template' }).click();
     const dialog = page.getByRole('dialog', { name: 'Room template' });

@@ -1,13 +1,11 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, type ErrorInfo, lazy, type ReactNode, Suspense } from 'react';
 
 import { recoverableDocument } from './lib/recovery';
 import { reportError } from './lib/reportError';
 import { downloadDocument } from './lib/repository';
 
-const BUTTON =
-  'inline-flex items-center justify-center rounded border border-slate-300 bg-white px-3 py-1.5 ' +
-  'text-sm text-slate-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 ' +
-  'focus-visible:outline-sky-500';
+// Loaded only when something crashed, so the page that shows the error is not in the first load.
+const CrashPage = lazy(() => import('./CrashPage').then((m) => ({ default: m.CrashPage })));
 
 type State = { crashed: boolean };
 
@@ -31,26 +29,9 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
     if (!this.state.crashed) return this.props.children;
     const doc = recoverableDocument();
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-100 p-4 text-slate-900">
-        <div role="alert" className="flex max-w-md flex-col gap-3 rounded-lg bg-white p-6 shadow">
-          <h1 className="text-lg font-semibold">Something went wrong</h1>
-          <p className="text-sm text-slate-700">
-            EZDesign hit an error it could not recover from. Your saved work is safe: changes are
-            saved as you go, and anything not yet sent is kept in this browser.
-            {doc && ' You can also download the design as it was a moment ago.'}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" className={BUTTON} onClick={() => window.location.reload()}>
-              Reload
-            </button>
-            {doc && (
-              <button type="button" className={BUTTON} onClick={() => downloadDocument(doc)}>
-                Download my design (JSON)
-              </button>
-            )}
-          </div>
-        </div>
-      </main>
+      <Suspense fallback={null}>
+        <CrashPage canDownload={doc !== null} onDownload={() => doc && downloadDocument(doc)} />
+      </Suspense>
     );
   }
 }

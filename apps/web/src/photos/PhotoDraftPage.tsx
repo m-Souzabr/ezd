@@ -1,14 +1,22 @@
 import { draftProblems, type RoomDraft, RoomDraftSchema } from '@ezd/core';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 
-import { api, ApiError, type PhotoDraft } from '../api/client';
-import { photoDraftKey } from '../api/keys';
-import { useCatalog } from '../catalog/useCatalog';
-import { errorMessage } from '../pages/format';
-import { FormError, LINK, Page, PRIMARY } from '../pages/ui';
-import { BUTTON } from '../editor/panels/fields';
+import { api, ApiError, type PhotoDraft } from '@/api/client';
+import { photoDraftKey } from '@/api/keys';
+import { useCatalog } from '@/catalog/useCatalog';
+import { FormError } from '@/components/form-error';
+import { FormActions } from '@/components/patterns/form-section';
+import { PageHeader } from '@/components/patterns/page-header';
+import { LoadingState } from '@/components/patterns/state-views';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { errorMessage } from '@/pages/format';
 import { buildDocument } from './document';
 import { DraftEditor } from './DraftEditor';
 import { DraftPlan } from './DraftPlan';
@@ -17,6 +25,17 @@ import { PhotoViewer } from './PhotoViewer';
 /** How long after the last correction it is saved. */
 const DRAFT_SAVE_DELAY_MS = 800;
 const DEFAULT_NAME = 'Kitchen from photo';
+const TEXT_LINK = buttonVariants({ variant: 'link', className: 'h-auto p-0' });
+
+/** A page that says one thing and links on: a missing, closed or unreadable draft. */
+function DraftMessage({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-6">
+      <PageHeader title={title} />
+      <p className="text-sm text-muted-foreground">{children}</p>
+    </div>
+  );
+}
 
 export function PhotoDraftPage() {
   const { id = '' } = useParams();
@@ -42,22 +61,20 @@ function PhotoDraftScreen({ draftId }: { draftId: string }) {
   if (draft.error) {
     const missing = draft.error instanceof ApiError && draft.error.status === 404;
     return (
-      <Page title={missing ? 'Draft not found' : 'The draft could not be opened'}>
-        <p className="text-sm text-slate-600">
-          {missing ? 'This draft does not exist or was deleted.' : errorMessage(draft.error)}{' '}
-          <Link to="/projects" className={LINK}>
-            Back to projects
-          </Link>
-        </p>
-      </Page>
+      <DraftMessage title={missing ? 'Draft not found' : 'The draft could not be opened'}>
+        {missing ? 'This draft does not exist or was deleted.' : errorMessage(draft.error)}{' '}
+        <Link to="/projects" className={TEXT_LINK}>
+          Back to projects
+        </Link>
+      </DraftMessage>
     );
   }
   if (!draft.data || !photo.data) {
     return (
-      <main className="flex h-screen items-center justify-center bg-slate-100 text-sm text-slate-600">
-        <h1 className="sr-only">EZDesign</h1>
-        <p role="status">Loading the draft…</p>
-      </main>
+      <div className="space-y-6">
+        <h1 className="sr-only">Draft room from a photo</h1>
+        <LoadingState label="Loading the draft…" />
+      </div>
     );
   }
 
@@ -66,40 +83,36 @@ function PhotoDraftScreen({ draftId }: { draftId: string }) {
   if (status === 'failed') return <AnalysisFailed draft={draft.data} projectId={projectId} />;
   if (status === 'confirmed' || status === 'discarded' || status === 'analyzing') {
     return (
-      <Page title={status === 'confirmed' ? 'Draft confirmed' : 'Draft closed'}>
-        <p className="text-sm text-slate-600">
-          {status === 'confirmed' && draft.data.design ? (
-            <>
-              This draft became a design.{' '}
-              <Link to={`/designs/${draft.data.design}`} className={LINK}>
-                Open the design
-              </Link>
-            </>
-          ) : status === 'analyzing' ? (
-            'This photo is still being analyzed. Reload in a moment.'
-          ) : (
-            'This draft was discarded.'
-          )}{' '}
-          <Link to={`/projects/${projectId}`} className={LINK}>
-            Back to the project
-          </Link>
-        </p>
-      </Page>
+      <DraftMessage title={status === 'confirmed' ? 'Draft confirmed' : 'Draft closed'}>
+        {status === 'confirmed' && draft.data.design ? (
+          <>
+            This draft became a design.{' '}
+            <Link to={`/designs/${draft.data.design}`} className={TEXT_LINK}>
+              Open the design
+            </Link>
+          </>
+        ) : status === 'analyzing' ? (
+          'This photo is still being analyzed. Reload in a moment.'
+        ) : (
+          'This draft was discarded.'
+        )}{' '}
+        <Link to={`/projects/${projectId}`} className={TEXT_LINK}>
+          Back to the project
+        </Link>
+      </DraftMessage>
     );
   }
 
   const parsed = RoomDraftSchema.safeParse(draft.data.draft);
   if (!parsed.success) {
     return (
-      <Page title="The draft could not be read">
-        <p className="text-sm text-slate-600">
-          Analyze the photo again from the{' '}
-          <Link to={`/projects/${projectId}`} className={LINK}>
-            project page
-          </Link>
-          .
-        </p>
-      </Page>
+      <DraftMessage title="The draft could not be read">
+        Analyze the photo again from the{' '}
+        <Link to={`/projects/${projectId}`} className={TEXT_LINK}>
+          project page
+        </Link>
+        .
+      </DraftMessage>
     );
   }
   return (
@@ -125,38 +138,30 @@ function AnalysisFailed({ draft, projectId }: { draft: PhotoDraft; projectId: st
     onSuccess: (design) => void navigate(`/designs/${design.id}`),
   });
   return (
-    <Page title="The photo could not be analyzed">
-      <p role="alert" className="mb-4 text-sm text-slate-700">
+    <div className="space-y-6">
+      <PageHeader title="The photo could not be analyzed" />
+      <p role="alert" className="text-sm">
         {draft.error || 'The analysis did not give a usable draft.'}
       </p>
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          className={PRIMARY}
-          disabled={again.isPending}
-          onClick={() => again.mutate()}
-        >
+        <Button disabled={again.isPending} onClick={() => again.mutate()}>
+          {again.isPending ? <Spinner aria-hidden="true" /> : null}
           {again.isPending ? 'Analyzing…' : 'Try again'}
-        </button>
-        <Link to={`/projects/${projectId}`} className={BUTTON}>
+        </Button>
+        <Link to={`/projects/${projectId}`} className={buttonVariants({ variant: 'outline' })}>
           Try another photo
         </Link>
-        <button
-          type="button"
-          className={BUTTON}
-          disabled={template.isPending}
-          onClick={() => template.mutate()}
-        >
+        <Button variant="outline" disabled={template.isPending} onClick={() => template.mutate()}>
           Start from a template
-        </button>
+        </Button>
       </div>
       {again.isPending && (
-        <p role="status" className="mt-3 text-sm text-slate-600">
+        <p role="status" className="text-sm text-muted-foreground">
           Looking at the photo. This can take up to a minute.
         </p>
       )}
       <FormError error={again.error ?? template.error} />
-    </Page>
+    </div>
   );
 }
 
@@ -232,80 +237,90 @@ function Correction({
     onSuccess: (design) => void navigate(`/designs/${design.id}`),
   });
 
+  const nameId = useId();
   return (
-    <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
-      <header className="flex flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-4 py-2">
-        <Link to="/" className="text-base font-semibold tracking-tight">
-          EZDesign
-        </Link>
-        <h1 className="text-sm font-medium">Draft room from a photo</h1>
-        <span role="status" className="text-xs text-slate-500">
-          {save === 'saved'
-            ? 'Saved'
-            : save === 'saving'
-              ? 'Saving…'
-              : 'Not saved. Check your connection.'}
-        </span>
-        <Link to={`/projects/${projectId}`} className={`${LINK} ml-auto text-sm`}>
-          Back to the project
-        </Link>
-      </header>
-      <div
-        role="note"
-        className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-950"
-      >
-        <strong>Measurements come from you, not the photo.</strong> The photo only suggests the
-        layout. Values marked <em>Estimated</em> are guesses: type each wall length, or tick it once
-        you have checked it. Measure one wall first; the others are easier to judge from it.
-      </div>
-      <main className="grid flex-1 gap-4 p-4 lg:grid-cols-2">
+    <div className="space-y-6">
+      <PageHeader
+        title="Draft room from a photo"
+        actions={
+          <Link to={`/projects/${projectId}`} className={buttonVariants({ variant: 'outline' })}>
+            Back to the project
+          </Link>
+        }
+      />
+      <p role="status" className="-mt-4 text-sm text-muted-foreground">
+        {save === 'saved'
+          ? 'Saved'
+          : save === 'saving'
+            ? 'Saving…'
+            : 'Not saved. Check your connection.'}
+      </p>
+      <Card role="note">
+        <CardContent className="text-sm">
+          <strong>Measurements come from you, not the photo.</strong> The photo only suggests the
+          layout. Values marked <em>Estimated</em> are guesses: type each wall length, or tick it
+          once you have checked it. Measure one wall first; the others are easier to judge from it.
+        </CardContent>
+      </Card>
+      <div className="grid gap-6 lg:grid-cols-2">
         <div className="flex min-h-[24rem] flex-col gap-3 lg:sticky lg:top-4 lg:h-[calc(100vh-8rem)]">
           <PhotoViewer src={api.photoFileUrl(photoId)} alt="The kitchen photo" className="flex-1" />
-          {notes && <p className="text-xs text-slate-600">Note from the analysis: {notes}</p>}
+          {notes && (
+            <p className="text-xs text-muted-foreground">Note from the analysis: {notes}</p>
+          )}
         </div>
-        <div className="flex flex-col gap-3">
-          <section aria-label="Plan preview" className="rounded-lg bg-white p-3 shadow-sm">
-            <DraftPlan draft={draft} />
+        <div className="flex flex-col gap-4">
+          <section aria-label="Plan preview">
+            <Card>
+              <CardContent>
+                <DraftPlan draft={draft} />
+              </CardContent>
+            </Card>
           </section>
           <DraftEditor draft={draft} catalog={catalog} onChange={change} />
-          <section
-            aria-label="Confirm"
-            className="flex flex-col gap-2 rounded-lg bg-white p-3 shadow-sm"
-          >
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
-              Design name
-              <input
-                type="text"
-                className="rounded border border-slate-300 px-2 py-1 text-sm text-slate-900"
-                value={name}
-                maxLength={200}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </label>
-            {problems.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-slate-700">Before you confirm:</p>
-                <ul aria-label="Still to do" className="list-disc pl-5 text-xs text-slate-700">
-                  {problems.map((problem) => (
-                    <li key={problem}>{problem}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className={PRIMARY}
-                disabled={problems.length > 0 || confirm.isPending}
-                onClick={() => confirm.mutate()}
-              >
-                {confirm.isPending ? 'Creating the design…' : 'Confirm and open the editor'}
-              </button>
-            </div>
-            <FormError error={confirm.error} />
+          <section aria-label="Confirm">
+            <Card>
+              <CardContent className="flex flex-col gap-4">
+                <Field>
+                  <FieldLabel htmlFor={nameId}>Design name</FieldLabel>
+                  <Input
+                    id={nameId}
+                    type="text"
+                    value={name}
+                    maxLength={200}
+                    onChange={(event) => setName(event.target.value)}
+                  />
+                </Field>
+                {problems.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-sm font-medium">Before you confirm:</p>
+                    <ul aria-label="Still to do" className="flex flex-col gap-2 text-sm">
+                      {problems.map((problem) => (
+                        <li key={problem} className="flex items-start gap-2">
+                          <Badge variant="warning">To do</Badge>
+                          <span>{problem}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <FormError error={confirm.error} />
+                <FormActions aboveTabBar>
+                  <Button
+                    type="button"
+                    className="flex-1 md:flex-none"
+                    disabled={problems.length > 0 || confirm.isPending}
+                    onClick={() => confirm.mutate()}
+                  >
+                    {confirm.isPending ? <Spinner aria-hidden="true" /> : null}
+                    {confirm.isPending ? 'Creating the design…' : 'Confirm and open the editor'}
+                  </Button>
+                </FormActions>
+              </CardContent>
+            </Card>
           </section>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

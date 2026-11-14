@@ -13,13 +13,35 @@ import { AISettingsPage } from './admin/AISettings';
 import { AuditPage } from './admin/AuditPage';
 import { UsersPage } from './admin/UsersPage';
 import { RequireStaff } from './auth/RequireStaff';
-import { ForgotPasswordPage, LoginPage, RegisterPage, ResetPasswordPage } from './pages/AuthPages';
 import { DesignEditorPage } from './pages/DesignEditor';
 import { LocalEditor } from './pages/LocalEditor';
-import { PhotoDraftPage } from './photos/PhotoDraftPage';
-import { ProjectDetailPage, ProjectsPage } from './pages/Projects';
-import { QuotePage } from './pages/QuotePage';
 import { AccountLinks } from './pages/ui';
+
+// The account pages are loaded when they are visited: the shell, the forms and the dialogs
+// they bring stay out of the first load, which the editor at `/` has to keep small.
+const AccountShell = lazy(() =>
+  import('./pages/AccountShell').then((m) => ({ default: m.AccountShell })),
+);
+const LoginPage = lazy(() => import('./pages/AuthPages').then((m) => ({ default: m.LoginPage })));
+const RegisterPage = lazy(() =>
+  import('./pages/AuthPages').then((m) => ({ default: m.RegisterPage })),
+);
+const ForgotPasswordPage = lazy(() =>
+  import('./pages/AuthPages').then((m) => ({ default: m.ForgotPasswordPage })),
+);
+const ResetPasswordPage = lazy(() =>
+  import('./pages/AuthPages').then((m) => ({ default: m.ResetPasswordPage })),
+);
+const ProjectsPage = lazy(() =>
+  import('./pages/Projects').then((m) => ({ default: m.ProjectsPage })),
+);
+const ProjectDetailPage = lazy(() =>
+  import('./pages/Projects').then((m) => ({ default: m.ProjectDetailPage })),
+);
+const QuotePage = lazy(() => import('./pages/QuotePage').then((m) => ({ default: m.QuotePage })));
+const PhotoDraftPage = lazy(() =>
+  import('./photos/PhotoDraftPage').then((m) => ({ default: m.PhotoDraftPage })),
+);
 
 /**
  * The design-system gallery is for development and test builds, like `window.__ezd`. In a
@@ -39,95 +61,83 @@ export function App() {
   return (
     <>
       <SessionExpiry />
-      <Routes>
-        <Route
-          path="/"
-          element={
-            localEditor ? (
-              <LocalEditor header={<AccountLinks />} />
-            ) : (
-              <Navigate to="/projects" replace />
-            )
-          }
-        />
-        {DesignSystemPage && (
+      <Suspense
+        fallback={
+          <p role="status" className="p-6 text-sm text-muted-foreground">
+            Loading…
+          </p>
+        }
+      >
+        <Routes>
           <Route
-            path="/design-system"
+            path="/"
             element={
-              <Suspense fallback={null}>
-                <DesignSystemPage />
-              </Suspense>
+              localEditor ? (
+                <LocalEditor header={<AccountLinks />} />
+              ) : (
+                <Navigate to="/projects" replace />
+              )
             }
           />
-        )}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route
-          path="/projects"
-          element={
-            <RequireSession>
-              <ProjectsPage />
-            </RequireSession>
-          }
-        />
-        <Route
-          path="/projects/:id"
-          element={
-            <RequireSession>
-              <ProjectDetailPage />
-            </RequireSession>
-          }
-        />
-        <Route
-          path="/designs/:id"
-          element={
-            <RequireSession>
-              <DesignEditorPage />
-            </RequireSession>
-          }
-        />
-        <Route
-          path="/photo-drafts/:id"
-          element={
-            <RequireSession>
-              <PhotoDraftPage />
-            </RequireSession>
-          }
-        />
-        <Route
-          path="/quotes/:id"
-          element={
-            <RequireSession>
-              <QuotePage />
-            </RequireSession>
-          }
-        />
-        <Route path="/settings/ai" element={<Navigate to="/admin/ai" replace />} />
-        <Route
-          path="/admin"
-          element={
-            <RequireSession>
-              <RequireStaff>
-                <AdminLayout />
-              </RequireStaff>
-            </RequireSession>
-          }
-        >
-          <Route index element={<AdminHome />} />
-          <Route path="catalog" element={<CatalogAdminPage />} />
-          <Route path="rules" element={<RulesAdminPage />} />
-          <Route path="app" element={<AppSettingsPage />} />
-          <Route path="quotes" element={<QuotesAdminPage />} />
-          <Route path="ai" element={<AISettingsPage />} />
-          <Route path="users" element={<UsersPage />} />
-          <Route path="audit" element={<AuditPage />} />
-          {/* An unknown admin path stays in the Control Panel instead of falling through to `/`. */}
-          <Route path="*" element={<AdminHome />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {DesignSystemPage && (
+            <Route
+              path="/design-system"
+              element={
+                <Suspense fallback={null}>
+                  <DesignSystemPage />
+                </Suspense>
+              }
+            />
+          )}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route
+            path="/designs/:id"
+            element={
+              <RequireSession>
+                <DesignEditorPage />
+              </RequireSession>
+            }
+          />
+          <Route
+            element={
+              <RequireSession>
+                <AccountShell />
+              </RequireSession>
+            }
+          >
+            <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/projects/:id" element={<ProjectDetailPage />} />
+            <Route path="/photo-drafts/:id" element={<PhotoDraftPage />} />
+            <Route path="/quotes/:id" element={<QuotePage />} />
+          </Route>
+          <Route path="/settings/ai" element={<Navigate to="/admin/ai" replace />} />
+          <Route
+            path="/admin"
+            element={
+              <RequireSession>
+                <RequireStaff>
+                  <AdminLayout />
+                </RequireStaff>
+              </RequireSession>
+            }
+          >
+            <Route index element={<AdminHome />} />
+            <Route path="catalog" element={<CatalogAdminPage />} />
+            <Route path="rules" element={<RulesAdminPage />} />
+            <Route path="app" element={<AppSettingsPage />} />
+            <Route path="quotes" element={<QuotesAdminPage />} />
+            <Route path="ai" element={<AISettingsPage />} />
+            <Route path="users" element={<UsersPage />} />
+            <Route path="audit" element={<AuditPage />} />
+            {/* An unknown admin path stays in the Control Panel instead of falling through to `/`. */}
+            <Route path="*" element={<AdminHome />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

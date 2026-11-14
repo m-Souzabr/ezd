@@ -19,19 +19,38 @@ import {
   type RoomDraft,
   setDraftShape,
 } from '@ezd/core';
+import { CheckIcon, PlusIcon } from 'lucide-react';
 import { useId, useState } from 'react';
 
-import { BUTTON } from '../editor/panels/fields';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
+import { cn } from '@/lib/utils';
 
 // The editable draft room. Every value the model supplied is shown as a suggestion (a
 // dashed outline and an Estimated tag) until the user types it or ticks it. Wall lengths
 // must all be typed or ticked before Confirm is enabled.
 
-const CONTROL =
-  'w-full rounded border bg-white px-2 py-1 text-sm text-slate-900 ' +
-  'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500';
-const SECTION = 'flex flex-col gap-2 rounded-lg bg-white p-3 shadow-sm';
-const HEADING = 'text-sm font-semibold text-slate-800';
+const ITEM_ROW = 'grid grid-cols-1 gap-3 border-t pt-3 sm:grid-cols-2 lg:grid-cols-4';
+
+/** A titled card; `aria-label` makes it a landmark the tests and screen readers can name. */
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <section aria-label={label}>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <h2>{label}</h2>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">{children}</CardContent>
+      </Card>
+    </section>
+  );
+}
 
 const typed = (value: number): DraftLen => ({ value, estimated: false });
 const UNKNOWN: DraftLen = { value: null, estimated: false };
@@ -73,33 +92,27 @@ export function DraftLengthField({
     setError(null);
   };
 
-  const border = estimate
-    ? `border-dashed ${lowConfidence ? 'border-amber-500 bg-amber-50' : 'border-sky-500'}`
-    : 'border-slate-300';
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-2">
-        <label htmlFor={id} className="text-xs font-medium text-slate-600">
-          {label}
-        </label>
+    <div className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
+        <FieldLabel htmlFor={id}>{label}</FieldLabel>
         {estimate && (
-          <span
-            className={`rounded px-1.5 text-[11px] font-medium ${
-              lowConfidence ? 'bg-amber-100 text-amber-900' : 'bg-sky-100 text-sky-900'
-            }`}
-          >
+          <Badge variant={lowConfidence ? 'warning' : 'secondary'}>
             Estimated{lowConfidence ? ', low confidence' : ''}
-          </span>
+          </Badge>
         )}
       </div>
       <div className="flex items-center gap-1">
-        <input
+        <Input
           id={id}
           type="text"
           inputMode="decimal"
           autoComplete="off"
           placeholder="inches"
-          className={`${CONTROL} ${border}`}
+          className={cn(
+            estimate && 'border-dashed',
+            estimate && (lowConfidence ? 'border-warning' : 'border-info'),
+          )}
           value={shown}
           aria-invalid={error !== null}
           aria-describedby={error ? `${id}-error` : undefined}
@@ -113,22 +126,19 @@ export function DraftLengthField({
           }}
         />
         {estimate && (
-          <button
+          <Button
             type="button"
-            className={BUTTON}
+            variant="outline"
+            size="icon"
             title="This value is right"
             onClick={() => onChange(typed(value.value!))}
           >
-            <span aria-hidden="true">✓</span>
+            <CheckIcon aria-hidden="true" />
             <span className="sr-only">Confirm {label}</span>
-          </button>
+          </Button>
         )}
       </div>
-      {error && (
-        <p id={`${id}-error`} role="alert" className="text-xs text-red-700">
-          {error}
-        </p>
-      )}
+      {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
     </div>
   );
 }
@@ -146,22 +156,15 @@ function Select<T extends string>({
 }) {
   const id = useId();
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium text-slate-600">
-        {label}
-      </label>
-      <select
-        id={id}
-        className={`${CONTROL} border-slate-300`}
-        value={value}
-        onChange={(event) => onChange(event.target.value as T)}
-      >
+    <div className="flex flex-col gap-1.5">
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <NativeSelect id={id} value={value} onChange={(event) => onChange(event.target.value as T)}>
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </div>
   );
 }
@@ -232,15 +235,14 @@ export function DraftEditor({
 
   return (
     <div className="flex flex-col gap-3">
-      <section aria-label="Room" className={SECTION}>
-        <h2 className={HEADING}>Room</h2>
+      <Section label="Room">
         <Select
           label="Shape"
           value={draft.shape}
           options={shapes}
           onChange={(shape) => onChange(setDraftShape(draft, shape))}
         />
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {draft.walls.map((wall, index) => (
             <DraftLengthField
               key={wall.label}
@@ -268,23 +270,20 @@ export function DraftEditor({
             onChange={(ceilingHeight) => onChange({ ...draft, ceilingHeight })}
           />
         </div>
-      </section>
+      </Section>
 
-      <section aria-label="Doors and windows" className={SECTION}>
-        <h2 className={HEADING}>Doors and windows</h2>
+      <Section label="Doors and windows">
         {draft.openings.length === 0 && (
-          <p className="text-xs text-slate-500">None found. Add any the photo does not show.</p>
+          <p className="text-sm text-muted-foreground">
+            None found. Add any the photo does not show.
+          </p>
         )}
         <ul className="flex flex-col gap-2">
           {draft.openings.map((opening, index) => {
             const name = draftOpeningName(draft, index);
             const low = opening.confidence === 'low';
             return (
-              <li
-                key={index}
-                aria-label={name}
-                className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-2 sm:grid-cols-4"
-              >
+              <li key={index} aria-label={name} className={ITEM_ROW}>
                 <Select
                   label="Kind"
                   value={opening.kind}
@@ -322,37 +321,39 @@ export function DraftEditor({
                   />
                 )}
                 <div className="flex items-end">
-                  <button
+                  <Button
                     type="button"
-                    className={BUTTON}
+                    variant="outline"
                     onClick={() =>
                       onChange({ ...draft, openings: draft.openings.filter((_, i) => i !== index) })
                     }
                   >
                     Remove<span className="sr-only"> {name.toLowerCase()}</span>
-                  </button>
+                  </Button>
                 </div>
               </li>
             );
           })}
         </ul>
         <div>
-          <button
+          <Button
             type="button"
-            className={BUTTON}
+            variant="outline"
             onClick={() =>
               onChange({ ...draft, openings: [...draft.openings, newOpening(firstWall)] })
             }
           >
+            <PlusIcon aria-hidden="true" />
             Add a door or window
-          </button>
+          </Button>
         </div>
-      </section>
+      </Section>
 
-      <section aria-label="Cabinets and appliances" className={SECTION}>
-        <h2 className={HEADING}>Cabinets and appliances</h2>
+      <Section label="Cabinets and appliances">
         {draft.items.length === 0 && (
-          <p className="text-xs text-slate-500">None found. You can add them in the editor.</p>
+          <p className="text-sm text-muted-foreground">
+            None found. You can add them in the editor.
+          </p>
         )}
         <ul className="flex flex-col gap-2">
           {draft.items.map((item, index) => {
@@ -361,11 +362,7 @@ export function DraftEditor({
             const label = `${CATEGORY_NAMES[item.category]} ${index + 1}`;
             const estimated = item.width.estimated;
             return (
-              <li
-                key={index}
-                aria-label={label}
-                className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-2 sm:grid-cols-4"
-              >
+              <li key={index} aria-label={label} className={ITEM_ROW}>
                 <Select
                   label="Kind"
                   value={item.category}
@@ -394,24 +391,24 @@ export function DraftEditor({
                   />
                 </div>
                 <div className="flex items-end">
-                  <button
+                  <Button
                     type="button"
-                    className={BUTTON}
+                    variant="outline"
                     onClick={() =>
                       onChange({ ...draft, items: draft.items.filter((_, i) => i !== index) })
                     }
                   >
                     Remove<span className="sr-only"> {label.toLowerCase()}</span>
-                  </button>
+                  </Button>
                 </div>
               </li>
             );
           })}
         </ul>
         <div>
-          <button
+          <Button
             type="button"
-            className={BUTTON}
+            variant="outline"
             onClick={() => {
               const entry = getEntry(catalog, CATEGORY_CATALOG_IDS.base);
               if (!entry) return;
@@ -430,10 +427,11 @@ export function DraftEditor({
               onChange({ ...draft, items: [...draft.items, item] });
             }}
           >
+            <PlusIcon aria-hidden="true" />
             Add a cabinet
-          </button>
+          </Button>
         </div>
-      </section>
+      </Section>
     </div>
   );
 }
@@ -455,19 +453,13 @@ function WidthSelect({
   const id = useId();
   return (
     <>
-      <div className="flex items-center gap-2">
-        <label htmlFor={id} className="text-xs font-medium text-slate-600">
-          {label}
-        </label>
-        {estimated && (
-          <span className="rounded bg-sky-100 px-1.5 text-[11px] font-medium text-sky-900">
-            Estimated
-          </span>
-        )}
+      <div className="flex flex-wrap items-center gap-2">
+        <FieldLabel htmlFor={id}>{label}</FieldLabel>
+        {estimated && <Badge variant="secondary">Estimated</Badge>}
       </div>
-      <select
+      <NativeSelect
         id={id}
-        className={`${CONTROL} ${estimated ? 'border-dashed border-sky-500' : 'border-slate-300'}`}
+        className={cn(estimated && 'border-dashed border-info')}
         value={value ?? ''}
         onChange={(event) => onChange(Number(event.target.value))}
       >
@@ -477,7 +469,7 @@ function WidthSelect({
             {formatLength(width)}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </>
   );
 }
