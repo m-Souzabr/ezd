@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 
 import { expect, test } from '@playwright/test';
 
-import { getDoc, IN } from './helpers';
+import { createProjectInUi, getDoc, IN } from './helpers';
 
 // The phase 9 scenario, with the API's vision model answering from e2e/llm-script.json:
 // upload a photo, analyze it, type the wall lengths, confirm, and land in the editor.
@@ -17,8 +17,7 @@ test('upload a photo, correct the draft room and open it in the editor', async (
     await page.getByLabel('Email').fill(`e2e-photo-${Date.now()}-${Math.random()}@example.com`);
     await page.getByLabel('Password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Create account' }).click();
-    await page.getByLabel('New project').fill('Photo house');
-    await page.getByRole('button', { name: 'Create project' }).click();
+    await createProjectInUi(page, 'Photo house');
     await page.getByRole('link', { name: 'Photo house' }).click();
   });
 

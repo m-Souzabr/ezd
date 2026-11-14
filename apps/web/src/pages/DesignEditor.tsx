@@ -1,6 +1,6 @@
 import type { DesignDocument } from '@ezd/core';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 
 import { api, ApiError, type DesignVersionSummary } from '../api/client';
@@ -14,7 +14,6 @@ import { BUTTON } from '../editor/panels/fields';
 import { ConflictDialog, SaveStatus } from '../editor/panels/SaveStatus';
 import { VersionsDialog } from '../editor/panels/VersionsDialog';
 import { VersionPreview } from '../editor/VersionPreview';
-import { PhotoReference } from '../photos/PhotoReference';
 import { QuotesDialog } from '../quotes/QuotesDialog';
 import {
   type Autosave,
@@ -29,6 +28,11 @@ import { DesignStoreProvider } from '../store/context';
 import { createDesignStore, type DesignStoreApi } from '../store/designStore';
 import { errorMessage } from './format';
 import { LINK, Page } from './ui';
+
+// Only a design that came from a photo has the panel, and it uses the design system's button.
+const PhotoReference = lazy(() =>
+  import('../photos/PhotoReference').then((m) => ({ default: m.PhotoReference })),
+);
 
 /** One design open in the editor: its store, and the autosave that watches the store. */
 type Session = { store: DesignStoreApi; autosave: Autosave; generation: number };
@@ -280,7 +284,11 @@ function DesignEditor({ designId }: { designId: string }) {
           }}
         />
       )}
-      {design?.source_photo && <PhotoReference photoId={design.source_photo} />}
+      {design?.source_photo && (
+        <Suspense fallback={null}>
+          <PhotoReference photoId={design.source_photo} />
+        </Suspense>
+      )}
       <nav aria-label="Design" className="ml-auto flex items-center gap-3 pb-1 text-sm">
         {design && (
           <Link to={`/projects/${design.project}`} className={LINK}>

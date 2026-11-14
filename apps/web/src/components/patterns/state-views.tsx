@@ -47,9 +47,19 @@ type ErrorStateProps = {
   title: string;
   description: string;
   onRetry: () => void;
+  /** The retry button's text. */
+  retryLabel?: string;
+  /** More actions next to the retry button. */
+  children?: ReactNode;
 };
 
-export function ErrorState({ title, description, onRetry }: ErrorStateProps) {
+export function ErrorState({
+  title,
+  description,
+  onRetry,
+  retryLabel = 'Try again',
+  children,
+}: ErrorStateProps) {
   return (
     <Empty role="alert">
       <EmptyHeader>
@@ -60,9 +70,12 @@ export function ErrorState({ title, description, onRetry }: ErrorStateProps) {
         <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button variant="outline" onClick={onRetry}>
-          Try again
-        </Button>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button variant="outline" onClick={onRetry}>
+            {retryLabel}
+          </Button>
+          {children}
+        </div>
       </EmptyContent>
     </Empty>
   );

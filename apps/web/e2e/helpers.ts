@@ -142,3 +142,20 @@ export async function signIn(page: Page, email: string, password = PASSWORD) {
   await submitLogin(page, email, password);
   await expect(page).toHaveURL(/\/projects$/);
 }
+
+/** On the projects page: makes a project through the New project dialog. */
+export async function createProjectInUi(page: Page, name: string) {
+  await page.getByRole('button', { name: 'New project' }).click();
+  const dialog = page.getByRole('dialog', { name: 'New project' });
+  await dialog.getByLabel('Project name').fill(name);
+  await dialog.getByRole('button', { name: 'Create project' }).click();
+  await expect(dialog).toBeHidden();
+}
+
+/** On a project's page: makes a design through the New design dialog, which opens it. */
+export async function createDesignInUi(page: Page, name: string) {
+  await page.getByRole('button', { name: 'New design' }).click();
+  const dialog = page.getByRole('dialog', { name: 'New design' });
+  await dialog.getByLabel('Design name').fill(name);
+  await dialog.getByRole('button', { name: 'Create design' }).click();
+}

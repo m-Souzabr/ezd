@@ -1,6 +1,13 @@
 import { expect, type Page, test } from '@playwright/test';
 
-import { dragFromCatalog, getDoc, IN, STORAGE_KEY } from './helpers';
+import {
+  createDesignInUi,
+  createProjectInUi,
+  dragFromCatalog,
+  getDoc,
+  IN,
+  STORAGE_KEY,
+} from './helpers';
 
 // The phase 6 scenario: an account, a design kept on the server, and its versions.
 
@@ -38,13 +45,11 @@ test('register, design on the server, reload, save a version and restore it', as
   });
 
   await test.step('create a project and a design in it', async () => {
-    await page.getByLabel('New project').fill('Lake house');
-    await page.getByRole('button', { name: 'Create project' }).click();
+    await createProjectInUi(page, 'Lake house');
     await page.getByRole('link', { name: 'Lake house' }).click();
     await expect(page.getByRole('heading', { name: 'Lake house' })).toBeVisible();
 
-    await page.getByLabel('New design').fill('Kitchen');
-    await page.getByRole('button', { name: 'Create design' }).click();
+    await createDesignInUi(page, 'Kitchen');
     await expect(page).toHaveURL(/\/designs\/[0-9a-f-]{36}$/);
     await expect(page.getByTestId('design-name')).toHaveText('Kitchen');
     await saved(page);
@@ -138,11 +143,9 @@ test('register, design on the server, reload, save a version and restore it', as
 /** Registers, and opens a new design with a room in it. Returns the design's URL. */
 async function newDesign(page: Page): Promise<string> {
   await register(page, newEmail());
-  await page.getByLabel('New project').fill('Cabin');
-  await page.getByRole('button', { name: 'Create project' }).click();
+  await createProjectInUi(page, 'Cabin');
   await page.getByRole('link', { name: 'Cabin' }).click();
-  await page.getByLabel('New design').fill('Kitchen');
-  await page.getByRole('button', { name: 'Create design' }).click();
+  await createDesignInUi(page, 'Kitchen');
   await expect(page).toHaveURL(/\/designs\/[0-9a-f-]{36}$/);
   await createRoom(page);
   await saved(page);

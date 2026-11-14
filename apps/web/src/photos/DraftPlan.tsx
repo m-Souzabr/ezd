@@ -1,6 +1,8 @@
 import { draftPreview, itemFootprint, pointOnWall, type RoomDraft, wallNormal } from '@ezd/core';
 import { useMemo } from 'react';
 
+import { cn } from '@/lib/utils';
+
 // The live plan of the draft, drawn from core's `draftPreview`. A wall with no length yet
 // is drawn at a placeholder length, dashed, and what cannot be placed is counted below.
 
@@ -10,7 +12,7 @@ export function DraftPlan({ draft }: { draft: RoomDraft }) {
   const { doc, skipped } = useMemo(() => draftPreview(draft), [draft]);
   const points = doc.room.walls.flatMap((wall) => [wall.start, wall.end]);
   if (points.length === 0) {
-    return <p className="text-sm text-slate-500">Pick a shape to see the plan.</p>;
+    return <p className="text-sm text-muted-foreground">Pick a shape to see the plan.</p>;
   }
   const xs = points.map((p) => p.x);
   const ys = points.map((p) => p.y);
@@ -26,7 +28,7 @@ export function DraftPlan({ draft }: { draft: RoomDraft }) {
         role="img"
         aria-label="Plan of the draft room"
         viewBox={`${minX} ${minY} ${width} ${height}`}
-        className="h-64 w-full rounded border border-slate-200 bg-white"
+        className="h-64 w-full rounded-lg border bg-card"
       >
         {doc.items.map((item) => {
           const footprint = itemFootprint(doc, item);
@@ -35,8 +37,10 @@ export function DraftPlan({ draft }: { draft: RoomDraft }) {
             <polygon
               key={item.id}
               points={footprint.map((p) => `${p.x},${p.y}`).join(' ')}
-              fill={item.kind === 'wall' ? '#e0f2fe' : '#f1f5f9'}
-              stroke="#475569"
+              className={cn(
+                'stroke-muted-foreground',
+                item.kind === 'wall' ? 'fill-info/20' : 'fill-muted',
+              )}
               strokeWidth={8}
               opacity={item.kind === 'wall' ? 0.7 : 1}
             />
@@ -55,7 +59,7 @@ export function DraftPlan({ draft }: { draft: RoomDraft }) {
                 y1={wall.start.y}
                 x2={wall.end.x}
                 y2={wall.end.y}
-                stroke="#0f172a"
+                className="stroke-foreground"
                 strokeWidth={wall.thickness}
                 strokeDasharray={known(index) ? undefined : '64 48'}
               />
@@ -65,7 +69,7 @@ export function DraftPlan({ draft }: { draft: RoomDraft }) {
                 fontSize={160}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fill="#0f172a"
+                className="fill-foreground"
               >
                 {String.fromCharCode(65 + index)}
               </text>
@@ -83,13 +87,13 @@ export function DraftPlan({ draft }: { draft: RoomDraft }) {
               y1={a.y}
               x2={b.x}
               y2={b.y}
-              stroke={opening.kind === 'window' ? '#0284c7' : '#b45309'}
+              className={opening.kind === 'window' ? 'stroke-info' : 'stroke-warning'}
               strokeWidth={wall.thickness + 16}
             />
           );
         })}
       </svg>
-      <figcaption className="text-xs text-slate-500">
+      <figcaption className="text-xs text-muted-foreground">
         Dashed walls have no length yet.
         {skipped > 0 &&
           ` ${skipped} ${skipped === 1 ? 'thing is' : 'things are'} not drawn until placed on a wall that has room for it.`}

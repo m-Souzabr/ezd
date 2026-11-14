@@ -1,12 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { UploadIcon } from 'lucide-react';
 import { type DragEvent, useEffect, useId, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
-import { api, type Photo } from '../api/client';
-import { photosKey } from '../api/keys';
-import { BUTTON } from '../editor/panels/fields';
-import { formatDate } from '../pages/format';
-import { ConfirmButton, FormError, LINK } from '../pages/ui';
+import { api, type Photo } from '@/api/client';
+import { photoDraftStatusLabel } from './status';
+import { photosKey } from '@/api/keys';
+import { FormError } from '@/components/form-error';
+import { ConfirmDialog } from '@/components/patterns/confirm-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { FieldError } from '@/components/ui/field';
+import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
+import { formatDate } from '@/pages/format';
 import { ACCEPTED_TYPES, photoFileProblem } from './upload';
 
 function Uploader({
@@ -63,18 +71,23 @@ function Uploader({
         }}
         onDragLeave={() => setOver(false)}
         onDrop={onDrop}
-        className={`flex flex-col items-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 text-center text-sm ${
-          over ? 'border-sky-500 bg-sky-50' : 'border-slate-300 bg-white'
-        }`}
+        className={cn(
+          'flex flex-col items-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center text-sm',
+          over ? 'border-primary bg-accent' : 'border-border bg-card',
+        )}
       >
-        <p className="text-slate-700">
+        <UploadIcon className="size-6 text-muted-foreground" aria-hidden="true" />
+        <p>
           Drop a photo of the kitchen here, or{' '}
-          <label htmlFor={inputId} className={`${LINK} cursor-pointer`}>
+          <label
+            htmlFor={inputId}
+            className="cursor-pointer text-primary underline underline-offset-4 has-focus-visible:ring-3"
+          >
             choose a file
           </label>
           .
         </p>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-muted-foreground">
           JPEG, PNG or WebP, up to 10 MB. Stand in a corner so the whole run of cabinets shows.
         </p>
         <input
@@ -89,17 +102,18 @@ function Uploader({
           }}
         />
         {preview && (
-          <img src={preview} alt="The photo being uploaded" className="max-h-40 rounded" />
+          <img src={preview} alt="The photo being uploaded" className="max-h-40 rounded-md" />
         )}
         {progress !== null && (
-          <progress aria-label="Upload progress" className="w-48" max={1} value={progress} />
+          <progress
+            aria-label="Upload progress"
+            className="h-2 w-48 accent-primary"
+            max={1}
+            value={progress}
+          />
         )}
       </div>
-      {problem && (
-        <p role="alert" className="text-sm text-red-700">
-          {problem}
-        </p>
-      )}
+      {problem && <FieldError>{problem}</FieldError>}
       <FormError error={send.error} />
     </div>
   );
@@ -108,6 +122,7 @@ function Uploader({
 function PhotoRow({ photo, projectId }: { photo: Photo; projectId: string }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [deleting, setDeleting] = useState(false);
   const refresh = () => queryClient.invalidateQueries({ queryKey: photosKey(projectId) });
   const analyze = useMutation({
     mutationFn: () => api.analyzePhoto(photo.id),
@@ -121,43 +136,72 @@ function PhotoRow({ photo, projectId }: { photo: Photo; projectId: string }) {
   const label = `photo from ${formatDate(photo.created_at)}`;
 
   return (
-    <li className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-3 last:border-b-0">
-      <img
-        src={api.photoFileUrl(photo.id)}
-        alt={`Kitchen ${label}`}
-        className="h-16 w-24 rounded object-cover"
-        loading="lazy"
+    <li>
+      <Card>
+        <CardContent className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <img
+            src={api.photoFileUrl(photo.id)}
+            alt={`Kitchen ${label}`}
+            className="h-24 w-full rounded-md object-cover sm:h-16 sm:w-24"
+            loading="lazy"
+          />
+          <div className="flex flex-1 flex-col gap-1 text-xs text-muted-foreground">
+            <span>Uploaded {formatDate(photo.created_at)}</span>
+            {draft && (
+              <span>
+                <Badge variant={draft.status === 'failed' ? 'destructive' : 'secondary'}>
+                  {photoDraftStatusLabel(draft.status)}
+                </Badge>
+              </span>
+            )}
+            {draft?.status === 'failed' && <span>The last analysis failed.</span>}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {draft?.status === 'ready' ? (
+              <Link
+                to={`/photo-drafts/${draft.id}`}
+                className={buttonVariants({ variant: 'outline' })}
+              >
+                Correct the draft
+              </Link>
+            ) : draft?.status === 'confirmed' && draft.design ? (
+              <Link
+                to={`/designs/${draft.design}`}
+                className={buttonVariants({ variant: 'outline' })}
+              >
+                Open the design
+              </Link>
+            ) : (
+              <Button
+                variant="outline"
+                disabled={analyze.isPending}
+                onClick={() => analyze.mutate()}
+              >
+                {analyze.isPending ? <Spinner aria-hidden="true" /> : null}
+                {analyze.isPending ? 'Analyzing…' : 'Analyze'}
+                <span className="sr-only"> {label}</span>
+              </Button>
+            )}
+            <Button variant="ghost" onClick={() => setDeleting(true)}>
+              Delete<span className="sr-only"> {label}</span>
+            </Button>
+          </div>
+          {analyze.isPending && (
+            <p role="status" className="basis-full text-xs text-muted-foreground">
+              Looking at the photo. This can take up to a minute.
+            </p>
+          )}
+          <FormError error={analyze.error ?? remove.error} />
+        </CardContent>
+      </Card>
+      <ConfirmDialog
+        open={deleting}
+        onOpenChange={setDeleting}
+        title="Delete this photo?"
+        description={`The ${label} and its drafts will be removed.`}
+        confirmLabel="Delete photo"
+        onConfirm={() => remove.mutate()}
       />
-      <div className="mr-auto flex flex-col text-xs text-slate-500">
-        <span>Uploaded {formatDate(photo.created_at)}</span>
-        {draft?.status === 'failed' && <span>The last analysis failed.</span>}
-      </div>
-      {draft?.status === 'ready' ? (
-        <Link to={`/photo-drafts/${draft.id}`} className={BUTTON}>
-          Correct the draft
-        </Link>
-      ) : draft?.status === 'confirmed' && draft.design ? (
-        <Link to={`/designs/${draft.design}`} className={BUTTON}>
-          Open the design
-        </Link>
-      ) : (
-        <button
-          type="button"
-          className={BUTTON}
-          disabled={analyze.isPending}
-          onClick={() => analyze.mutate()}
-        >
-          {analyze.isPending ? 'Analyzing…' : 'Analyze'}
-          <span className="sr-only"> {label}</span>
-        </button>
-      )}
-      <ConfirmButton label="Delete" what={label} onConfirm={() => remove.mutate()} />
-      {analyze.isPending && (
-        <p role="status" className="basis-full text-xs text-slate-600">
-          Looking at the photo. This can take up to a minute.
-        </p>
-      )}
-      <FormError error={analyze.error ?? remove.error} />
     </li>
   );
 }
@@ -170,9 +214,9 @@ export function PhotoSection({ projectId }: { projectId: string }) {
     queryFn: () => api.listPhotos(projectId),
   });
   return (
-    <section aria-label="Photos" className="mt-8 flex flex-col gap-3">
-      <h2 className="text-base font-semibold">Start from a photo</h2>
-      <p className="text-sm text-slate-600">
+    <section aria-label="Photos" className="flex flex-col gap-3">
+      <h2 className="text-lg font-semibold">Start from a photo</h2>
+      <p className="text-sm text-muted-foreground">
         Upload a photo of an existing kitchen to get a draft of its layout. You check the draft and
         type the real measurements before it becomes a design.
       </p>
@@ -182,7 +226,7 @@ export function PhotoSection({ projectId }: { projectId: string }) {
       />
       <FormError error={photos.error} />
       {photos.data && photos.data.length > 0 && (
-        <ul aria-label="Photos" className="rounded-lg bg-white shadow-sm">
+        <ul aria-label="Photos" className="flex flex-col gap-3">
           {photos.data.map((photo) => (
             <PhotoRow key={photo.id} photo={photo} projectId={projectId} />
           ))}

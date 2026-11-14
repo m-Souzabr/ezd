@@ -36,6 +36,7 @@
     "roboto-fontface": "catalog:",
     "shadcn": "catalog:",
     "tw-animate-css": "catalog:",
+    "zod": "catalog:",
     "zustand": "catalog:"
   },
   "devDependencies": {

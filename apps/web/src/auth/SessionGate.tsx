@@ -34,7 +34,7 @@ export function RequireSession({ children }: { children: ReactNode }) {
   const location = useLocation();
   if (user === undefined) {
     return (
-      <p role="status" className="p-6 text-sm text-slate-600">
+      <p role="status" className="p-6 text-sm text-muted-foreground">
         Loading…
       </p>
     );
