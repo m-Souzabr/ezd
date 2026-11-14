@@ -135,3 +135,34 @@ A renderer (for example `react-three-fiber`, MIT) maps each box to a mesh, puts 
 polygon on y = 0, and selects `sourceId` in the store on click. It reads the document
 through `useDesign` and never writes to it: a drag in 3D goes through core's `snap` and
 `execute`, like the plan.
+
+## A new Control Panel setting or permission
+
+**A setting in an existing section** (the app settings, the rules, the quote defaults):
+
+1. Add the field to the Zod schema in core (`packages/core/src/config/`, `rules/config.ts`
+   or `bom/defaults.ts`) with a default equal to today's behavior, and a test. Unset must
+   keep meaning "as before".
+2. Run `pnpm --filter @ezd/core schema` and commit the result. `validate-config`,
+   `validate-rules-config` and `validate-quote-defaults` read the schema, so the server
+   checks the new field with no Python change.
+3. Show it on the section's page (`apps/web/src/admin/`) with the shared controls, and read it
+   where it takes effect (`useConfig()`, `useRulesConfig()`, `useQuoteDefaults()`).
+4. Export, import, reset, the dry run and the version diff need no change: they work on the
+   section as a whole.
+
+**A permission**:
+
+1. Add the code and its label to `controlpanel/codes.py` and `admin/permissions.ts`.
+2. Add a migration that creates the `Permission` row and gives it to the roles that should
+   hold it (copy `0007_hardening.py`; a migration never imports `codes.py`).
+3. Declare it on the view with `control_panel_perm` (a code, a tuple of which any one is
+   enough, or a dict from method to code).
+4. Add the route's rows to `TABLE` in `tests/test_permission_matrix.py` and its name to
+   `tests/test_isolation.py`. CI fails until both are done.
+5. Gate the screen with `RequirePermission` or `useCan` and add the section to
+   `admin/sections.ts`. The server is what enforces it.
+
+**A new admin route** needs a name beginning `admin-` (that also puts it under the admin
+throttle), a call to `controlpanel.audit.record` in every mutation, a `max_body_bytes` if it
+takes more than a little JSON, and the rows above. Run `pnpm run openapi` and commit.

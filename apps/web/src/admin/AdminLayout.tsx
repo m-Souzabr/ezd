@@ -1,13 +1,13 @@
 import { Link, NavLink, Outlet } from 'react-router';
 
-import { useCan } from '../auth/can';
+import { useSession } from '../auth/session';
 import { AccountLinks } from '../pages/ui';
-import { SECTIONS, type Section } from './sections';
+import { canOpen, SECTIONS, type Section } from './sections';
 
 const ITEM = 'block rounded px-3 py-1.5 text-sm';
 
 function SidebarItem({ section }: { section: Section }) {
-  const allowed = useCan(section.permission);
+  const allowed = canOpen(useSession(), section);
   if (!allowed) return null;
   if (section.soon) {
     return (

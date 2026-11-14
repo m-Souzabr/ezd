@@ -109,7 +109,7 @@ function RuleRow({
       <td className="px-3 py-2">
         <select
           aria-label={`Severity of ${id}`}
-          className={`${FIELD} disabled:bg-slate-100 disabled:text-slate-500`}
+          className={`${FIELD} disabled:bg-slate-100 disabled:text-slate-600`}
           value={setting.severity}
           disabled={locked}
           onChange={(event) => set({ severity: event.target.value as Severity })}
@@ -143,7 +143,7 @@ function RuleRow({
               />
             </div>
           ))}
-          {names.length === 0 && <span className="text-xs text-slate-500">None</span>}
+          {names.length === 0 && <span className="text-xs text-slate-600">None</span>}
         </div>
       </td>
       <td className="px-3 py-2">
@@ -307,7 +307,7 @@ function RulesForm({
         </table>
       </section>
       <SnapOptions config={config} onChange={onChange} />
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-600">
         Lengths are in inches, as {formatLength(DEFAULT_RULES_CONFIG.thresholds.minAisle)} for the
         default minimum aisle. These are design-quality guidelines, not building-code checks.
       </p>

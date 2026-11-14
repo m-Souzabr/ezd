@@ -17,7 +17,7 @@ export function Pager({
   onOffset(offset: number): void;
 }) {
   if (total <= limit)
-    return total > 0 ? <p className="mt-2 text-xs text-slate-500">{total} in all</p> : null;
+    return total > 0 ? <p className="mt-2 text-xs text-slate-600">{total} in all</p> : null;
   const last = Math.min(offset + limit, total);
   return (
     <nav aria-label="Pages" className="mt-3 flex items-center gap-3 text-sm text-slate-700">

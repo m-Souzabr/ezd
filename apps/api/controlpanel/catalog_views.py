@@ -5,6 +5,7 @@ from typing import Any
 from django.db import IntegrityError, transaction
 from django.db.models import F
 from django.http import Http404
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
@@ -79,13 +80,20 @@ def _draft_payload(row: CatalogVersion | None) -> dict[str, Any]:
             "catalog": catalogs.published_catalog(),
             "based_on": based_on,
             "updated_at": None,
+            "updated_by": "",
         }
     return {
         "revision": row.revision,
         "catalog": row.catalog,
         "based_on": based_on,
         "updated_at": row.updated_at,
+        "updated_by": _editor(row),
     }
+
+
+def _editor(row: CatalogVersion) -> str:
+    editor = row.updated_by or row.created_by
+    return editor.email if editor else ""
 
 
 def _working_copy(revision: int) -> dict[str, Any]:
@@ -93,10 +101,10 @@ def _working_copy(revision: int) -> dict[str, Any]:
     row = catalogs.draft()
     if revision == 0:
         if row is not None:
-            raise StaleCatalogDraft()
+            raise StaleCatalogDraft(draft=row)
         return copy.deepcopy(catalogs.published_catalog())
     if row is None or row.revision != revision:
-        raise StaleCatalogDraft()
+        raise StaleCatalogDraft(draft=row)
     return copy.deepcopy(row.catalog)
 
 
@@ -109,15 +117,15 @@ def _store(user: Any, revision: int, catalog: dict[str, Any]) -> CatalogVersion:
         try:
             with transaction.atomic():
                 return CatalogVersion.objects.create(
-                    status=Status.DRAFT, catalog=catalog, created_by=user
+                    status=Status.DRAFT, catalog=catalog, created_by=user, updated_by=user
                 )
         except IntegrityError as error:
-            raise StaleCatalogDraft() from error
+            raise StaleCatalogDraft(draft=catalogs.draft()) from error
     changed = CatalogVersion.objects.filter(status=Status.DRAFT, revision=revision).update(
-        catalog=catalog, revision=F("revision") + 1
+        catalog=catalog, revision=F("revision") + 1, updated_by=user, updated_at=timezone.now()
     )
     if not changed:
-        raise StaleCatalogDraft()
+        raise StaleCatalogDraft(draft=catalogs.draft())
     row = catalogs.draft()
     assert row is not None
     return row
@@ -128,6 +136,7 @@ class CatalogDraftView(APIView):
 
     permission_classes = (HasControlPanelPerm,)
     control_panel_perm = CATALOG_EDIT
+    max_body_bytes = 1024 * 1024
 
     @extend_schema(responses={200: CatalogDraftSerializer})
     def get(self, request: Request) -> Response:
@@ -185,7 +194,7 @@ class CatalogPublishView(APIView):
         with transaction.atomic():
             draft = CatalogVersion.objects.select_for_update().filter(status=Status.DRAFT).first()
             if draft is None or draft.revision != serializer.validated_data["revision"]:
-                raise StaleCatalogDraft()
+                raise StaleCatalogDraft(draft=draft)
             catalogs.validate_for_publish(draft.catalog)
             previous = catalogs.published()
             number = catalogs.next_number()

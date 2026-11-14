@@ -15,6 +15,7 @@ const draft = (overrides: Partial<CatalogDraft> = {}): CatalogDraft => ({
   catalog: SEED_CATALOG,
   based_on: 'seed-1',
   updated_at: null,
+  updated_by: '',
   ...overrides,
 });
 

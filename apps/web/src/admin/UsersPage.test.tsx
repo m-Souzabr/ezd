@@ -10,8 +10,14 @@ import { makeAdminUser, makeUser } from '../test/users';
 import { UsersPage } from './UsersPage';
 
 const ROLES = [
-  { name: 'Administrator', permissions: [] },
-  { name: 'Support', permissions: ['users.manage', 'users.view'] },
+  { id: 1, name: 'Administrator', permissions: [], protected: true, members: 1 },
+  {
+    id: 2,
+    name: 'Support',
+    permissions: ['users.manage', 'users.view'],
+    protected: true,
+    members: 1,
+  },
 ];
 
 function setup(me: User, rows = [makeAdminUser()], total = rows.length) {

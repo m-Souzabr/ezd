@@ -104,7 +104,7 @@ function TextField({
         {label}
       </label>
       {multiline ? <textarea rows={3} {...props} /> : <input type="text" {...props} />}
-      {hint && <p className="text-xs text-slate-500">{hint}</p>}
+      {hint && <p className="text-xs text-slate-600">{hint}</p>}
       {error && (
         <p id={`${id}-error`} role="alert" className="text-xs text-red-700">
           {error}
@@ -169,7 +169,7 @@ function LogoField({
           </button>
         )}
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-600">
         A PNG or JPEG. It is scaled to fit and saved as a plain PNG, under 150 KB.
       </p>
       {(failure ?? error) && (

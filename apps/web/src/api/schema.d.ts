@@ -20,6 +20,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/audit/export/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The entries matching the filters as CSV, with the secrets masked. */
+        get: operations["admin_audit_export_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/audit/types/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The kinds of object the log has entries for, for the filter. */
+        get: operations["admin_audit_types_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/catalog/draft/": {
         parameters: {
             query?: never;
@@ -37,6 +71,23 @@ export interface paths {
          */
         put: operations["admin_catalog_draft_update"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/catalog/dry-run/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Which designs and quotes the draft catalog would change. */
+        post: operations["admin_catalog_dry_run_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -246,6 +297,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/catalog/versions/diff/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description What changed between two published catalog versions, by entry and finish id. */
+        get: operations["admin_catalog_versions_diff_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/config/draft/": {
         parameters: {
             query?: never;
@@ -269,6 +337,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/config/dry-run/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Which designs would be checked differently under the draft's rules. */
+        post: operations["admin_config_dry_run_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/config/export/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description A published version of every section as one JSON file.
+         *
+         *     A section is left out for a user who may not read it, so an export never shows more
+         *     than the pages do.
+         */
+        get: operations["admin_config_export_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/config/import/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Checks a file made by the export and saves what it holds as the draft.
+         *
+         *     Nothing is published. Every section is checked before any is saved, so a file with
+         *     one invalid section changes nothing, and the sections need their own permissions.
+         */
+        post: operations["admin_config_import_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/config/publish/": {
         parameters: {
             query?: never;
@@ -285,6 +414,23 @@ export interface paths {
          *     one the user may not edit.
          */
         post: operations["admin_config_publish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/config/reset/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Saves the compiled-in defaults of one section as the draft. Nothing is published. */
+        post: operations["admin_config_reset_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -328,6 +474,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/config/versions/diff/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description What changed between two published versions, section by section.
+         *
+         *     Only the sections the user may edit are compared.
+         */
+        get: operations["admin_config_versions_diff_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/roles/": {
         parameters: {
             query?: never;
@@ -335,14 +502,33 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description The roles and the permission codes each one holds. Read-only. */
+        /** @description The roles and the permission codes each one holds. */
         get: operations["admin_roles_list"];
         put?: never;
-        post?: never;
+        /** @description Creates a role. It cannot hold a permission its creator does not. */
+        post: operations["admin_roles_create"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/admin/roles/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Deletes a role. Whoever held it loses what it gave, on their next request. */
+        delete: operations["admin_roles_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Renames a role or changes its permissions. Takes effect on its members' next request. */
+        patch: operations["admin_roles_partial_update"];
         trace?: never;
     };
     "/api/admin/users/": {
@@ -961,7 +1147,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Readiness probe: the API can reach its database. */
+        /** @description Readiness probe: the API can reach its database, and what the published config says. */
         get: operations["ready_retrieve"];
         put?: never;
         post?: never;
@@ -1031,6 +1217,9 @@ export interface components {
             readonly object_id: string;
             readonly before: unknown;
             readonly after: unknown;
+            readonly changes: {
+                [key: string]: unknown;
+            }[];
             /** Format: date-time */
             readonly created_at: string;
         };
@@ -1054,6 +1243,7 @@ export interface components {
             based_on: string | null;
             /** Format: date-time */
             updated_at: string | null;
+            updated_by: string;
         };
         CatalogDraftUpdateRequest: {
             revision: number;
@@ -1099,6 +1289,12 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         };
+        Change: {
+            path: string;
+            kind: components["schemas"]["KindEnum"];
+            before?: unknown;
+            after?: unknown;
+        };
         ChatRequestRequest: {
             message: string;
             summary: string;
@@ -1113,6 +1309,7 @@ export interface components {
             based_on: number | null;
             /** Format: date-time */
             updated_at: string | null;
+            updated_by: string;
         };
         ConfigDraftUpdateRequest: {
             revision: number;
@@ -1245,6 +1442,18 @@ export interface components {
             plan: string;
             elevations: components["schemas"]["ElevationRequest"][];
         };
+        DryRun: {
+            total: number;
+            sampled: number;
+            changed: number;
+            samples: {
+                [key: string]: unknown;
+            }[];
+        };
+        DryRunResult: {
+            designs: components["schemas"]["DryRun"];
+            quotes: components["schemas"]["DryRun"];
+        };
         Elevation: {
             wallId: string;
             label: string;
@@ -1255,8 +1464,24 @@ export interface components {
             label: string;
             image: string;
         };
+        Export: {
+            format: string;
+            formatVersion: number;
+            config?: unknown;
+            catalog?: unknown;
+        };
         Health: {
             status: string;
+        };
+        ImportRequest: {
+            data: unknown;
+            /** @default false */
+            replace: boolean;
+        };
+        ImportResult: {
+            sections: string[];
+            config_revision: number | null;
+            catalog_revision: number | null;
         };
         /** @description The body of a 422. */
         InconsistentQuote: {
@@ -1277,6 +1502,13 @@ export interface components {
          * @enum {string}
          */
         KeySourceEnum: "settings" | "environment" | "none";
+        /**
+         * @description * `added` - added
+         *     * `removed` - removed
+         *     * `changed` - changed
+         * @enum {string}
+         */
+        KindEnum: "added" | "removed" | "changed";
         /** @description What staff see. The key itself is never in it, only its last four characters. */
         LLMSettings: {
             vendor: string;
@@ -1413,6 +1645,25 @@ export interface components {
         PatchedProjectRequest: {
             name?: string;
         };
+        PatchedRoleWriteRequest: {
+            name?: string;
+            permissions?: components["schemas"]["PermissionsEnum"][];
+        };
+        /**
+         * @description * `config.catalog.edit` - config.catalog.edit
+         *     * `config.catalog.publish` - config.catalog.publish
+         *     * `config.rules.edit` - config.rules.edit
+         *     * `config.app.edit` - config.app.edit
+         *     * `config.quote.edit` - config.quote.edit
+         *     * `llm.settings.edit` - llm.settings.edit
+         *     * `users.view` - users.view
+         *     * `users.manage` - users.manage
+         *     * `users.roles.assign` - users.roles.assign
+         *     * `users.roles.manage` - users.roles.manage
+         *     * `audit.view` - audit.view
+         * @enum {string}
+         */
+        PermissionsEnum: "config.catalog.edit" | "config.catalog.publish" | "config.rules.edit" | "config.app.edit" | "config.quote.edit" | "llm.settings.edit" | "users.view" | "users.manage" | "users.roles.assign" | "users.roles.manage" | "audit.view";
         Photo: {
             /** Format: uuid */
             readonly id: string;
@@ -1547,6 +1798,8 @@ export interface components {
         };
         Ready: {
             status: string;
+            config: string;
+            catalog: string;
         };
         RegisterRequest: {
             /** Format: email */
@@ -1554,6 +1807,10 @@ export interface components {
             password: string;
             /** @default  */
             name: string;
+        };
+        ResetRequest: {
+            section: components["schemas"]["SectionEnum"];
+            revision: number;
         };
         /** @description `invalid` reports a proposal the browser could not use after the last retry. */
         ResolveRequestRequest: {
@@ -1571,8 +1828,11 @@ export interface components {
             summary: string;
         };
         Role: {
+            id: number;
             name: string;
             permissions: string[];
+            protected: boolean;
+            members: number;
         };
         /**
          * @description * `user` - User
@@ -1580,6 +1840,18 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "user" | "assistant";
+        RoleWriteRequest: {
+            name?: string;
+            permissions?: components["schemas"]["PermissionsEnum"][];
+        };
+        /**
+         * @description * `app` - app
+         *     * `rules` - rules
+         *     * `quotes` - quotes
+         *     * `catalog` - catalog
+         * @enum {string}
+         */
+        SectionEnum: "app" | "rules" | "quotes" | "catalog";
         Settings: {
             markupBps: number;
             discountBps: number;
@@ -1655,6 +1927,11 @@ export interface components {
             /** @description The Control Panel codes the user holds; the web app only uses them to hide things. */
             readonly permissions: string[];
         };
+        VersionDiff: {
+            sections: {
+                [key: string]: components["schemas"]["Change"][];
+            };
+        };
     };
     responses: never;
     parameters: never;
@@ -1671,8 +1948,14 @@ export interface operations {
                 action?: string;
                 /** @description An actor's id or part of their email. */
                 actor?: string;
+                /** @description The first day, as YYYY-MM-DD. */
+                date_from?: string;
+                /** @description The last day, as YYYY-MM-DD. */
+                date_to?: string;
                 /** @description Number of results to return per page. */
                 limit?: number;
+                /** @description The kind of object changed. */
+                object_type?: string;
                 /** @description The initial index from which to return the results. */
                 offset?: number;
             };
@@ -1688,6 +1971,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedAuditEntryList"];
+                };
+            };
+        };
+    };
+    admin_audit_export_retrieve: {
+        parameters: {
+            query?: {
+                /** @description An action, or the start of one. */
+                action?: string;
+                /** @description An actor's id or part of their email. */
+                actor?: string;
+                /** @description The first day, as YYYY-MM-DD. */
+                date_from?: string;
+                /** @description The last day, as YYYY-MM-DD. */
+                date_to?: string;
+                /** @description The kind of object changed. */
+                object_type?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+        };
+    };
+    admin_audit_types_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
                 };
             };
         };
@@ -1730,6 +2062,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogDraft"];
+                };
+            };
+        };
+    };
+    admin_catalog_dry_run_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryRunResult"];
                 };
             };
         };
@@ -2020,6 +2371,28 @@ export interface operations {
             };
         };
     };
+    admin_catalog_versions_diff_retrieve: {
+        parameters: {
+            query: {
+                from: number;
+                to: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionDiff"];
+                };
+            };
+        };
+    };
     admin_config_draft_retrieve: {
         parameters: {
             query?: never;
@@ -2062,6 +2435,72 @@ export interface operations {
             };
         };
     };
+    admin_config_dry_run_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryRunResult"];
+                };
+            };
+        };
+    };
+    admin_config_export_retrieve: {
+        parameters: {
+            query?: {
+                /** @description A catalog version. Default: current. */
+                catalog?: string;
+                /** @description A config version. Default: published. */
+                number?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Export"];
+                };
+            };
+        };
+    };
+    admin_config_import_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResult"];
+                };
+            };
+        };
+    };
     admin_config_publish_create: {
         parameters: {
             query?: never;
@@ -2081,6 +2520,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConfigVersion"];
+                };
+            };
+        };
+    };
+    admin_config_reset_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResult"];
                 };
             };
         };
@@ -2129,6 +2591,28 @@ export interface operations {
             };
         };
     };
+    admin_config_versions_diff_retrieve: {
+        parameters: {
+            query: {
+                from: number;
+                to: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionDiff"];
+                };
+            };
+        };
+    };
     admin_roles_list: {
         parameters: {
             query?: never;
@@ -2144,6 +2628,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Role"][];
+                };
+            };
+        };
+    };
+    admin_roles_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RoleWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Role"];
+                };
+            };
+        };
+    };
+    admin_roles_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_roles_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedRoleWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Role"];
                 };
             };
         };

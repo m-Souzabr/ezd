@@ -73,7 +73,7 @@ function SettingsForm({ settings }: { settings: LLMSettings }) {
         errors={fieldErrors(save.error, 'api_key')}
         required={false}
       />
-      <p className="-mt-2 text-xs text-slate-500">
+      <p className="-mt-2 text-xs text-slate-600">
         It is stored encrypted on the server and never shown again, here or anywhere else.
       </p>
       <fieldset className="flex flex-col gap-3">
@@ -107,7 +107,7 @@ function SettingsForm({ settings }: { settings: LLMSettings }) {
         )}
       </div>
       {settings.updated_at && (
-        <p className="text-xs text-slate-500">Last changed {formatDate(settings.updated_at)}.</p>
+        <p className="text-xs text-slate-600">Last changed {formatDate(settings.updated_at)}.</p>
       )}
     </form>
   );

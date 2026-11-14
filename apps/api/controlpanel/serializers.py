@@ -2,8 +2,12 @@ from typing import Any
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from .audit import scrub
+from .codes import ALL_CODES, PROTECTED_ROLES
+from .diff import diff
 from .models import AuditEntry
 
 User = get_user_model()
@@ -80,16 +84,50 @@ class AdminUserUpdateSerializer(serializers.Serializer):
 
 
 class RoleSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     name = serializers.CharField()
     permissions = serializers.ListField(child=serializers.CharField())
+    # A seeded role cannot be renamed, deleted or given other permissions.
+    protected = serializers.BooleanField()
+    members = serializers.IntegerField()
 
     @classmethod
     def of(cls, group: Group) -> dict[str, Any]:
         held = {permission.codename for permission in group.permissions.all()}
-        return {"name": group.name, "permissions": sorted(held)}
+        return {
+            "id": group.pk,
+            "name": group.name,
+            "permissions": sorted(held),
+            "protected": group.name in PROTECTED_ROLES,
+            "members": group.user_set.count(),
+        }
+
+
+class RoleWriteSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=150, trim_whitespace=True, required=False)
+    permissions = serializers.ListField(
+        child=serializers.ChoiceField(choices=ALL_CODES), required=False
+    )
 
 
 class AuditEntrySerializer(serializers.ModelSerializer):
+    # What changed, field by field, with the secrets masked.
+    changes = serializers.SerializerMethodField()
+    before = serializers.SerializerMethodField()
+    after = serializers.SerializerMethodField()
+
+    def get_before(self, entry: AuditEntry) -> Any:
+        return scrub(entry.before)
+
+    def get_after(self, entry: AuditEntry) -> Any:
+        return scrub(entry.after)
+
+    @extend_schema_field(serializers.ListField(child=serializers.DictField()))
+    def get_changes(self, entry: AuditEntry) -> list[dict[str, Any]]:
+        if entry.before is None and entry.after is None:
+            return []
+        return diff(scrub(entry.before), scrub(entry.after))
+
     class Meta:
         model = AuditEntry
         fields = (
@@ -101,6 +139,7 @@ class AuditEntrySerializer(serializers.ModelSerializer):
             "object_id",
             "before",
             "after",
+            "changes",
             "created_at",
         )
         read_only_fields = fields
@@ -125,6 +164,8 @@ class ConfigDraftSerializer(serializers.Serializer):
     quote_defaults = serializers.JSONField()
     based_on = serializers.IntegerField(allow_null=True)
     updated_at = serializers.DateTimeField(allow_null=True)
+    # The email of whoever saved it last; empty without a saved draft.
+    updated_by = serializers.CharField()
 
 
 class ConfigDraftUpdateSerializer(serializers.Serializer):
@@ -170,6 +211,7 @@ class CatalogDraftSerializer(serializers.Serializer):
     catalog = serializers.JSONField()
     based_on = serializers.CharField(allow_null=True)
     updated_at = serializers.DateTimeField(allow_null=True)
+    updated_by = serializers.CharField()
 
 
 class CatalogDraftUpdateSerializer(serializers.Serializer):

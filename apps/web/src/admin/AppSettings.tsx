@@ -9,14 +9,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type ReactNode, useId, useMemo, useState } from 'react';
 
 import { api, ApiError, isConflict } from '../api/client';
-import { configDraftKey, configVersionsKey } from '../api/keys';
+import { configDraftKey, configDryRunKey, configVersionsKey } from '../api/keys';
 import { RequirePermission } from '../auth/permissions';
 import { BUTTON, CheckboxField, LengthField } from '../editor/panels/fields';
 import { CloseButton, Modal } from '../pages/Modal';
 import { errorMessage, formatDate } from '../pages/format';
 import { FormError, PRIMARY } from '../pages/ui';
 import { NoAccess } from './AdminLayout';
+import { ConflictNotice } from './ConflictNotice';
 import { FIELD } from './controls';
+import { DryRunSummary } from './DryRunSummary';
+import { VersionCompare } from './VersionCompare';
 
 type Path = readonly string[];
 type Errors = ReadonlyMap<string, string>;
@@ -448,12 +451,15 @@ export function PublishDialog({
   busy,
   error,
   onPublish,
+  unsaved = false,
 }: {
   open: boolean;
   onClose(): void;
   busy: boolean;
   error: unknown;
   onPublish(note: string): void;
+  /** The form has edits that are not saved yet, which the dry run cannot count. */
+  unsaved?: boolean;
 }) {
   const [note, setNote] = useState('');
   const id = useId();
@@ -464,6 +470,7 @@ export function PublishDialog({
       title="Publish these settings?"
       description="Everyone gets them the next time they open the app. A published version never changes, but you can roll back to it later."
     >
+      <DryRunSummary queryKey={configDryRunKey} run={api.dryRunConfig} unsaved={unsaved} />
       <div className="flex flex-col gap-1">
         <label htmlFor={id} className="text-xs font-medium text-slate-600">
           Note (what changed and why)
@@ -518,13 +525,21 @@ export function VersionHistory() {
                 </span>
               )}
               <span className="text-slate-600">{row.note || 'No note'}</span>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-600">
                 {row.created_by} · {formatDate(row.created_at)}
               </span>
+              <a
+                className="ml-auto text-xs text-primary underline underline-offset-2"
+                href={api.configExportUrl(row.number)}
+                download
+                aria-label={`Export version ${row.number}`}
+              >
+                Export
+              </a>
               {row.status !== 'published' && (
                 <button
                   type="button"
-                  className={`${BUTTON} ml-auto px-2 py-0.5 text-xs`}
+                  className={`${BUTTON} px-2 py-0.5 text-xs`}
                   aria-label={`Roll back to version ${row.number}`}
                   onClick={() => setTarget(row.number)}
                 >
@@ -535,6 +550,12 @@ export function VersionHistory() {
           ))}
         </ul>
       )}
+      <VersionCompare
+        kind="config"
+        numbers={rows.map((row) => row.number)}
+        label={(number) => `Version ${number}`}
+        load={api.diffConfigVersions}
+      />
       <Modal
         open={target !== null}
         onOpenChange={(next) => !next && setTarget(null)}
@@ -647,22 +668,14 @@ function Editor({
             ? `${errors.size} ${errors.size === 1 ? 'problem' : 'problems'} to fix first.`
             : (message ?? (dirty ? 'Unsaved changes.' : revision > 0 ? 'Draft saved.' : ''))}
         </span>
-        {conflict && (
-          <button type="button" className={BUTTON} onClick={() => window.location.reload()}>
-            Reload the latest draft
-          </button>
-        )}
       </div>
       {!conflict && <FormError error={save.error} />}
-      {conflict && (
-        <p role="alert" className="text-sm text-red-700">
-          Someone else changed the draft. Reload to see their changes; yours are not saved.
-        </p>
-      )}
+      <ConflictNotice error={save.error ?? publish.error} />
       <Form config={config} errors={errors} edit={edit} reset={reset} />
       <PublishDialog
         open={publishing}
         onClose={() => setPublishing(false)}
+        unsaved={dirty}
         busy={publish.isPending}
         error={
           publish.error instanceof ApiError && publish.error.status === 409 ? null : publish.error

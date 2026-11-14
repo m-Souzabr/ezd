@@ -16,6 +16,7 @@ from django.db.models import Max
 from rest_framework import status
 from rest_framework.exceptions import APIException
 
+from .conflict import conflict_extra
 from .models import CatalogVersion
 
 Issue = dict[str, str]
@@ -46,6 +47,10 @@ class StaleCatalogDraft(APIException):
     status_code = status.HTTP_409_CONFLICT
     default_detail = "The draft was changed by someone else. Reload it and try again."
     default_code = "stale_draft"
+
+    def __init__(self, detail: str | None = None, *, draft: Any = None) -> None:
+        super().__init__(detail)
+        self.extra = conflict_extra(draft)
 
 
 class CatalogConflict(APIException):
@@ -161,3 +166,21 @@ def assistant_tools(catalog: Catalog | None = None) -> tuple[list[dict[str, Any]
     """
     catalog = catalog if catalog is not None else published_catalog()
     return _tools_for(catalog["version"], json.dumps(catalog, sort_keys=True))
+
+
+def health() -> str:
+    """Whether the published catalog parses and satisfies every rule: `ok`, `defaults`,
+    `invalid` or `unknown` (core could not be run). Kept per row, which never changes."""
+    row = published()
+    if row is None:
+        return "defaults"
+    try:
+        return _checked(row.pk)
+    except CatalogCheckUnavailable:
+        return "unknown"
+
+
+@cache
+def _checked(pk: int) -> str:
+    row = CatalogVersion.objects.get(pk=pk)
+    return "invalid" if problems(row.catalog) else "ok"

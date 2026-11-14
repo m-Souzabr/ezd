@@ -18,6 +18,8 @@ const QuotesAdminPage = adminPage(() => import('./admin/QuotesAdmin'), 'QuotesAd
 const RulesAdminPage = adminPage(() => import('./admin/RulesAdmin'), 'RulesAdminPage');
 const AISettingsPage = adminPage(() => import('./admin/AISettings'), 'AISettingsPage');
 const AuditPage = adminPage(() => import('./admin/AuditPage'), 'AuditPage');
+const BackupPage = adminPage(() => import('./admin/BackupPage'), 'BackupPage');
+const RolesPage = adminPage(() => import('./admin/RolesPage'), 'RolesPage');
 const UsersPage = adminPage(() => import('./admin/UsersPage'), 'UsersPage');
 
 // The account pages are loaded when they are visited: the shell, the forms and the dialogs
@@ -139,6 +141,8 @@ export function App() {
             <Route path="ai" element={<AISettingsPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="audit" element={<AuditPage />} />
+            <Route path="backup" element={<BackupPage />} />
+            <Route path="roles" element={<RolesPage />} />
             {/* An unknown admin path stays in the Control Panel instead of falling through to `/`. */}
             <Route path="*" element={<AdminHome />} />
           </Route>

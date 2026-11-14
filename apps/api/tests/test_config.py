@@ -85,6 +85,7 @@ def test_without_a_draft_the_editor_gets_the_published_config(admin: APIClient) 
         "quote_defaults": {},
         "based_on": None,
         "updated_at": None,
+        "updated_by": "",
     }
     publish(admin, HIDE_PROPERTIES)
     draft = admin.get(DRAFT).json()

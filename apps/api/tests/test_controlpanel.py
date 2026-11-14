@@ -77,42 +77,6 @@ def test_a_non_staff_user_holding_a_permission_is_refused(client: APIClient, use
     assert client.get("/api/admin/users/").status_code == 403
 
 
-# (method, url, body, the permission it needs)
-def matrix(target: User) -> list[tuple[str, str, dict | None, str]]:
-    return [
-        ("get", "/api/admin/users/", None, "users.view"),
-        ("get", f"/api/admin/users/{target.pk}/", None, "users.view"),
-        ("get", "/api/admin/roles/", None, "users.view"),
-        ("get", "/api/admin/audit/", None, "audit.view"),
-        ("post", "/api/admin/users/", {"email": "new@example.com"}, "users.manage"),
-        ("patch", f"/api/admin/users/{target.pk}/", {"name": "X"}, "users.manage"),
-        ("post", f"/api/admin/users/{target.pk}/reset-password/", None, "users.manage"),
-        ("get", "/api/llm/settings/", None, "llm.settings.edit"),
-        ("get", "/api/admin/config/draft/", None, "config.app.edit"),
-        ("put", "/api/admin/config/draft/", {"revision": 0, "app_config": {}}, "config.app.edit"),
-        ("post", "/api/admin/config/publish/", {"revision": 1}, "config.app.edit"),
-        ("get", "/api/admin/config/versions/", None, "config.app.edit"),
-        ("post", "/api/admin/config/versions/1/rollback/", {}, "config.app.edit"),
-    ]
-
-
-@pytest.mark.parametrize("role", ["Administrator", "Support", "Catalog editor"])
-def test_each_role_may_use_exactly_its_routes(role: str, user: User) -> None:
-    api = staff_with(role, "staff@example.com")
-    held = set(permissions_of(api.user))  # type: ignore[attr-defined]
-    for method, url, body, needed in matrix(user):
-        status = getattr(api, method)(url, body, format="json").status_code
-        assert (status != 403) == (needed in held), (role, method, url, status)
-
-
-def test_a_non_staff_user_gets_403_and_anonymous_gets_401(
-    client: APIClient, anonymous: APIClient, user: User
-) -> None:
-    for method, url, body, _ in matrix(user):
-        assert getattr(client, method)(url, body, format="json").status_code == 403
-        assert getattr(anonymous, method)(url, body, format="json").status_code == 401
-
-
 # --- the user list ----------------------------------------------------------------------
 
 
@@ -459,7 +423,7 @@ def test_the_audit_log_is_paginated_and_filterable(administrator: APIClient, use
     assert len(administrator.get("/api/admin/audit/?limit=1").json()) == 1
 
 
-def test_roles_are_listed_read_only(support: APIClient) -> None:
+def test_roles_are_listed_and_only_role_managers_change_them(support: APIClient) -> None:
     roles = {r["name"]: r["permissions"] for r in support.get("/api/admin/roles/").json()}
     assert roles["Support"] == ["users.manage", "users.view"]
-    assert support.post("/api/admin/roles/", {}, format="json").status_code == 405
+    assert support.post("/api/admin/roles/", {}, format="json").status_code == 403

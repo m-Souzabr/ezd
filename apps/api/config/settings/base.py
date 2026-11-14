@@ -105,7 +105,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PARSER_CLASSES": ["config.api.LimitedJSONParser"],
     "DEFAULT_AUTHENTICATION_CLASSES": ["config.api.SessionAuth"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
-    "DEFAULT_THROTTLE_CLASSES": ["config.api.UserThrottle"],
+    "DEFAULT_THROTTLE_CLASSES": ["config.api.UserThrottle", "config.api.AdminThrottle"],
     "DEFAULT_THROTTLE_RATES": {
         "user": env.str("API_THROTTLE_USER", default="600/min"),
         "login_ip": env.str("API_THROTTLE_LOGIN_IP", default="5/min"),
@@ -113,6 +113,7 @@ REST_FRAMEWORK = {
         "auth_ip": env.str("API_THROTTLE_AUTH_IP", default="20/min"),
         "llm": env.str("API_THROTTLE_LLM", default="20/min"),
         "upload": env.str("API_THROTTLE_UPLOAD", default="30/min"),
+        "admin": env.str("API_THROTTLE_ADMIN", default="120/min"),
     },
     # How many proxies sit in front of the API, to find the client address for throttling.
     "NUM_PROXIES": env.int("DJANGO_NUM_PROXIES", default=0),
@@ -199,6 +200,12 @@ ROOM_DRAFT_SCHEMA_PATH = env.str(
 PHOTO_MAX_BYTES = env.int("PHOTO_MAX_BYTES", default=10 * 1024 * 1024)
 PHOTO_MAX_PIXELS = env.int("PHOTO_MAX_PIXELS", default=50_000_000)
 PHOTO_MAX_EDGE = env.int("PHOTO_MAX_EDGE", default=2000)
+
+# Control Panel. Audit entries older than this many days are removed by `manage.py
+# prune_audit`; 0 keeps them all. A quote logo is decoded, shrunk to this edge and re-encoded.
+AUDIT_RETENTION_DAYS = env.int("AUDIT_RETENTION_DAYS", default=0)
+LOGO_MAX_EDGE = env.int("LOGO_MAX_EDGE", default=800)
+LOGO_MAX_PIXELS = env.int("LOGO_MAX_PIXELS", default=4_000_000)
 
 # Uploaded photos. Never served from MEDIA_ROOT or a public bucket: only the authenticated
 # `/api/photos/{id}/file/` endpoint reads them. STORAGE_BACKEND "s3" keeps them in an

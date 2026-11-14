@@ -9,6 +9,7 @@ LLM_EDIT = "llm.settings.edit"
 USERS_VIEW = "users.view"
 USERS_MANAGE = "users.manage"
 USERS_ROLES_ASSIGN = "users.roles.assign"
+ROLES_MANAGE = "users.roles.manage"
 AUDIT_VIEW = "audit.view"
 
 PERMISSION_CHOICES = (
@@ -21,6 +22,7 @@ PERMISSION_CHOICES = (
     (USERS_VIEW, "View users"),
     (USERS_MANAGE, "Manage users"),
     (USERS_ROLES_ASSIGN, "Assign roles"),
+    (ROLES_MANAGE, "Manage roles"),
     (AUDIT_VIEW, "View the audit log"),
 )
 ALL_CODES = tuple(code for code, _ in PERMISSION_CHOICES)
@@ -34,3 +36,6 @@ ROLES = {
     CATALOG_EDITOR: (CATALOG_EDIT, CATALOG_PUBLISH),
     SUPPORT: (USERS_VIEW, USERS_MANAGE),
 }
+
+# The seeded roles cannot be renamed, deleted or given other permissions.
+PROTECTED_ROLES = tuple(ROLES)

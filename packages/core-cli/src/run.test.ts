@@ -675,3 +675,41 @@ describe('the rules configuration', () => {
     expect(out(bad.stdout).errors[0]!.path).toBe('taxBps');
   });
 });
+
+describe('compare-designs', () => {
+  const document = JSON.parse(fixture('valid'));
+
+  it('reads stdin', () => {
+    expect(readsStdin(['compare-designs'])).toBe(true);
+  });
+
+  it('prints the violations of each design under both configurations', () => {
+    const result = run(
+      ['compare-designs'],
+      JSON.stringify({
+        designs: [
+          { id: 'a', document },
+          { id: 'b', document: {} },
+        ],
+      }),
+    );
+    const output = JSON.parse(result.stdout);
+    expect(result.exitCode).toBe(0);
+    expect(output.results[0]).toMatchObject({ id: 'a', error: null });
+    expect(output.results[0].before).toEqual(output.results[0].after);
+    expect(output.results[1]).toMatchObject({ id: 'b', error: 'The document is not valid.' });
+  });
+
+  it('refuses input that is not JSON, has no designs, or has a bad catalog or rules', () => {
+    for (const stdin of [
+      '{ nope',
+      '{}',
+      JSON.stringify({ designs: [], after: { catalog: { entries: 1 } } }),
+      JSON.stringify({ designs: [], before: { rules: 5 } }),
+    ]) {
+      const result = run(['compare-designs'], stdin);
+      expect(result.exitCode).toBe(1);
+      expect(JSON.parse(result.stdout).ok).toBe(false);
+    }
+  });
+});
