@@ -124,16 +124,17 @@ flowchart LR
 
 ## What is where
 
-| Concern                                                                     | Code                                                                                             |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Document, commands, history, rules, snapping, BOM and pricing, scene        | `packages/core/src/`                                                                             |
-| Chat: summary for the model, tools, proposal to commands                    | `packages/core/src/llm/`, `apps/api/chat/`, `apps/api/llm/`                                      |
-| Photo: draft schemas, normalising, problems, draft to commands              | `packages/core/src/photo/`, `apps/api/photos/`                                                   |
-| Editor: store, views, tools, panels                                         | `apps/web/src/store/`, `apps/web/src/editor/`                                                    |
-| Accounts, projects, designs, versions, autosave                             | `apps/api/accounts/`, `apps/api/projects/`, `apps/web/src/lib/`                                  |
-| Quotes and their PDF                                                        | `apps/api/quotes/`, `apps/web/src/quotes/`                                                       |
-| Control Panel: config and catalog versions, audit, roles, import and export | `apps/api/controlpanel/`, `apps/web/src/admin/`, `packages/core/src/config/`                     |
-| Errors: boundary, reporting hooks, readiness                                | `apps/web/src/ErrorBoundary.tsx`, `apps/web/src/lib/reportError.ts`, `apps/api/config/errors.py` |
+| Concern                                                                     | Code                                                                                                          |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Document, commands, history, rules, snapping, BOM and pricing, scene        | `packages/core/src/`                                                                                          |
+| Chat: summary for the model, tools, proposal to commands                    | `packages/core/src/llm/`, `apps/api/chat/`, `apps/api/llm/`                                                   |
+| Photo: draft schemas, normalising, problems, draft to commands              | `packages/core/src/photo/`, `apps/api/photos/`                                                                |
+| Editor: store, views, tools, panels                                         | `apps/web/src/store/`, `apps/web/src/editor/`                                                                 |
+| Accounts, projects, designs, versions, autosave                             | `apps/api/accounts/`, `apps/api/projects/`, `apps/web/src/lib/`                                               |
+| Quotes and their PDF                                                        | `apps/api/quotes/`, `apps/web/src/quotes/`                                                                    |
+| Control Panel: config and catalog versions, audit, roles, import and export | `apps/api/controlpanel/`, `apps/web/src/admin/`, `packages/core/src/config/`                                  |
+| Design system: tokens, ui components, patterns, gallery                     | `apps/web/src/styles/globals.css`, `src/components/`, `src/routes/design-system.tsx`; `docs/DESIGN-SYSTEM.md` |
+| Errors: boundary, reporting hooks, readiness                                | `apps/web/src/ErrorBoundary.tsx`, `apps/web/src/lib/reportError.ts`, `apps/api/config/errors.py`              |
 
 See also `docs/EXTENDING.md` (what v1 left out and how to add it), `docs/OPERATIONS.md`,
 `docs/SECURITY.md`, `docs/PERFORMANCE.md`, `docs/BROWSERS.md` and `docs/RULES.md`.

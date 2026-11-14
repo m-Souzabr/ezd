@@ -64,7 +64,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
   if (!settled) {
     return (
-      <main className="flex h-screen items-center justify-center bg-slate-100 text-sm text-slate-600">
+      <main className="flex h-screen items-center justify-center bg-background text-sm text-muted-foreground">
         <h1 className="sr-only">EZDesign</h1>
         <p role="status">Loading…</p>
       </main>

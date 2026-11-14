@@ -142,6 +142,57 @@ export function audit(page: Page): Promise<string[]> {
         );
       }
     }
+    // A dialog has a name and a description, so a screen reader says what it is and what it asks.
+    for (const el of document.querySelectorAll('[role="dialog"], [role="alertdialog"]')) {
+      if (hidden(el)) continue;
+      const named = el.getAttribute('aria-label') || el.getAttribute('aria-labelledby');
+      if (!named) problems.push(`Dialog without a title: ${describe(el)}`);
+      if (!el.getAttribute('aria-describedby'))
+        problems.push(`Dialog without a description: ${describe(el)}`);
+    }
+
+    // On a touch screen, a control is at least 44 px in both directions. Links inside a line of
+    // text are exempt, as in WCAG 2.2's target-size rule.
+    if (matchMedia('(pointer: coarse)').matches) {
+      const controls =
+        'button, [role="button"], [role="tab"], input:not([type="hidden"]), select, textarea';
+      for (const el of document.querySelectorAll(`${controls}, a[href]`)) {
+        if (hidden(el) || visuallyHidden(el) || el.closest('canvas')) continue;
+        if (el.matches('a[href]') && el.closest('p, li > span, td')) continue;
+        if (el.matches('input[type="checkbox"], input[type="radio"]') && el.closest('label'))
+          continue;
+        const box = el.getBoundingClientRect();
+        if (box.width === 0 || box.height === 0) continue;
+        if (box.width < 44 || box.height < 44)
+          problems.push(
+            `Target ${Math.round(box.width)}x${Math.round(box.height)} px: ${describe(el)}`,
+          );
+      }
+    }
     return problems;
   });
+}
+
+/**
+ * Tabs through the page and checks that whatever has focus shows it: an outline or a ring (box
+ * shadow). Returns one line per control that does not.
+ */
+export async function auditFocus(page: Page, presses = 25): Promise<string[]> {
+  const problems: string[] = [];
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  for (let press = 0; press < presses; press += 1) {
+    await page.keyboard.press('Tab');
+    const problem = await page.evaluate(() => {
+      const el = document.activeElement;
+      if (!el || el === document.body) return null;
+      const style = getComputedStyle(el);
+      const outline = style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0;
+      const ring = style.boxShadow !== 'none' && style.boxShadow !== '';
+      const border = el.matches('input, select, textarea');
+      if (outline || ring || border) return null;
+      return `<${el.tagName.toLowerCase()}> "${(el.textContent ?? '').trim().slice(0, 40)}"`;
+    });
+    if (problem) problems.push(`No visible focus: ${problem}`);
+  }
+  return problems;
 }

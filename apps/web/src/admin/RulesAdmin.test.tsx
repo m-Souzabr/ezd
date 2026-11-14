@@ -66,7 +66,11 @@ function setup(options: { draft?: ConfigDraft; can?: boolean; inForce?: RulesCon
 
 afterEach(() => vi.restoreAllMocks());
 
-const row = (id: string) => screen.getByRole('rowheader', { name: new RegExp(id) }).closest('tr')!;
+/** The list item of one rule: each rule is a card in a list, so it reads on a phone. */
+const row = (id: string) =>
+  within(screen.getByRole('list', { name: 'Rules' }))
+    .getByText(id, { selector: 'code' })
+    .closest('li')!;
 
 describe('the rules page', () => {
   it('is for those who may edit the rules', () => {
@@ -76,19 +80,22 @@ describe('the rules page', () => {
 
   it('lists every rule with its severity, switch and thresholds', async () => {
     setup();
-    await screen.findByRole('table', { name: 'Design rules' });
-    expect(screen.getAllByRole('row')).toHaveLength(22);
+    await screen.findByRole('list', { name: 'Rules' });
+    expect(
+      within(screen.getByRole('list', { name: 'Rules' })).getAllByRole('listitem'),
+    ).toHaveLength(21);
     const aisle = within(row('clearance.aisle'));
     expect(aisle.getByLabelText('Severity of clearance.aisle')).toHaveValue('warning');
     expect(aisle.getByRole('switch', { name: 'clearance.aisle is on' })).toBeChecked();
     expect(aisle.getByLabelText('Minimum aisle')).toHaveValue('36"');
     expect(aisle.getByLabelText('Recommended aisle')).toHaveValue('42"');
-    expect(within(row('room.open')).getByText('None')).toBeInTheDocument();
+    // A rule with no threshold shows no threshold field.
+    expect(within(row('room.open')).queryAllByRole('textbox')).toHaveLength(0);
   });
 
   it('shows the rules that protect the document as locked, with the reason', async () => {
     setup();
-    await screen.findByRole('table', { name: 'Design rules' });
+    await screen.findByRole('list', { name: 'Rules' });
     for (const id of [
       'item.catalog',
       'item.overlap',
@@ -100,7 +107,11 @@ describe('the rules page', () => {
     ]) {
       const locked = within(row(id));
       expect(locked.getByLabelText(`Severity of ${id}`)).toBeDisabled();
-      expect(locked.getByRole('switch', { name: `${id} is on` })).toBeDisabled();
+      // Base UI's switch is a span with aria-disabled, not a form control with `disabled`.
+      expect(locked.getByRole('switch', { name: `${id} is on` })).toHaveAttribute(
+        'aria-disabled',
+        'true',
+      );
       expect(locked.getByText(/Locked: always on, always an error/)).toBeInTheDocument();
     }
     const open = within(row('item.blocks-door'));
@@ -110,7 +121,7 @@ describe('the rules page', () => {
 
   it('saves a changed severity, switch and threshold with the revision it loaded', async () => {
     const { saveRulesDraft } = setup({ draft: draft({ revision: 4, based_on: 2 }) });
-    await screen.findByRole('table', { name: 'Design rules' });
+    await screen.findByRole('list', { name: 'Rules' });
     fireEvent.change(screen.getByLabelText('Severity of clearance.aisle'), {
       target: { value: 'error' },
     });
@@ -131,7 +142,7 @@ describe('the rules page', () => {
 
   it('refuses a threshold outside its range with core’s message and keeps the old value', async () => {
     const { saveRulesDraft } = setup();
-    await screen.findByRole('table', { name: 'Design rules' });
+    await screen.findByRole('list', { name: 'Rules' });
     const minAisle = screen.getByLabelText('Minimum aisle');
     fireEvent.change(minAisle, { target: { value: '20' } });
     fireEvent.blur(minAisle);
@@ -146,7 +157,7 @@ describe('the rules page', () => {
 
   it('refuses a threshold that breaks the order of its pair', async () => {
     setup();
-    await screen.findByRole('table', { name: 'Design rules' });
+    await screen.findByRole('list', { name: 'Rules' });
     const recommended = screen.getByLabelText('Recommended aisle');
     fireEvent.change(recommended, { target: { value: '30' } });
     fireEvent.blur(recommended);
@@ -166,7 +177,7 @@ describe('the rules page', () => {
         }),
       }),
     });
-    await screen.findByRole('table', { name: 'Design rules' });
+    await screen.findByRole('list', { name: 'Rules' });
     expect(screen.getByLabelText('Severity of clearance.aisle')).toHaveValue('info');
     fireEvent.click(screen.getByRole('button', { name: 'Reset clearance.aisle to defaults' }));
     expect(screen.getByLabelText('Severity of clearance.aisle')).toHaveValue('warning');
@@ -214,7 +225,7 @@ describe('the rules page', () => {
 
   it('publishes what is on screen with a note', async () => {
     const { saveRulesDraft, publishConfig } = setup();
-    await screen.findByRole('table', { name: 'Design rules' });
+    await screen.findByRole('list', { name: 'Rules' });
     fireEvent.click(screen.getByRole('switch', { name: 'room.open is on' }));
     fireEvent.click(screen.getByRole('button', { name: 'Publish…' }));
     fireEvent.change(await screen.findByLabelText(/^Note/), { target: { value: 'Quieter' } });
@@ -233,7 +244,7 @@ describe('the rules page', () => {
         errors: [{ path: 'thresholds.minAisle', message: 'Nope.' }],
       }),
     );
-    await screen.findByRole('table', { name: 'Design rules' });
+    await screen.findByRole('list', { name: 'Rules' });
     fireEvent.click(screen.getByRole('switch', { name: 'room.open is on' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
     expect(await screen.findByRole('alert')).toBeInTheDocument();

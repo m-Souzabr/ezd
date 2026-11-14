@@ -1,3 +1,4 @@
+import { ThemeToggle } from '@/components/patterns/theme-toggle';
 import { type DesignDocument, itemLabel, wallLabel } from '@ezd/core';
 import { MessageSquareIcon, PanelLeftIcon, PanelRightIcon } from 'lucide-react';
 import { lazy, type ReactNode, Suspense, useEffect, useState } from 'react';
@@ -172,9 +173,12 @@ export function Editor({
 
   return (
     <div className="flex h-dvh flex-col bg-background text-foreground">
-      <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-card px-3 py-2">
+      <header className="relative flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-card px-3 py-2">
         <h1 className="text-base font-semibold tracking-tight">EZDesign</h1>
         {header}
+        <div className="absolute top-1/2 right-3 -translate-y-1/2">
+          <ThemeToggle />
+        </div>
       </header>
       <Toolbar
         onLoadDocument={onLoadDocument}

@@ -1,8 +1,8 @@
 import type { Len } from '@ezd/core';
 import { useId, useState } from 'react';
 
-import { Field } from '../../editor/panels/fields';
-import { FIELD } from '../controls';
+import { Field } from '@/editor/panels/fields';
+import { Input } from '@/components/ui/input';
 import { formatDollars, formatLengthList, parseDollars, parseLengthList } from './helpers';
 
 /** A text field that commits on Enter or blur. `onCommit` returns an error or null. */
@@ -30,12 +30,11 @@ export function CommitField({
   };
   return (
     <Field label={label} htmlFor={id} error={error} errorId={`${id}-error`}>
-      <input
+      <Input
         id={id}
         type="text"
         autoComplete="off"
         inputMode={inputMode}
-        className={FIELD}
         value={draft ?? value}
         disabled={disabled}
         aria-invalid={error !== null}

@@ -330,7 +330,7 @@ describe('the roles page', () => {
       new ApiError(403, { detail: 'A role cannot grant a permission you do not hold.' }),
     );
     renderAs(ADMIN, <RolesPage />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Edit Auditor' }));
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Edit Auditor' }))[0]!);
     const dialog = await screen.findByRole('dialog', { name: 'Edit Auditor' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save role' }));
     expect(await within(dialog).findByText(/cannot grant a permission/)).toBeInTheDocument();
@@ -340,8 +340,8 @@ describe('the roles page', () => {
     vi.spyOn(client.api, 'listRoles').mockResolvedValue(ROLES);
     const remove = vi.spyOn(client.api, 'deleteRole').mockResolvedValue(undefined);
     renderAs(ADMIN, <RolesPage />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Delete Auditor' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Delete Auditor?' });
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Delete Auditor' }))[0]!);
+    const dialog = await screen.findByRole('alertdialog', { name: 'Delete Auditor?' });
     expect(dialog).toHaveTextContent('1 person holds this role');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete role' }));
     await waitFor(() => expect(remove).toHaveBeenCalledWith(9));
@@ -454,7 +454,7 @@ describe('the backup and reset page', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('bob@example.com');
     fireEvent.click(screen.getByRole('button', { name: 'Replace the draft…' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Replace the draft?' });
+    const dialog = await screen.findByRole('alertdialog', { name: 'Replace the draft?' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Replace the draft' }));
 
     await waitFor(() => expect(importConfig).toHaveBeenLastCalledWith({ a: 1 }, true));
@@ -471,7 +471,9 @@ describe('the backup and reset page', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Reset rules…' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Reset rules…' }));
     expect(reset).not.toHaveBeenCalled();
-    const dialog = await screen.findByRole('dialog', { name: /Reset the rules draft to defaults/ });
+    const dialog = await screen.findByRole('alertdialog', {
+      name: /Reset the rules draft to defaults/,
+    });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Reset to defaults' }));
 
     await waitFor(() => expect(reset).toHaveBeenCalledWith('rules', 2));
@@ -479,7 +481,7 @@ describe('the backup and reset page', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset catalog…' }));
     fireEvent.click(
-      within(await screen.findByRole('dialog', { name: /Reset the catalog draft/ })).getByRole(
+      within(await screen.findByRole('alertdialog', { name: /Reset the catalog draft/ })).getByRole(
         'button',
         { name: 'Reset to defaults' },
       ),

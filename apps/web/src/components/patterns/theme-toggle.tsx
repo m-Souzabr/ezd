@@ -1,8 +1,8 @@
 import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react';
+import { useContext } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/hooks/use-theme';
-import type { Theme } from '@/lib/theme-context';
+import { ThemeContext, type Theme } from '@/lib/theme-context';
 
 const NEXT: Record<Theme, Theme> = {
   light: 'dark',
@@ -16,8 +16,11 @@ const LABEL: Record<Theme, string> = {
   system: 'Theme: system. Switch to light',
 };
 
+/** Without a `ThemeProvider` (a tree rendered on its own in a test) there is no theme to switch. */
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const context = useContext(ThemeContext);
+  if (context === null) return null;
+  const { theme, setTheme } = context;
   const Icon = theme === 'light' ? SunIcon : theme === 'dark' ? MoonIcon : MonitorIcon;
 
   return (

@@ -7,7 +7,7 @@ import type { NavItem } from '@/lib/navigation';
 /**
  * The frame of the account pages, with navigation from the routes the app has. The shell hides
  * what the user lacks the permission for; the quick editor is there only while the
- * configuration allows it. Dark mode is not reachable on every screen yet, so no theme toggle.
+ * configuration allows it.
  */
 export function AccountShell() {
   const { localEditor } = useConfig().features;
@@ -16,5 +16,5 @@ export function AccountShell() {
     { to: '/admin', label: 'Admin', icon: ShieldIcon, staffOnly: true },
     ...(localEditor ? [{ to: '/', label: 'Quick editor', icon: PencilRulerIcon }] : []),
   ];
-  return <AppShell items={items} themeToggle={false} />;
+  return <AppShell items={items} />;
 }

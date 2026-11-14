@@ -62,7 +62,10 @@ test('staff hide the properties window and publish; a fresh session loses it; a 
   await test.step('rolling back brings it back, as a new version', async () => {
     await page.goto('/admin/app');
     await page.getByRole('button', { name: `Roll back to version ${baseline.number}` }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Roll back', exact: true }).click();
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: 'Roll back', exact: true })
+      .click();
     await expect(page.getByText(`Rolled back to version ${baseline.number}`)).toBeVisible();
 
     const { context, fresh } = await visitor();

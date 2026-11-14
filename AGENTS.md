@@ -50,7 +50,7 @@ Rules for code agents and contributors working on EZDesign. The plan is
 ezd/
   packages/core/      @ezd/core      pure TS domain: schemas, units, commands, catalog, rules, scene, bom
   packages/core-cli/  @ezd/core-cli  Node CLI wrapping core (validate, apply) for Python callers
-  apps/web/           @ezd/web       React + Vite app: the 2D editor, and its Playwright tests in e2e/
+  apps/web/           @ezd/web       React + Vite app: the 2D editor, the account pages and the Control Panel, and its Playwright tests in e2e/
   apps/api/           Django project (Python)
   evals/              LLM eval cases, their documents and recorded responses; photos/ for photo import
   scripts/            repository tooling (license check)
@@ -394,6 +394,20 @@ object_type, object_id, before=, after=)`; it masks secret-looking keys when wri
   `config` and `catalog` as `ok`, `defaults`, `invalid` or `unknown` and never fails for them.
 - **Logos** are decoded, shrunk to `LOGO_MAX_EDGE` and re-encoded by `controlpanel/logo.py`, as
   photos are; what is stored is the re-encoded image, so tests compare against `process_logo`.
+- **UI and design system.** Every screen is built from the tokens in `apps/web/src/styles/globals.css`
+  (semantic classes such as `bg-primary`, never a raw color class or hex value: `pnpm lint` fails
+  anywhere in `src` except `components/ui`, tests and the canvas files listed in
+  `eslint.config.js`), the generated components in `components/ui` (shadcn on Base UI, installed
+  with the shadcn CLI; every edit is listed in `apps/web/CHANGELOG.md`) and the nine files of
+  `components/patterns`: use a pattern before a `ui` component and never import the primitive
+  library. Variants use `cva` in the component's file. A screen works at 375, 768 and 1280 px,
+  in light and dark, from the keyboard, with 44 px touch targets; a new screen is added to
+  `e2e/design-system.spec.ts`, which runs the audit in `e2e/a11y.ts` (axe-core is MPL-2.0 and
+  not allowed) in both themes at the three sizes. New components and states go on the
+  `/design-system` gallery (development and test builds only). The theme choice is in
+  `localStorage` under `app-theme`; `public/theme-init.js` applies it before the first paint
+  without an inline script. `docs/DESIGN-SYSTEM.md` is the guide and
+  `.github/pull_request_template.md` the checklist.
 - **Rules and quote defaults** are two more sections of the same `ConfigVersion`
   (`rules_config`, `quote_defaults`), published together with `app_config`, so one version
   number names a whole configuration and a rollback restores all three. Each is edited with its

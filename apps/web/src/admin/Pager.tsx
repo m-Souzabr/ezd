@@ -1,8 +1,4 @@
-import { BUTTON } from '../editor/panels/fields';
-
-export const FIELD =
-  'rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 ' +
-  'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500';
+import { Button } from '@/components/ui/button';
 
 /** Previous and next for a list read a page at a time. */
 export function Pager({
@@ -17,29 +13,29 @@ export function Pager({
   onOffset(offset: number): void;
 }) {
   if (total <= limit)
-    return total > 0 ? <p className="mt-2 text-xs text-slate-600">{total} in all</p> : null;
+    return total > 0 ? <p className="mt-2 text-xs text-muted-foreground">{total} in all</p> : null;
   const last = Math.min(offset + limit, total);
   return (
-    <nav aria-label="Pages" className="mt-3 flex items-center gap-3 text-sm text-slate-700">
-      <button
+    <nav aria-label="Pages" className="mt-3 flex items-center gap-3 text-sm text-muted-foreground">
+      <Button
         type="button"
-        className={BUTTON}
+        variant="outline"
         disabled={offset === 0}
         onClick={() => onOffset(Math.max(0, offset - limit))}
       >
         Previous
-      </button>
+      </Button>
       <span>
         {offset + 1} to {last} of {total}
       </span>
-      <button
+      <Button
         type="button"
-        className={BUTTON}
+        variant="outline"
         disabled={last >= total}
         onClick={() => onOffset(offset + limit)}
       >
         Next
-      </button>
+      </Button>
     </nav>
   );
 }

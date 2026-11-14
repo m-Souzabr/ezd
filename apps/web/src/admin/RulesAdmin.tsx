@@ -22,12 +22,19 @@ import { api } from '../api/client';
 import { configDraftKey } from '../api/keys';
 import { RequirePermission } from '../auth/permissions';
 import { useRulesConfig } from '../config/useConfig';
-import { BUTTON, LengthField } from '../editor/panels/fields';
+import { LengthField } from '../editor/panels/fields';
 import { errorMessage } from '../pages/format';
 import { NoAccess } from './AdminLayout';
-import { FIELD } from './controls';
 import { DraftSection, type LoadedSection } from './DraftSection';
 import { sampleDesign } from './sampleDesign';
+import { LockIcon } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { PageHeader } from '@/components/patterns/page-header';
 
 type Thresholds = RulesConfig['thresholds'];
 type Snap = RulesConfig['snap'];
@@ -96,79 +103,87 @@ function RuleRow({
     return null;
   };
   return (
-    <tr className="align-top odd:bg-slate-50/60">
-      <th scope="row" className="px-3 py-2 text-left font-normal">
-        <code className="text-xs font-semibold text-slate-900">{id}</code>
-        <p className="mt-0.5 max-w-xs text-xs text-slate-600">{RULE_DESCRIPTIONS[id]}</p>
-        {locked && (
-          <p className="mt-1 max-w-xs text-xs text-amber-800">
-            Locked: always on, always an error. {LOCKED_RULES[id]}
-          </p>
-        )}
-      </th>
-      <td className="px-3 py-2">
-        <select
-          aria-label={`Severity of ${id}`}
-          className={`${FIELD} disabled:bg-slate-100 disabled:text-slate-600`}
-          value={setting.severity}
-          disabled={locked}
-          onChange={(event) => set({ severity: event.target.value as Severity })}
-        >
-          {SEVERITIES.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </td>
-      <td className="px-3 py-2">
-        <input
-          type="checkbox"
-          role="switch"
-          aria-label={`${id} is on`}
-          className="size-4 accent-sky-600"
-          checked={setting.enabled}
-          disabled={locked}
-          onChange={(event) => set({ enabled: event.target.checked })}
-        />
-      </td>
-      <td className="px-3 py-2">
-        <div className="flex flex-wrap gap-3">
-          {names.map((name) => (
-            <div key={name} className="w-40">
-              <LengthField
-                label={THRESHOLD_LABELS[name]}
-                value={config.thresholds[name]}
-                onCommit={commit(name)}
-              />
+    <li>
+      <Card size="sm">
+        <CardContent className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <code className="text-xs font-semibold">{id}</code>
+              <p className="mt-0.5 max-w-prose text-xs text-muted-foreground">
+                {RULE_DESCRIPTIONS[id]}
+              </p>
+              {locked && (
+                <p className="mt-1 flex items-start gap-1 text-xs text-warning-foreground">
+                  <LockIcon className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
+                  <span>Locked: always on, always an error. {LOCKED_RULES[id]}</span>
+                </p>
+              )}
             </div>
-          ))}
-          {names.length === 0 && <span className="text-xs text-slate-600">None</span>}
-        </div>
-      </td>
-      <td className="px-3 py-2">
-        <button
-          type="button"
-          className={`${BUTTON} px-2 py-0.5 text-xs`}
-          aria-label={`Reset ${id} to defaults`}
-          disabled={isDefault(config, id)}
-          onClick={() =>
-            onChange({
-              ...config,
-              rules: { ...config.rules, [id]: DEFAULT_RULES_CONFIG.rules[id] },
-              thresholds: {
-                ...config.thresholds,
-                ...Object.fromEntries(
-                  names.map((name) => [name, DEFAULT_RULES_CONFIG.thresholds[name]]),
-                ),
-              },
-            })
-          }
-        >
-          Reset
-        </button>
-      </td>
-    </tr>
+            <div className="flex items-center gap-2">
+              <Switch
+                aria-label={`${id} is on`}
+                checked={setting.enabled}
+                disabled={locked}
+                onCheckedChange={(checked) => set({ enabled: checked })}
+              />
+              <span className="text-xs text-muted-foreground">
+                {setting.enabled ? 'On' : 'Off'}
+              </span>
+            </div>
+            <div className="w-32">
+              <NativeSelect
+                aria-label={`Severity of ${id}`}
+                value={setting.severity}
+                disabled={locked}
+                onChange={(event) => set({ severity: event.target.value as Severity })}
+              >
+                {SEVERITIES.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </NativeSelect>
+            </div>
+          </div>
+          {names.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {names.map((name) => (
+                <div key={name} className="w-40">
+                  <LengthField
+                    label={THRESHOLD_LABELS[name]}
+                    value={config.thresholds[name]}
+                    onCommit={commit(name)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          <div>
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              aria-label={`Reset ${id} to defaults`}
+              disabled={isDefault(config, id)}
+              onClick={() =>
+                onChange({
+                  ...config,
+                  rules: { ...config.rules, [id]: DEFAULT_RULES_CONFIG.rules[id] },
+                  thresholds: {
+                    ...config.thresholds,
+                    ...Object.fromEntries(
+                      names.map((name) => [name, DEFAULT_RULES_CONFIG.thresholds[name]]),
+                    ),
+                  },
+                })
+              }
+            >
+              Reset
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </li>
   );
 }
 
@@ -191,17 +206,19 @@ function SnapOptions({
   };
   const names = Object.keys(SNAP_LABELS) as (keyof typeof SNAP_LABELS)[];
   return (
-    <section aria-label="Snapping" className="rounded-lg bg-white p-4 shadow-sm">
+    <section aria-label="Snapping" className="rounded-lg border bg-card p-4 text-card-foreground">
       <div className="mb-3 flex items-center">
         <h2 className="text-base font-semibold">Snapping</h2>
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           type="button"
-          className={`${BUTTON} ml-auto px-2 py-0.5 text-xs`}
+          className="ml-auto "
           aria-label="Reset snapping to defaults"
           onClick={() => onChange({ ...config, snap: DEFAULT_RULES_CONFIG.snap })}
         >
           Reset to defaults
-        </button>
+        </Button>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {names.map((name) => (
@@ -213,14 +230,14 @@ function SnapOptions({
           />
         ))}
         <div className="flex flex-col gap-1">
-          <label htmlFor={stepId} className="text-xs font-medium text-slate-600">
+          <label htmlFor={stepId} className="text-xs font-medium text-muted-foreground">
             Free rotation step (degrees)
           </label>
-          <input
+          <Input
             id={stepId}
             type="text"
             inputMode="numeric"
-            className={`${FIELD} w-28`}
+            className="w-28"
             value={text ?? String(config.snap.freeRotationStep)}
             onChange={(event) => {
               setText(event.target.value);
@@ -236,7 +253,7 @@ function SnapOptions({
             aria-invalid={stepError !== null}
           />
           {stepError && (
-            <p role="alert" className="text-xs text-red-700">
+            <p role="alert" className="text-xs text-destructive">
               {stepError}
             </p>
           )}
@@ -261,11 +278,11 @@ function RulesForm({
     <>
       <section
         aria-label="Preview"
-        className="rounded-lg bg-white p-4 text-sm shadow-sm"
+        className="rounded-lg border bg-card p-4 text-sm text-card-foreground"
         data-testid="rules-preview"
       >
         <h2 className="mb-1 text-base font-semibold">Preview</h2>
-        <p className="text-slate-700">
+        <p className="text-foreground">
           On a sample kitchen, the rules now find <strong>{describe(now)}</strong>.
           {changed ? (
             <>
@@ -277,37 +294,13 @@ function RulesForm({
           )}
         </p>
       </section>
-      <section aria-label="Rules" className="overflow-x-auto rounded-lg bg-white shadow-sm">
-        <table className="w-full min-w-[56rem] text-sm">
-          <caption className="sr-only">Design rules</caption>
-          <thead className="border-b border-slate-200 text-left text-xs text-slate-600">
-            <tr>
-              <th scope="col" className="px-3 py-2 font-medium">
-                Rule
-              </th>
-              <th scope="col" className="px-3 py-2 font-medium">
-                Severity
-              </th>
-              <th scope="col" className="px-3 py-2 font-medium">
-                On
-              </th>
-              <th scope="col" className="px-3 py-2 font-medium">
-                Thresholds
-              </th>
-              <th scope="col" className="px-3 py-2 font-medium">
-                <span className="sr-only">Reset</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {RULE_IDS.map((id) => (
-              <RuleRow key={id} id={id} config={config} onChange={onChange} />
-            ))}
-          </tbody>
-        </table>
-      </section>
+      <ul aria-label="Rules" className="flex flex-col gap-3">
+        {RULE_IDS.map((id) => (
+          <RuleRow key={id} id={id} config={config} onChange={onChange} />
+        ))}
+      </ul>
       <SnapOptions config={config} onChange={onChange} />
-      <p className="text-xs text-slate-600">
+      <p className="text-xs text-muted-foreground">
         Lengths are in inches, as {formatLength(DEFAULT_RULES_CONFIG.thresholds.minAisle)} for the
         default minimum aisle. These are design-quality guidelines, not building-code checks.
       </p>
@@ -334,7 +327,10 @@ export function RulesAdminPage() {
   }, [draft.data]);
   return (
     <RequirePermission permission="config.rules.edit" fallback={<NoAccess />}>
-      <h1 className="mb-4 text-xl font-semibold">Rules</h1>
+      <PageHeader
+        title="Rules"
+        description="Which design checks run, how serious they are, and the limits they use."
+      />
       {loaded ? (
         <DraftSection<RulesConfig>
           key={`${loaded.revision}-${loaded.basedOn}`}
@@ -349,11 +345,11 @@ export function RulesAdminPage() {
           {({ value, set }) => <RulesForm config={value} onChange={set} />}
         </DraftSection>
       ) : draft.error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-destructive">
           {errorMessage(draft.error)}
         </p>
       ) : (
-        <p role="status" className="text-sm text-slate-600">
+        <p role="status" className="text-sm text-muted-foreground">
           Loading…
         </p>
       )}

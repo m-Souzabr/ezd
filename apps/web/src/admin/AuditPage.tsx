@@ -5,12 +5,15 @@ import { api, type AuditChange, type AuditEntry } from '../api/client';
 import { adminAuditKey, adminAuditTypesKey } from '../api/keys';
 import { RequirePermission } from '../auth/permissions';
 import { formatDate } from '../pages/format';
-import { Table, type Column } from '../pages/Table';
+import { DataList, type DataListColumn } from '@/components/patterns/data-list';
+import { PageHeader } from '@/components/patterns/page-header';
+import { EmptyState, ErrorState, LoadingState } from '@/components/patterns/state-views';
+import { buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { NoAccess } from './AdminLayout';
 import { ChangeList } from './changes';
-import { Pager } from './controls';
+import { Pager } from './Pager';
 
 const PAGE_SIZE = 25;
 
@@ -31,16 +34,21 @@ function Changes({ entry }: { entry: AuditEntry }) {
   );
 }
 
-const COLUMNS: Column<AuditEntry>[] = [
-  { key: 'created_at', header: 'When', cell: (entry) => formatDate(entry.created_at) },
-  { key: 'actor', header: 'Who', cell: (entry) => entry.actor_email || '—' },
-  { key: 'action', header: 'Action', cell: (entry) => entry.action },
+const COLUMNS: DataListColumn<AuditEntry>[] = [
   {
-    key: 'object',
+    id: 'created_at',
+    header: 'When',
+    primary: true,
+    cell: (entry) => formatDate(entry.created_at),
+  },
+  { id: 'actor', header: 'Who', cell: (entry) => entry.actor_email || '—' },
+  { id: 'action', header: 'Action', cell: (entry) => entry.action },
+  {
+    id: 'object',
     header: 'Object',
     cell: (entry) => `${entry.object_type} ${entry.object_id}`.trim(),
   },
-  { key: 'changes', header: 'Changes', cell: (entry) => <Changes entry={entry} /> },
+  { id: 'changes', header: 'Changes', cell: (entry) => <Changes entry={entry} /> },
 ];
 
 function Audit() {
@@ -65,23 +73,26 @@ function Audit() {
     set(value);
     setOffset(0);
   };
-  const field = 'flex flex-col gap-1 text-sm text-slate-700';
+  const field = 'flex flex-col gap-1 text-sm text-muted-foreground';
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-semibold">Audit log</h1>
-        <a
-          className="ml-auto inline-flex h-8 items-center rounded-lg border border-border px-2.5 text-sm font-medium hover:bg-muted"
-          href={api.auditExportUrl(filters)}
-          download
-        >
-          Export CSV
-        </a>
-      </div>
+      <PageHeader
+        title="Audit log"
+        description="Every change made in the Control Panel."
+        actions={
+          <a
+            className={buttonVariants({ variant: 'outline' })}
+            href={api.auditExportUrl(filters)}
+            download
+          >
+            Export CSV
+          </a>
+        }
+      />
       <form
         aria-label="Filter the audit log"
-        className="mb-3 flex flex-wrap gap-3"
+        className="my-4 flex flex-wrap gap-3"
         onSubmit={(event) => event.preventDefault()}
       >
         <label className={field} htmlFor={`${ids}-actor`}>
@@ -138,15 +149,24 @@ function Audit() {
           />
         </label>
       </form>
-      <Table
-        label="Audit log"
-        columns={COLUMNS}
-        rows={log.data?.rows}
-        rowKey={(entry) => entry.id}
-        loading={log.isPending}
-        error={log.error?.message ?? null}
-        empty="No entries match."
-      />
+      {log.isPending ? (
+        <LoadingState label="Loading the audit log" />
+      ) : log.error ? (
+        <ErrorState
+          title="The audit log could not be loaded"
+          description={log.error.message}
+          onRetry={() => void log.refetch()}
+        />
+      ) : log.data.rows.length === 0 ? (
+        <EmptyState title="No entries match" description="Change the filters or the dates." />
+      ) : (
+        <DataList
+          caption="Audit log"
+          rows={log.data.rows}
+          columns={COLUMNS}
+          getRowId={(entry) => String(entry.id)}
+        />
+      )}
       <Pager offset={offset} limit={PAGE_SIZE} total={log.data?.total ?? 0} onOffset={setOffset} />
     </>
   );

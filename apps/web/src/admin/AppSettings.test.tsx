@@ -179,7 +179,7 @@ describe('the app settings page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Roll back to version 1' }));
     expect(rollbackConfig).not.toHaveBeenCalled();
     fireEvent.click(
-      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Roll back' }),
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Roll back' }),
     );
     await waitFor(() => expect(rollbackConfig).toHaveBeenCalledWith(1));
   });

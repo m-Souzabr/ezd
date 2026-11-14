@@ -4,10 +4,29 @@ import { type ReactNode, useState } from 'react';
 import { ApiError, isConflict } from '../api/client';
 import { api } from '../api/client';
 import { configDraftKey, configVersionsKey } from '../api/keys';
-import { BUTTON } from '../editor/panels/fields';
-import { FormError, PRIMARY } from '../pages/ui';
+import { FormError } from '@/components/form-error';
+import { Badge } from '@/components/ui/badge';
 import { PublishDialog, VersionHistory } from './AppSettings';
 import { ConflictNotice } from './ConflictNotice';
+import { Button } from '@/components/ui/button';
+
+/** Where the draft stands: a draft, or the published version it is level with. */
+export function DraftStatus({
+  dirty,
+  revision,
+  basedOn,
+}: {
+  dirty: boolean;
+  revision: number;
+  basedOn: number | string | null;
+}) {
+  const draft = dirty || revision > 0;
+  const published =
+    basedOn === null
+      ? 'Defaults'
+      : `Published ${typeof basedOn === 'number' ? `v${basedOn}` : basedOn}`;
+  return <Badge variant={draft ? 'warning' : 'success'}>{draft ? 'Draft' : published}</Badge>;
+}
 
 export type LoadedSection<T> = { revision: number; value: T; basedOn: number | null };
 
@@ -82,10 +101,12 @@ export function DraftSection<T>({
   const conflict = isConflict(saveDraft.error) || isConflict(publish.error);
   return (
     <div className="flex flex-col gap-4">
-      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg bg-white p-3 shadow-sm">
-        <button
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3 text-card-foreground">
+        <DraftStatus dirty={dirty} revision={revision} basedOn={loaded.basedOn} />
+        <Button
+          variant="outline"
           type="button"
-          className={BUTTON}
+
           disabled={!dirty || invalid || saveDraft.isPending}
           onClick={() => {
             setMessage(null);
@@ -93,21 +114,31 @@ export function DraftSection<T>({
           }}
         >
           Save draft
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={PRIMARY}
+          variant="ghost"
+          disabled={!dirty}
+          onClick={() => {
+            setMessage(null);
+            setValue(saved);
+          }}
+        >
+          Discard changes
+        </Button>
+        <Button
+          type="button"
           disabled={invalid || (!dirty && revision === 0 && loaded.basedOn !== null)}
           onClick={() => setPublishing(true)}
         >
           Publish…
-        </button>
+        </Button>
         {onReset && (
-          <button type="button" className={BUTTON} onClick={() => set(onReset())}>
+          <Button variant="outline" type="button" onClick={() => set(onReset())}>
             {resetLabel ?? 'Reset to defaults'}
-          </button>
+          </Button>
         )}
-        <span role="status" className="text-sm text-slate-600">
+        <span role="status" className="text-sm text-muted-foreground">
           {invalid
             ? `${found} ${found === 1 ? 'problem' : 'problems'} to fix first.`
             : (message ?? (dirty ? 'Unsaved changes.' : revision > 0 ? 'Draft saved.' : ''))}
