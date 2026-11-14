@@ -86,6 +86,8 @@ test('register, design on the server, reload, save a version and restore it', as
     await expect(dialog.getByRole('listitem')).toContainText(['Version 1']);
     await expect(dialog.getByRole('listitem')).toContainText(['One cabinet']);
     await dialog.getByRole('button', { name: 'Close' }).click();
+    // The dialog fades out: wait for it, or its backdrop still catches the next drag.
+    await expect(dialog).toBeHidden();
   });
 
   await test.step('change the design: a second cabinet is saved', async () => {
@@ -111,7 +113,11 @@ test('register, design on the server, reload, save a version and restore it', as
     await page.getByRole('button', { name: 'Versions' }).click();
     const dialog = page.getByRole('dialog', { name: 'Version history' });
     await dialog.getByRole('button', { name: 'Restore version 1' }).click();
-    await dialog.getByRole('button', { name: 'Confirm restoring version 1' }).click();
+    // A locator changed with the Base UI alert dialog: confirming is its own dialog.
+    await page
+      .getByRole('alertdialog', { name: 'Restore version 1?' })
+      .getByRole('button', { name: 'Replace the draft' })
+      .click();
     await expect(dialog).toBeHidden();
 
     await expect.poll(async () => (await getDoc(page)).items.length).toBe(1);
@@ -203,7 +209,7 @@ test('a save over a newer one is refused: reload theirs, or overwrite with mine'
 
   await page.bringToFront();
   await dragFromCatalog(page, 'wall.standard', 90, 10);
-  const conflict = page.getByRole('dialog', { name: 'This design was changed elsewhere' });
+  const conflict = page.getByRole('alertdialog', { name: 'This design was changed elsewhere' });
   await expect(conflict).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId('save-status')).toHaveText('Conflict');
 

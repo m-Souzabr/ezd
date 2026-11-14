@@ -1,7 +1,8 @@
 import type { AppConfigInput } from '@ezd/core';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { mockMedia } from '../test/media';
 import { room, seedItem, storeFor, WALLS } from '../test/kitchen';
 import { WithConfig } from '../test/config';
 import { DesignStoreProvider } from '../store/context';
@@ -14,6 +15,12 @@ import { Toolbar } from './panels/Toolbar';
 // Konva needs a canvas, which jsdom does not have.
 vi.mock('./plan/PlanCanvas', () => ({ PlanCanvas: () => <div data-testid="plan" /> }));
 vi.mock('./elevation/ElevationCanvas', () => ({ ElevationCanvas: () => null }));
+
+// The help dialog is loaded when first opened.
+beforeAll(() => import('./panels/HelpDialogBody'));
+
+// A desktop screen: the panels are columns. The narrow layout is tested in Editor.layout.test.tsx.
+beforeEach(() => mockMedia(true));
 
 const [A] = WALLS;
 const kitchen = () => room(144, 120, seedItem('item-000001', 'base.standard', A, 12));
@@ -186,14 +193,14 @@ describe('shortcuts', () => {
 });
 
 describe('the help', () => {
-  it('shows the configured steps', () => {
+  it('shows the configured steps', async () => {
     render(
       <WithConfig input={{ help: { steps: [{ title: 'Only step', text: 'Do the thing.' }] } }}>
         <HelpDialog trigger={<button type="button">Help</button>} />
       </WithConfig>,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Help' }));
-    expect(screen.getAllByRole('listitem')).toHaveLength(1);
+    expect(await screen.findAllByRole('listitem')).toHaveLength(1);
     expect(screen.getByText('Only step.')).toBeInTheDocument();
   });
 });

@@ -9,15 +9,16 @@ import {
 } from '@ezd/core';
 import { type FormEvent, useId, useMemo, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import type { QuoteCreate } from '../api/client';
 import { useQuoteDefaults } from '../config/useConfig';
-import { BUTTON } from '../editor/panels/fields';
+import { Field as LabelledField } from '../editor/panels/fields';
 import { useDesign } from '../store/context';
 import { formatPercent, parsePercent } from './format';
-
-const INPUT =
-  'w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 ' +
-  'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500';
 
 type Fields = {
   customerName: string;
@@ -58,27 +59,23 @@ function Field({
   const id = useId();
   const props = {
     id,
-    className: INPUT,
     value,
     'aria-invalid': Boolean(error),
     'aria-describedby': error ? `${id}-error` : undefined,
   };
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium text-slate-600">
-        {label}
-      </label>
+    <LabelledField label={label} htmlFor={id} error={error} errorId={`${id}-error`}>
       {multiline ? (
-        <textarea {...props} rows={2} onChange={(event) => onChange(event.target.value)} />
+        <Textarea
+          {...props}
+          rows={2}
+          className="min-h-16"
+          onChange={(event) => onChange(event.target.value)}
+        />
       ) : (
-        <input {...props} type={type} onChange={(event) => onChange(event.target.value)} />
+        <Input {...props} type={type} onChange={(event) => onChange(event.target.value)} />
       )}
-      {error && (
-        <p id={`${id}-error`} role="alert" className="text-xs text-red-700">
-          {error}
-        </p>
-      )}
-    </div>
+    </LabelledField>
   );
 }
 
@@ -106,6 +103,7 @@ export function QuoteForm({
   const defaults = useQuoteDefaults();
   const [fields, setFields] = useState<Fields>(() => initialFields(defaults));
   const [override, setOverride] = useState(false);
+  const overrideId = useId();
   const set = (key: keyof Fields) => (value: string) =>
     setFields((current) => ({ ...current, [key]: value }));
 
@@ -148,7 +146,7 @@ export function QuoteForm({
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Customer name" value={fields.customerName} onChange={set('customerName')} />
         <Field
           label="Customer email (optional)"
@@ -163,7 +161,7 @@ export function QuoteForm({
         value={fields.customerAddress}
         onChange={set('customerAddress')}
       />
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Field
           label="Markup %"
           value={fields.markup}
@@ -184,18 +182,18 @@ export function QuoteForm({
         />
       </div>
       {settingsProblem && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-destructive">
           {settingsProblem}
         </p>
       )}
       <Field label="Notes (optional)" multiline value={fields.notes} onChange={set('notes')} />
 
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-0.5 rounded bg-slate-50 px-3 py-2 text-sm">
-        <dt className="text-slate-600">Lines</dt>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-0.5 rounded-lg bg-muted px-3 py-2 text-sm">
+        <dt className="text-muted-foreground">Lines</dt>
         <dd className="text-right tabular-nums">{lines.length}</dd>
         {totals && (
           <>
-            <dt className="text-slate-600">Subtotal</dt>
+            <dt className="text-muted-foreground">Subtotal</dt>
             <dd className="text-right tabular-nums">{formatMoney(totals.subtotalCents)}</dd>
             <dt className="font-semibold">Total</dt>
             <dd className="text-right font-semibold tabular-nums" data-testid="quote-form-total">
@@ -208,40 +206,45 @@ export function QuoteForm({
       {errors > 0 && (
         <div
           role="alert"
-          className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+          className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
         >
           <p>
             The design has {errors === 1 ? '1 error' : `${errors} errors`}. Fix{' '}
             {errors === 1 ? 'it' : 'them'} in the Validation panel before quoting, or quote it as it
             is.
           </p>
-          <label className="mt-2 flex items-center gap-2">
-            <input
-              type="checkbox"
-              className="size-4 accent-red-700"
+          <div className="mt-2 flex items-center gap-2">
+            <Checkbox
+              id={overrideId}
               checked={override}
-              onChange={(event) => setOverride(event.target.checked)}
+              aria-labelledby={`${overrideId}-label`}
+              onCheckedChange={(next) => setOverride(next)}
             />
-            Create the quote anyway
-          </label>
+            <Label
+              id={`${overrideId}-label`}
+              className="font-normal"
+              onClick={() => setOverride(!override)}
+            >
+              Create the quote anyway
+            </Label>
+          </div>
         </div>
       )}
       {error && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}
       <div className="flex justify-end gap-2">
-        <button type="button" className={BUTTON} onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className={`${BUTTON} border-sky-700 bg-sky-700 text-white hover:bg-sky-800`}
           disabled={pending || blocked || !totals || !fields.customerName.trim()}
         >
           {pending ? 'Creating…' : 'Create quote'}
-        </button>
+        </Button>
       </div>
     </form>
   );

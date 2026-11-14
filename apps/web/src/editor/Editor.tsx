@@ -1,6 +1,10 @@
 import { type DesignDocument, itemLabel, wallLabel } from '@ezd/core';
-import { type ReactNode, useEffect, useState } from 'react';
+import { MessageSquareIcon, PanelLeftIcon, PanelRightIcon } from 'lucide-react';
+import { lazy, type ReactNode, Suspense, useEffect, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { LG_UP, MD_UP } from '@/lib/breakpoints';
 import { useConfig } from '../config/useConfig';
 import { handleGlobalKey, isTyping } from '../lib/shortcuts';
 import { useDesign, useDesignStore } from '../store/context';
@@ -8,12 +12,20 @@ import type { DesignStore } from '../store/designStore';
 import { ElevationCanvas } from './elevation/ElevationCanvas';
 import { CatalogPanel } from './panels/CatalogPanel';
 import { BomPanel } from './panels/BomPanel';
-import { BUTTON } from './panels/fields';
 import { PropertiesPanel } from './panels/PropertiesPanel';
 import { Toolbar } from './panels/Toolbar';
 import { ValidationPanel } from './panels/ValidationPanel';
+import type { SheetName } from './EditorOverlays';
 import { PlanCanvas } from './plan/PlanCanvas';
 import { findTarget } from './tools/select';
+
+// The sheets and the drawer exist only below 1024 px; the desktop editor never loads them.
+const EditorOverlays = lazy(() => import('./EditorOverlays'));
+
+/** Whether a dialog, alert dialog, sheet or drawer is open. A closed one kept mounted is hidden. */
+const openDialog = (): boolean =>
+  document.querySelector('[role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])') !==
+  null;
 
 /** What a screen reader hears when the selection changes. */
 function announcement(state: DesignStore): string {
@@ -60,23 +72,107 @@ export function Editor({
   const [materialsOpen, setMaterialsOpen] = useState(false);
   // Only a properties window that starts collapsed can be opened and closed.
   const [propertiesOpen, setPropertiesOpen] = useState(!panels.properties.defaultCollapsed);
-  const showAssistant = features.assistant && assistant;
+  const lgUp = useMediaQuery(LG_UP);
+  const mdUp = useMediaQuery(MD_UP);
+  /** The panel open as a sheet. Below 1024 px the panels are sheets; from there up, columns. */
+  const [sheet, setSheet] = useState<SheetName | null>(null);
+  const showAssistant = Boolean(features.assistant && assistant);
   const showRight = panels.properties.visible || panels.validation.visible;
+  const showMaterials = materialsOpen && panels.materials.visible;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      // A text field keeps its own editing keys, and a dialog its own Escape.
+      // A text field keeps its own editing keys, and a dialog, sheet or drawer its own Escape.
       if (event.key !== 'Escape' && isTyping(event.target)) return;
-      if (document.querySelector('[role="dialog"]')) return;
+      if (openDialog()) return;
       if (handleGlobalKey(event, store, toolbar.buttons)) event.preventDefault();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [store, toolbar.buttons]);
 
+  const properties =
+    panels.properties.visible &&
+    (panels.properties.defaultCollapsed && !propertiesOpen ? (
+      <Button
+        variant="outline"
+        aria-expanded={false}
+        className="m-2 justify-between"
+        onClick={() => setPropertiesOpen(true)}
+      >
+        Show properties
+      </Button>
+    ) : (
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {panels.properties.defaultCollapsed && (
+          <Button
+            variant="outline"
+            aria-expanded
+            className="m-2 justify-between"
+            onClick={() => setPropertiesOpen(false)}
+          >
+            Hide properties
+          </Button>
+        )}
+        <PropertiesPanel />
+      </div>
+    ));
+  const rightPanels = (
+    <>
+      {properties}
+      {panels.validation.visible && (
+        <div
+          className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
+            panels.properties.visible ? 'border-t' : ''
+          }`}
+        >
+          <ValidationPanel />
+        </div>
+      )}
+    </>
+  );
+
+  const panelButtons = !lgUp && (
+    <>
+      {panels.catalog.visible && (
+        <Button
+          variant="outline"
+          size="sm"
+          aria-haspopup="dialog"
+          onClick={() => setSheet('catalog')}
+        >
+          <PanelLeftIcon aria-hidden="true" />
+          Catalog
+        </Button>
+      )}
+      {showRight && (
+        <Button
+          variant="outline"
+          size="sm"
+          aria-haspopup="dialog"
+          onClick={() => setSheet('properties')}
+        >
+          <PanelRightIcon aria-hidden="true" />
+          Properties
+        </Button>
+      )}
+      {showAssistant && (
+        <Button
+          variant="outline"
+          size="sm"
+          aria-haspopup="dialog"
+          onClick={() => setSheet('assistant')}
+        >
+          <MessageSquareIcon aria-hidden="true" />
+          Assistant
+        </Button>
+      )}
+    </>
+  );
+
   return (
-    <div className="flex h-screen flex-col bg-slate-100 text-slate-900">
-      <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-3 pt-2">
+    <div className="flex h-dvh flex-col bg-background text-foreground">
+      <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-card px-3 py-2">
         <h1 className="text-base font-semibold tracking-tight">EZDesign</h1>
         {header}
       </header>
@@ -84,10 +180,11 @@ export function Editor({
         onLoadDocument={onLoadDocument}
         materialsOpen={materialsOpen}
         onToggleMaterials={() => setMaterialsOpen((open) => !open)}
+        panelButtons={panelButtons}
       />
       <div className="flex min-h-0 flex-1">
-        {panels.catalog.visible && (
-          <aside className="flex w-64 shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white">
+        {lgUp && panels.catalog.visible && (
+          <aside className="flex w-64 shrink-0 flex-col overflow-hidden border-r bg-card">
             <CatalogPanel />
           </aside>
         )}
@@ -99,8 +196,8 @@ export function Editor({
               <ElevationCanvas wallId={view.wallId} previewDoc={previewDoc} />
             )}
           </div>
-          {materialsOpen && panels.materials.visible && (
-            <div className="flex max-h-[40%] min-h-0 flex-col border-t border-slate-200 bg-white">
+          {showMaterials && mdUp && (
+            <div className="flex max-h-[40%] min-h-0 flex-col border-t bg-card">
               <BomPanel />
             </div>
           )}
@@ -112,63 +209,39 @@ export function Editor({
           {notice && (
             <div
               role="status"
-              className="absolute inset-x-0 bottom-3 mx-auto flex w-fit max-w-[90%] items-center gap-3 rounded-md bg-slate-900 px-4 py-2 text-sm text-white shadow-lg"
+              className="absolute inset-x-0 bottom-3 mx-auto flex w-fit max-w-[90%] items-center gap-3 rounded-lg bg-foreground px-4 py-2 text-sm text-background shadow-lg"
             >
               <span>{notice}</span>
-              <button
-                type="button"
-                className={`${BUTTON} border-slate-600 bg-slate-800 px-2 py-0.5 text-xs text-white hover:bg-slate-700`}
-                onClick={() => store.getState().notify(null)}
-              >
+              <Button variant="secondary" size="xs" onClick={() => store.getState().notify(null)}>
                 Dismiss
-              </button>
+              </Button>
             </div>
           )}
         </main>
-        {showRight && (
-          <aside className="flex w-72 shrink-0 flex-col border-l border-slate-200 bg-white">
-            {panels.properties.visible &&
-              (panels.properties.defaultCollapsed && !propertiesOpen ? (
-                <button
-                  type="button"
-                  aria-expanded={false}
-                  className={`${BUTTON} m-2 justify-between`}
-                  onClick={() => setPropertiesOpen(true)}
-                >
-                  Show properties
-                </button>
-              ) : (
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                  {panels.properties.defaultCollapsed && (
-                    <button
-                      type="button"
-                      aria-expanded
-                      className={`${BUTTON} m-2 justify-between`}
-                      onClick={() => setPropertiesOpen(false)}
-                    >
-                      Hide properties
-                    </button>
-                  )}
-                  <PropertiesPanel />
-                </div>
-              ))}
-            {panels.validation.visible && (
-              <div
-                className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
-                  panels.properties.visible ? 'border-t border-slate-200' : ''
-                }`}
-              >
-                <ValidationPanel />
-              </div>
-            )}
-          </aside>
+        {lgUp && showRight && (
+          <aside className="flex w-72 shrink-0 flex-col border-l bg-card">{rightPanels}</aside>
         )}
-        {showAssistant && (
-          <aside className="flex w-80 shrink-0 flex-col border-l border-slate-200 bg-white">
-            {assistant}
-          </aside>
+        {lgUp && showAssistant && (
+          <aside className="flex w-80 shrink-0 flex-col border-l bg-card">{assistant}</aside>
         )}
       </div>
+      {(!lgUp || !mdUp) && (
+        <Suspense fallback={null}>
+          <EditorOverlays
+            sheet={lgUp ? null : sheet}
+            onSheetChange={setSheet}
+            catalog={
+              !lgUp && panels.catalog.visible ? (
+                <CatalogPanel onAdded={() => setSheet(null)} />
+              ) : null
+            }
+            right={!lgUp && showRight ? rightPanels : null}
+            assistant={!lgUp && showAssistant ? assistant : null}
+            materials={!mdUp && showMaterials ? <BomPanel /> : null}
+            onMaterialsClose={() => setMaterialsOpen(false)}
+          />
+        </Suspense>
+      )}
       <p aria-live="polite" className="sr-only" data-testid="announcement">
         {selected}
       </p>

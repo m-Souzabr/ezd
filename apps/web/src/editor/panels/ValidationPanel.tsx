@@ -1,16 +1,41 @@
 import type { Severity, Violation } from '@ezd/core';
+import {
+  CircleAlertIcon,
+  InfoIcon,
+  type LucideIcon,
+  TriangleAlertIcon,
+  WrenchIcon,
+} from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 import { useDesign, useDesignStore } from '../../store/context';
 import { planBoundsOf } from '../../store/selectors';
 import { asOne } from '../edits';
 import { findTarget } from '../tools/select';
 import { fitBounds } from '../viewport';
-import { BUTTON, PanelSection } from './fields';
+import { PanelSection } from './fields';
 
-const GROUPS: { severity: Severity; title: string; dot: string }[] = [
-  { severity: 'error', title: 'Errors', dot: 'bg-red-600' },
-  { severity: 'warning', title: 'Warnings', dot: 'bg-amber-500' },
-  { severity: 'info', title: 'Suggestions', dot: 'bg-sky-500' },
+/** The severity is its icon and its word, not just its color. */
+const GROUPS: {
+  severity: Severity;
+  title: string;
+  icon: LucideIcon;
+  variant: 'destructive' | 'warning' | 'outline';
+  className?: string;
+}[] = [
+  {
+    severity: 'error',
+    title: 'Errors',
+    icon: CircleAlertIcon,
+    variant: 'destructive',
+    // A solid badge: the tinted one is too faint for small text.
+    className: 'bg-destructive text-primary-foreground',
+  },
+  { severity: 'warning', title: 'Warnings', icon: TriangleAlertIcon, variant: 'warning' },
+  // The `info` badge's blue is a hair under AA contrast with its text, so this one is an outline.
+  { severity: 'info', title: 'Suggestions', icon: InfoIcon, variant: 'outline' },
 ];
 
 /** How far `Fit` zooms in on the items of a violation, in pixels per inch. */
@@ -39,24 +64,20 @@ function ViolationRow({ violation }: { violation: Violation }) {
   };
 
   return (
-    <li
-      data-rule-id={violation.ruleId}
-      className="flex items-start gap-2 border-b border-slate-100 px-3 py-2"
-    >
-      <button
-        type="button"
-        className="flex-1 rounded text-left text-sm text-slate-800 hover:text-sky-700 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500"
+    <li data-rule-id={violation.ruleId} className="flex items-start gap-2 border-b px-3 py-2">
+      <Button
+        variant="ghost"
+        className="h-auto min-w-0 flex-1 flex-col items-start justify-start px-1.5 py-1 text-left font-normal whitespace-normal"
         onClick={show}
       >
-        {violation.message}
-        <span className="mt-0.5 block font-mono text-[11px] text-slate-500">
-          {violation.ruleId}
-        </span>
-      </button>
+        <span className="text-sm">{violation.message}</span>
+        <span className="font-mono text-[11px] text-muted-foreground">{violation.ruleId}</span>
+      </Button>
       {violation.fix && violation.fix.length > 0 && (
-        <button type="button" className={`${BUTTON} px-2 py-0.5 text-xs`} onClick={apply}>
+        <Button variant="outline" size="xs" className="shrink-0" onClick={apply}>
+          <WrenchIcon aria-hidden="true" />
           Apply<span className="sr-only"> fix: {violation.message}</span>
-        </button>
+        </Button>
       )}
     </li>
   );
@@ -69,16 +90,18 @@ export function ValidationPanel() {
     <PanelSection title={`Validation (${violations.length})`}>
       <div className="overflow-y-auto">
         {violations.length === 0 && (
-          <p className="p-3 text-sm text-slate-600">No problems found.</p>
+          <p className="p-3 text-sm text-muted-foreground">No problems found.</p>
         )}
-        {GROUPS.map(({ severity, title, dot }) => {
+        {GROUPS.map(({ severity, title, icon: Icon, variant, className }) => {
           const group = violations.filter((violation) => violation.severity === severity);
           if (group.length === 0) return null;
           return (
             <section key={severity} aria-label={title}>
-              <h3 className="flex items-center gap-2 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
-                <span aria-hidden className={`size-2 rounded-full ${dot}`} />
-                {title} ({group.length})
+              <h3 className="border-b bg-background px-3 py-1.5">
+                <Badge variant={variant} className={className}>
+                  <Icon aria-hidden="true" />
+                  {title} ({group.length})
+                </Badge>
               </h3>
               <ul>
                 {group.map((violation, i) => (
@@ -91,7 +114,7 @@ export function ValidationPanel() {
             </section>
           );
         })}
-        <p className="border-t border-slate-100 px-3 py-2 text-xs text-slate-600">
+        <p className="px-3 py-2 text-xs text-muted-foreground">
           These checks are design guidance, not building-code compliance.
         </p>
       </div>

@@ -1,6 +1,6 @@
 import { inches } from '@ezd/core';
 import { fireEvent, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { apply, room, seedItem, storeFor, WALLS } from '../../test/kitchen';
 import { renderWithStore } from '../../test/render';
@@ -125,6 +125,25 @@ describe('typed lengths', () => {
     fireEvent.change(offset, { target: { value: '18' } });
     fireEvent.blur(offset);
     expect(store.getState().doc.items[0]!.placement).toMatchObject({ offset: inches(18) });
+  });
+
+  it('lets Escape go on to a sheet when nothing was typed, and keeps it when something was', () => {
+    setup(seedItem('item-000001', 'base.standard', A, 12));
+    const offset = screen.getByLabelText(/Offset along wall A/);
+    const seen = vi.fn();
+    // The panel's container stands in for a sheet; what reaches the body went past the field.
+    offset.closest('section')!.parentElement!.setAttribute('role', 'dialog');
+    const listener = (event: KeyboardEvent) => seen(event.key);
+    document.body.addEventListener('keydown', listener);
+
+    // Typed: the first Escape only undoes it.
+    fireEvent.change(offset, { target: { value: '99' } });
+    fireEvent.keyDown(offset, { key: 'Escape' });
+    expect(seen).not.toHaveBeenCalled();
+    // Nothing typed: it reaches the sheet, which closes on it.
+    fireEvent.keyDown(offset, { key: 'Escape' });
+    expect(seen).toHaveBeenCalledWith('Escape');
+    document.body.removeEventListener('keydown', listener);
   });
 
   it('execute nothing when the value did not change', () => {

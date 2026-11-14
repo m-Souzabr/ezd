@@ -1,15 +1,17 @@
 import { formatLength, type Len, parseLength } from '@ezd/core';
-import { Label } from 'radix-ui';
 import { type ReactNode, useId, useState } from 'react';
 
-// Form controls for the panels. Every one is a native control with a visible label, so it
-// is reachable and operable from the keyboard.
+import { Checkbox } from '@/components/ui/checkbox';
+import { Field as DsField, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Label } from '@/components/ui/label';
 
-const control =
-  'w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 ' +
-  'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500 ' +
-  'disabled:bg-slate-100 disabled:text-slate-500';
+// Form controls for the panels, on the design system's `Field`, `Input`, `NativeSelect` and
+// `Checkbox`. Every one has a visible label, so it is reachable and operable from the keyboard.
+// The select is the platform's own: a phone shows its picker.
 
+/** A label, a control and the reason it was refused. */
 export function Field({
   label,
   htmlFor,
@@ -19,22 +21,22 @@ export function Field({
 }: {
   label: string;
   htmlFor: string;
-  error?: string | null;
-  errorId?: string;
+  error?: string | null | undefined;
+  errorId?: string | undefined;
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <Label.Root htmlFor={htmlFor} className="text-xs font-medium text-slate-600">
+    <DsField data-invalid={error ? true : undefined} className="gap-1.5">
+      <FieldLabel htmlFor={htmlFor} className="text-xs text-muted-foreground">
         {label}
-      </Label.Root>
+      </FieldLabel>
       {children}
       {error && (
-        <p id={errorId} role="alert" className="text-xs text-red-700">
+        <FieldError id={errorId} className="text-xs">
           {error}
-        </p>
+        </FieldError>
       )}
-    </div>
+    </DsField>
   );
 }
 
@@ -79,12 +81,11 @@ export function LengthField({
 
   return (
     <Field label={label} htmlFor={id} error={error} errorId={`${id}-error`}>
-      <input
+      <Input
         id={id}
         type="text"
         inputMode="decimal"
         autoComplete="off"
-        className={control}
         value={draft ?? formatLength(value)}
         disabled={disabled}
         aria-invalid={error !== null}
@@ -98,8 +99,11 @@ export function LengthField({
         onKeyDown={(event) => {
           if (event.key === 'Enter') commit(draft ?? formatLength(value));
           if (event.key === 'Escape') {
+            // Escape undoes what was typed and goes no further. In a sheet, with nothing typed,
+            // it goes on to close the sheet.
+            const dirty = draft !== null || error !== null;
             reset();
-            event.stopPropagation();
+            if (dirty || !event.currentTarget.closest('[role="dialog"]')) event.stopPropagation();
           }
         }}
       />
@@ -131,9 +135,8 @@ export function SelectField({
   const id = useId();
   return (
     <Field label={label} htmlFor={id}>
-      <select
+      <NativeSelect
         id={id}
-        className={control}
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
@@ -143,7 +146,7 @@ export function SelectField({
             {option.label}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </Field>
   );
 }
@@ -158,26 +161,29 @@ export function CheckboxField({
   onChange(checked: boolean): void;
 }) {
   const id = useId();
+  const labelId = `${id}-label`;
+  // The label names the checkbox by id, not by wrapping it: Base UI's checkbox is a button
+  // with a hidden input, and a wrapping `<label>` would name both. Clicking the text toggles.
   return (
     <div className="flex items-center gap-2">
-      <input
+      <Checkbox
         id={id}
-        type="checkbox"
-        className="size-4 rounded border-slate-300 accent-sky-600 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500"
         checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
+        aria-labelledby={labelId}
+        onCheckedChange={(next) => onChange(next)}
       />
-      <Label.Root htmlFor={id} className="text-sm text-slate-700">
+      <Label id={labelId} className="font-normal" onClick={() => onChange(!checked)}>
         {label}
-      </Label.Root>
+      </Label>
     </div>
   );
 }
 
+/** A titled block of a side panel. */
 export function PanelSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section aria-label={title} className="flex min-h-0 flex-col">
-      <h2 className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold tracking-wide text-slate-600 uppercase">
+      <h2 className="border-b bg-muted px-3 py-2 text-xs font-semibold tracking-wide text-foreground uppercase">
         {title}
       </h2>
       {children}
@@ -185,8 +191,12 @@ export function PanelSection({ title, children }: { title: string; children: Rea
   );
 }
 
+/**
+ * The old button classes. The Control Panel (Phase 19) still builds its buttons from them;
+ * the editor uses `Button`. Remove with the last Control Panel import.
+ */
 export const BUTTON =
-  'inline-flex items-center justify-center gap-1 rounded border border-slate-300 bg-white px-2.5 py-1 ' +
-  'text-sm text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-45 ' +
-  'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500 ' +
-  'data-[state=on]:border-sky-700 data-[state=on]:bg-sky-700 data-[state=on]:text-white';
+  'inline-flex items-center justify-center gap-1 rounded border border-border bg-background px-2.5 py-1 ' +
+  'text-sm text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-45 ' +
+  'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring ' +
+  'data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground';

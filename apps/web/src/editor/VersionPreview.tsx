@@ -1,12 +1,14 @@
 import { type DesignDocument, wallLabel } from '@ezd/core';
+import { EyeIcon } from 'lucide-react';
 import { useMemo } from 'react';
 
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useCatalog } from '../catalog/useCatalog';
 import { useRulesConfig } from '../config/useConfig';
 import { DesignStoreProvider, useDesign, useDesignStore } from '../store/context';
 import { createDesignStore, type View } from '../store/designStore';
 import { ElevationCanvas } from './elevation/ElevationCanvas';
-import { BUTTON } from './panels/fields';
 import { PlanCanvas } from './plan/PlanCanvas';
 
 function PreviewViews() {
@@ -16,36 +18,35 @@ function PreviewViews() {
 
   // The canvas frames the view itself when it changes.
   const show = (next: View) => store.getState().setView(next);
-  const pressed = (on: boolean) => `${BUTTON} ${on ? 'border-sky-700 bg-sky-700 text-white' : ''}`;
 
   return (
     <>
       <div
         role="group"
         aria-label="View"
-        className="flex gap-1 border-b border-slate-200 bg-white px-3 py-2"
+        className="flex gap-1 overflow-x-auto border-b bg-card px-3 py-2 *:shrink-0"
       >
-        <button
-          type="button"
-          className={pressed(view.kind === 'plan')}
+        <Button
+          variant={view.kind === 'plan' ? 'default' : 'outline'}
+          size="sm"
           aria-pressed={view.kind === 'plan'}
           onClick={() => show({ kind: 'plan' })}
         >
           Plan
-        </button>
+        </Button>
         {doc.room.walls.map((wall) => {
           const on = view.kind === 'elevation' && view.wallId === wall.id;
           return (
-            <button
+            <Button
               key={wall.id}
-              type="button"
-              className={pressed(on)}
+              variant={on ? 'default' : 'outline'}
+              size="sm"
               aria-pressed={on}
               aria-label={`Elevation ${wallLabel(doc, wall.id)}`}
               onClick={() => show({ kind: 'elevation', wallId: wall.id })}
             >
               {wallLabel(doc, wall.id)}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -83,19 +84,23 @@ export function VersionPreview({
     [document, catalog, rules],
   );
   return (
-    <div className="flex h-screen flex-col bg-slate-100 text-slate-900">
-      <header className="flex flex-wrap items-center gap-3 border-b border-amber-300 bg-amber-50 px-3 py-2">
+    <div className="flex h-dvh flex-col bg-background text-foreground">
+      <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b bg-muted px-3 py-2">
         <h1 className="text-base font-semibold tracking-tight">
           Version {number}
           {label && <span className="font-normal"> · {label}</span>}
         </h1>
-        <p className="mr-auto text-sm text-amber-900">Read-only preview of a saved version.</p>
-        <button type="button" className={BUTTON} disabled={restoring} onClick={onRestore}>
+        <Badge variant="outline">
+          <EyeIcon aria-hidden="true" />
+          Read-only
+        </Badge>
+        <p className="mr-auto text-sm">Read-only preview of a saved version.</p>
+        <Button disabled={restoring} onClick={onRestore}>
           Restore this version
-        </button>
-        <button type="button" className={BUTTON} onClick={onClose}>
+        </Button>
+        <Button variant="outline" onClick={onClose}>
           Back to the draft
-        </button>
+        </Button>
       </header>
       <DesignStoreProvider store={store}>
         <PreviewViews />

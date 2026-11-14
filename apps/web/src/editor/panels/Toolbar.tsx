@@ -1,7 +1,9 @@
 import { type DesignDocument, proposeCountertops, wallLabel } from '@ezd/core';
-import { Dialog, Toolbar as RadixToolbar } from 'radix-ui';
-import { type ChangeEvent, useRef, useState } from 'react';
+import { Redo2Icon, Undo2Icon } from 'lucide-react';
+import { type ChangeEvent, lazy, type ReactNode, Suspense, useRef, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { useConfig } from '../../config/useConfig';
 import { downloadDocument, type ReadError, readDocument } from '../../lib/repository';
 import { useDesign, useDesignStore } from '../../store/context';
@@ -9,29 +11,47 @@ import type { Tool } from '../../store/designStore';
 import { canRedo, canUndo, fitView } from '../../store/selectors';
 import { asOne } from '../edits';
 import type { OpeningToolKind } from '../tools/opening';
-import { BUTTON } from './fields';
+import { type Choice, ChoiceGroup, HintButton } from './controls';
 import { HelpDialog } from './HelpDialog';
+import { useRovingFocus } from './roving';
 import { RoomTemplateDialog } from './RoomTemplateDialog';
 
-const TOOLS: { tool: Tool; name: string; hint: string }[] = [
-  { tool: 'select', name: 'Select', hint: 'Select, move and resize' },
-  { tool: 'wall', name: 'Wall', hint: 'Draw walls: click each corner, double-click to finish' },
-  { tool: 'opening', name: 'Opening', hint: 'Add a door or window: click a wall' },
-  { tool: 'pan', name: 'Pan', hint: 'Drag to move the view' },
+// The dialog is loaded when a file is refused, which is rare.
+const ImportErrorDialog = lazy(() => import('./ImportErrorDialog'));
+
+const TOOLS: Choice<Tool>[] = [
+  { value: 'select', label: 'Select', hint: 'Select, move and resize', shortcut: 'Esc' },
+  {
+    value: 'wall',
+    label: 'Wall',
+    hint: 'Draw walls: click each corner, double-click to finish',
+  },
+  { value: 'opening', label: 'Opening', hint: 'Add a door or window: click a wall' },
+  { value: 'pan', label: 'Pan', hint: 'Drag to move the view', shortcut: 'Space + drag' },
+];
+
+const OPENINGS: Choice<OpeningToolKind>[] = [
+  { value: 'door', label: 'Door' },
+  { value: 'window', label: 'Window' },
 ];
 
 const PLAN = 'plan';
 
-const separator = 'mx-1 h-6 w-px bg-slate-300';
+const MOD = 'Ctrl+';
+
+const Divider = () => <Separator orientation="vertical" className="mx-1 h-6" />;
 
 export function Toolbar({
   onLoadDocument,
   materialsOpen,
   onToggleMaterials,
+  panelButtons,
 }: {
   onLoadDocument(doc: DesignDocument): void;
   materialsOpen: boolean;
   onToggleMaterials(): void;
+  /** Buttons that open the side panels as sheets, which the editor passes below 1024 px. */
+  panelButtons?: ReactNode;
 }) {
   const store = useDesignStore();
   const { toolbar, panels, features } = useConfig();
@@ -43,6 +63,8 @@ export function Toolbar({
   const undoable = useDesign(canUndo);
   const redoable = useDesign(canRedo);
   const fileInput = useRef<HTMLInputElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  useRovingFocus(toolbarRef);
   const [importError, setImportError] = useState<ReadError | null>(null);
 
   const fit = () => {
@@ -71,146 +93,140 @@ export function Toolbar({
     else setImportError(read.error);
   };
 
+  const views: Choice<string>[] = [
+    { value: PLAN, label: 'Plan' },
+    ...doc.room.walls.map((wall) => ({
+      value: wall.id,
+      label: wallLabel(doc, wall.id),
+      name: `Elevation ${wallLabel(doc, wall.id)}`,
+      hint: `Elevation of wall ${wallLabel(doc, wall.id)}`,
+    })),
+  ];
+
   return (
     <>
-      <RadixToolbar.Root
+      {/* Scrolls sideways inside its own box on a narrow screen, so the page does not. */}
+      <div
+        ref={toolbarRef}
+        role="toolbar"
         aria-label="Editor"
-        className="flex flex-wrap items-center gap-1 border-b border-slate-200 bg-white px-3 py-2"
+        className="flex items-center gap-1 overflow-x-auto border-b bg-card px-3 py-2 *:shrink-0"
       >
-        <RadixToolbar.ToggleGroup
-          type="single"
-          aria-label="Tool"
-          className="flex gap-1"
+        {panelButtons}
+        <ChoiceGroup
+          label="Tool"
           value={tool}
-          onValueChange={(value) => {
-            if (value) store.getState().setTool(value as Tool);
-          }}
-        >
-          {TOOLS.filter(({ tool: value }) => toolbar.tools[value]).map(
-            ({ tool: value, name, hint }) => (
-              <RadixToolbar.ToggleItem key={value} value={value} title={hint} className={BUTTON}>
-                {name}
-              </RadixToolbar.ToggleItem>
-            ),
-          )}
-        </RadixToolbar.ToggleGroup>
+          choices={TOOLS.filter((choice) => toolbar.tools[choice.value])}
+          onChange={(value) => store.getState().setTool(value)}
+        />
 
         {tool === 'opening' && (
-          <RadixToolbar.ToggleGroup
-            type="single"
-            aria-label="Opening to add"
+          <ChoiceGroup
+            label="Opening to add"
             className="ml-1 flex gap-1"
             value={openingKind}
-            onValueChange={(value) => {
-              if (value) store.getState().setOpeningKind(value as OpeningToolKind);
-            }}
-          >
-            <RadixToolbar.ToggleItem value="door" className={BUTTON}>
-              Door
-            </RadixToolbar.ToggleItem>
-            <RadixToolbar.ToggleItem value="window" className={BUTTON}>
-              Window
-            </RadixToolbar.ToggleItem>
-          </RadixToolbar.ToggleGroup>
+            choices={OPENINGS}
+            onChange={(value) => store.getState().setOpeningKind(value)}
+          />
         )}
 
         {features.roomTemplates && (
           <RoomTemplateDialog
-            trigger={<RadixToolbar.Button className={BUTTON}>Room template</RadixToolbar.Button>}
+            trigger={
+              <Button variant="outline" size="sm">
+                Room template
+              </Button>
+            }
           />
         )}
 
         {buttons.undoRedo && (
           <>
-            <RadixToolbar.Separator className={separator} />
-            <RadixToolbar.Button
-              className={BUTTON}
+            <Divider />
+            <HintButton
+              variant="outline"
+              size="sm"
               disabled={!undoable}
+              hint="Undo the last change"
+              shortcut={`${MOD}Z`}
               onClick={() => store.getState().undo()}
             >
+              <Undo2Icon aria-hidden="true" />
               Undo
-            </RadixToolbar.Button>
-            <RadixToolbar.Button
-              className={BUTTON}
+            </HintButton>
+            <HintButton
+              variant="outline"
+              size="sm"
               disabled={!redoable}
+              hint="Redo the change you undid"
+              shortcut={`${MOD}Shift+Z`}
               onClick={() => store.getState().redo()}
             >
+              <Redo2Icon aria-hidden="true" />
               Redo
-            </RadixToolbar.Button>
+            </HintButton>
           </>
         )}
 
-        <RadixToolbar.Separator className={separator} />
+        <Divider />
         {buttons.views && (
-          <RadixToolbar.ToggleGroup
-            type="single"
-            aria-label="View"
-            className="flex gap-1"
+          <ChoiceGroup
+            label="View"
             value={view.kind === 'plan' ? PLAN : view.wallId}
-            onValueChange={(value) => {
-              if (!value) return;
+            choices={views}
+            onChange={(value) =>
               store
                 .getState()
-                .setView(value === PLAN ? { kind: 'plan' } : { kind: 'elevation', wallId: value });
-            }}
-          >
-            <RadixToolbar.ToggleItem value={PLAN} className={BUTTON}>
-              Plan
-            </RadixToolbar.ToggleItem>
-            {doc.room.walls.map((wall) => (
-              <RadixToolbar.ToggleItem
-                key={wall.id}
-                value={wall.id}
-                className={BUTTON}
-                aria-label={`Elevation ${wallLabel(doc, wall.id)}`}
-                title={`Elevation of wall ${wallLabel(doc, wall.id)}`}
-              >
-                {wallLabel(doc, wall.id)}
-              </RadixToolbar.ToggleItem>
-            ))}
-          </RadixToolbar.ToggleGroup>
+                .setView(value === PLAN ? { kind: 'plan' } : { kind: 'elevation', wallId: value })
+            }
+          />
         )}
         {buttons.fit && (
-          <RadixToolbar.Button className={BUTTON} onClick={fit} title="Frame the whole view">
+          <HintButton variant="outline" size="sm" hint="Frame the whole view" onClick={fit}>
             Fit
-          </RadixToolbar.Button>
+          </HintButton>
         )}
 
-        <RadixToolbar.Separator className={separator} />
+        <Divider />
         {buttons.countertops && (
-          <RadixToolbar.Button className={BUTTON} onClick={generateCountertops}>
+          <Button variant="outline" size="sm" onClick={generateCountertops}>
             Generate countertops
-          </RadixToolbar.Button>
+          </Button>
         )}
         {panels.materials.visible && (
-          <RadixToolbar.Button
-            className={BUTTON}
+          <Button
+            variant={materialsOpen ? 'default' : 'outline'}
+            size="sm"
             aria-pressed={materialsOpen}
-            data-state={materialsOpen ? 'on' : 'off'}
             onClick={onToggleMaterials}
           >
             Materials
-          </RadixToolbar.Button>
+          </Button>
         )}
         {features.jsonImportExport && (
           <>
-            <RadixToolbar.Button
-              className={BUTTON}
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => downloadDocument(store.getState().doc)}
             >
               Export JSON
-            </RadixToolbar.Button>
-            <RadixToolbar.Button className={BUTTON} onClick={() => fileInput.current?.click()}>
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => fileInput.current?.click()}>
               Import JSON
-            </RadixToolbar.Button>
+            </Button>
           </>
         )}
         {buttons.help && (
           <HelpDialog
-            trigger={<RadixToolbar.Button className={BUTTON}>Help</RadixToolbar.Button>}
+            trigger={
+              <Button variant="outline" size="sm">
+                Help
+              </Button>
+            }
           />
         )}
-      </RadixToolbar.Root>
+      </div>
 
       <input
         ref={fileInput}
@@ -223,38 +239,11 @@ export function Toolbar({
         onChange={(event) => void importFile(event)}
       />
 
-      <Dialog.Root open={importError !== null} onOpenChange={() => setImportError(null)}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-40 bg-slate-900/40" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 z-50 max-h-[80vh] w-[28rem] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-white p-5 shadow-xl">
-            <Dialog.Title className="text-base font-semibold text-slate-900">
-              The file was not imported
-            </Dialog.Title>
-            <Dialog.Description className="mt-1 text-sm text-slate-600">
-              {importError?.issues.length
-                ? 'It is not a valid design. Your current design is unchanged.'
-                : importError?.message}
-            </Dialog.Description>
-            {importError && importError.issues.length > 0 && (
-              <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-800">
-                {importError.issues.map((issue, i) => (
-                  <li key={i}>
-                    {issue.path && <code className="font-mono text-xs">{issue.path}: </code>}
-                    {issue.message}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="mt-4 flex justify-end">
-              <Dialog.Close asChild>
-                <button type="button" className={BUTTON}>
-                  Close
-                </button>
-              </Dialog.Close>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+      {importError && (
+        <Suspense fallback={null}>
+          <ImportErrorDialog error={importError} onClose={() => setImportError(null)} />
+        </Suspense>
+      )}
     </>
   );
 }

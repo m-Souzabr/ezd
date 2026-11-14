@@ -6,23 +6,31 @@ import {
   type Len,
   parseLength,
 } from '@ezd/core';
+import { PlusIcon } from 'lucide-react';
 import { useId, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { FieldError } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { NativeSelect } from '@/components/ui/native-select';
 import { useConfig } from '../../config/useConfig';
 import { useDesign, useDesignStore } from '../../store/context';
 import { freeSpot, newItem } from '../edits';
 import { newId } from '../ids';
 import { itemCode } from '../labels';
-import { BUTTON, PanelSection } from './fields';
+import { PanelSection } from './fields';
 
 /** The seed names say how a corner cabinet is measured, in brackets. Leave that out. */
 const shortName = (entry: CatalogEntry): string => entry.name.replace(/\s*\(.*\)$/, '');
 
-const input =
-  'rounded border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 ' +
-  'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500';
-
-function CatalogRow({ entry }: { entry: CatalogEntry }) {
+function CatalogRow({
+  entry,
+  onAdded,
+}: {
+  entry: CatalogEntry;
+  onAdded?: (() => void) | undefined;
+}) {
   const store = useDesignStore();
   const id = useId();
   const free = 'free' in entry.width ? entry.width.free : null;
@@ -58,14 +66,15 @@ function CatalogRow({ entry }: { entry: CatalogEntry }) {
     const executed = state.execute({ type: 'item.add', item: { ...added, placement } });
     if (executed.ok) state.select([added.id]);
     state.notify(executed.ok ? null : executed.error.message);
+    if (executed.ok) onAdded?.();
   };
 
   return (
-    <li className="border-b border-slate-100 px-3 py-2">
+    <li className="border-b px-3 py-2">
       <div
         data-testid={`catalog-${entry.id}`}
         title="Drag onto the canvas"
-        className="flex cursor-grab touch-none items-center justify-between gap-2 rounded px-1 py-0.5 select-none hover:bg-sky-50 active:cursor-grabbing"
+        className="flex cursor-grab touch-none items-center justify-between gap-2 rounded-md px-1 py-0.5 select-none hover:bg-accent active:cursor-grabbing"
         onPointerDown={(event) => {
           if (event.button !== 0 || error) return;
           // Stops the browser from selecting text while the item is dragged.
@@ -74,30 +83,30 @@ function CatalogRow({ entry }: { entry: CatalogEntry }) {
           store.getState().startDrag({ kind: 'add', item: item(), snap: null });
         }}
       >
-        <span className="text-sm text-slate-900">{name}</span>
-        <span className="font-mono text-xs text-slate-500">
+        <span className="text-sm">{name}</span>
+        <span className="font-mono text-xs text-muted-foreground">
           {itemCode({ ...entry.defaultSize, catalogId: entry.id, kind: entry.kind, width })}
         </span>
       </div>
       <div className="mt-1 flex items-center gap-2 px-1">
-        <label htmlFor={id} className="text-xs text-slate-600">
+        <Label htmlFor={id} className="text-xs font-normal text-muted-foreground">
           Width
-        </label>
+        </Label>
         {free ? (
-          <input
+          <Input
             id={id}
             type="text"
             inputMode="decimal"
-            className={`${input} w-20`}
+            className="h-7 w-20 text-xs md:text-xs"
             value={text}
             aria-invalid={error !== null}
             aria-describedby={error ? `${id}-error` : undefined}
             onChange={(event) => typeWidth(event.target.value)}
           />
         ) : (
-          <select
+          <NativeSelect
             id={id}
-            className={input}
+            className="h-7 text-xs md:text-xs pointer-coarse:h-11"
             value={width}
             onChange={(event) => setWidth(Number(event.target.value))}
           >
@@ -106,29 +115,31 @@ function CatalogRow({ entry }: { entry: CatalogEntry }) {
                 {formatLength(choice)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         )}
-        <button
-          type="button"
-          className={`${BUTTON} ml-auto px-2 py-0.5 text-xs`}
+        <Button
+          variant="outline"
+          size="xs"
+          className="ml-auto"
           disabled={error !== null}
           aria-label={`Add ${name}`}
           onClick={add}
         >
+          <PlusIcon aria-hidden="true" />
           Add
-        </button>
+        </Button>
       </div>
       {error && (
-        <p id={`${id}-error`} role="alert" className="mt-1 px-1 text-xs text-red-700">
+        <FieldError id={`${id}-error`} className="mt-1 px-1 text-xs">
           {error}
-        </p>
+        </FieldError>
       )}
     </li>
   );
 }
 
 /** The catalog, grouped by kind and filtered by the search box. Entries drag onto the canvas. */
-export function CatalogPanel() {
+export function CatalogPanel({ onAdded }: { onAdded?: (() => void) | undefined } = {}) {
   const catalog = useDesign((state) => state.catalog);
   const { order, groups: groupConfig } = useConfig().panels.catalog;
   const [query, setQuery] = useState('');
@@ -151,31 +162,28 @@ export function CatalogPanel() {
 
   return (
     <PanelSection title="Catalog">
-      <div className="border-b border-slate-200 p-3">
-        <label htmlFor={searchId} className="sr-only">
+      <div className="border-b p-3">
+        <Label htmlFor={searchId} className="sr-only">
           Search the catalog
-        </label>
-        <input
+        </Label>
+        <Input
           id={searchId}
           type="search"
           placeholder="Search the catalog"
-          className="w-full rounded border border-slate-300 px-2 py-1 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
       </div>
       <div className="overflow-y-auto">
         {groups.length === 0 && (
-          <p className="p-3 text-sm text-slate-600">Nothing in the catalog matches.</p>
+          <p className="p-3 text-sm text-muted-foreground">Nothing in the catalog matches.</p>
         )}
         {groups.map((group) => (
           <section key={group.kind} aria-label={group.title}>
-            <h3 className="bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
-              {group.title}
-            </h3>
+            <h3 className="bg-muted px-3 py-1 text-xs font-semibold">{group.title}</h3>
             <ul>
               {group.entries.map((entry) => (
-                <CatalogRow key={entry.id} entry={entry} />
+                <CatalogRow key={entry.id} entry={entry} onAdded={onAdded} />
               ))}
             </ul>
           </section>

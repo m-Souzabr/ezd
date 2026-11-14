@@ -9,6 +9,7 @@ import {
   serializeDocument,
   STORAGE_KEY,
 } from '../lib/repository';
+import { mockMedia } from '../test/media';
 import { room, seedItem, WALLS } from '../test/kitchen';
 
 // jsdom has no canvas, so the drawing itself is left to the Playwright tests.
@@ -44,7 +45,11 @@ async function open(repository: DesignRepository) {
   await screen.findByRole('toolbar', { name: 'Editor' });
 }
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  // A desktop screen, where the panels are columns.
+  mockMedia(true);
+});
 afterEach(() => void vi.useRealTimers());
 
 describe('LocalEditor', () => {

@@ -39,13 +39,16 @@ function SheetContent({
   children,
   side = 'right',
   showCloseButton = true,
+  keepMounted = false,
   ...props
 }: SheetPrimitive.Popup.Props & {
   side?: 'top' | 'right' | 'bottom' | 'left';
   showCloseButton?: boolean;
+  /** Keeps the content mounted while the sheet is closed, so what it holds keeps its state. */
+  keepMounted?: boolean;
 }) {
   return (
-    <SheetPortal>
+    <SheetPortal keepMounted={keepMounted}>
       <SheetOverlay />
       <SheetPrimitive.Popup
         data-slot="sheet-content"
