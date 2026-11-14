@@ -190,13 +190,3 @@ export function PanelSection({ title, children }: { title: string; children: Rea
     </section>
   );
 }
-
-/**
- * The old button classes. The Control Panel (Phase 19) still builds its buttons from them;
- * the editor uses `Button`. Remove with the last Control Panel import.
- */
-export const BUTTON =
-  'inline-flex items-center justify-center gap-1 rounded border border-border bg-background px-2.5 py-1 ' +
-  'text-sm text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-45 ' +
-  'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring ' +
-  'data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground';

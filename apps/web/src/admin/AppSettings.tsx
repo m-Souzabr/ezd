@@ -115,7 +115,7 @@ function ColorInput({ ctx, path, label }: { ctx: Ctx; path: Path; label: string 
         <input
           type="color"
           aria-label={`${label} picker`}
-          className="h-8 w-10 rounded border border-input"
+          className="h-8 w-10 rounded border border-input pointer-coarse:h-11 pointer-coarse:w-11"
           value={picker}
           onChange={(event) =>
             ctx.edit(

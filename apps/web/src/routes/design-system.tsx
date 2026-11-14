@@ -156,11 +156,11 @@ function DataListDemo() {
   );
 }
 
-type SampleForm = { name: string; email: string; width: string };
+type SampleForm = { name: string; email: string; width: string; phone: string };
 
 function FormDemo() {
   const { control, handleSubmit } = useForm<SampleForm>({
-    defaultValues: { name: '', email: 'not-an-email', width: '' },
+    defaultValues: { name: '', email: 'not-an-email', width: '', phone: '' },
   });
   return (
     <form
@@ -192,12 +192,12 @@ function FormDemo() {
 
 function FormErrorDemo() {
   const { control } = useForm<SampleForm>({
-    defaultValues: { name: '', email: '', width: '' },
-    errors: { name: { type: 'required', message: 'Enter a name.' } },
+    defaultValues: { name: '', email: '', width: '', phone: '' },
+    errors: { phone: { type: 'required', message: 'Enter a phone number.' } },
   });
   return (
     <FormSection title="Form section with an error">
-      <TextField control={control} name="name" label="Name" required />
+      <TextField control={control} name="phone" label="Phone" type="tel" required />
     </FormSection>
   );
 }

@@ -166,3 +166,11 @@ through `useDesign` and never writes to it: a drag in 3D goes through core's `sn
 **A new admin route** needs a name beginning `admin-` (that also puts it under the admin
 throttle), a call to `controlpanel.audit.record` in every mutation, a `max_body_bytes` if it
 takes more than a little JSON, and the rows above. Run `pnpm run openapi` and commit.
+
+## A new screen
+
+Follow `docs/DESIGN-SYSTEM.md`: a page component and its route in `apps/web/src/App.tsx` (a Control
+Panel section also goes in `admin/sections.ts`), `PageHeader`, then `DataList`, `FormSection` and
+`ResponsiveDialog` from `components/patterns`, tokens only. Add it to
+`e2e/design-system.spec.ts` so it is audited in both themes at three sizes. The screen needs no
+dark-mode code: the tokens carry it.

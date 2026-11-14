@@ -144,7 +144,7 @@ function LogoField({
           id={id}
           type="file"
           accept="image/png,image/jpeg"
-          className="text-sm"
+          className="text-sm pointer-coarse:h-11"
           disabled={busy}
           onChange={(event) => {
             const file = event.target.files?.[0];

@@ -61,21 +61,21 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     // The layout specs run on a phone, a tablet and a desktop. The `chromium` project at 1440 px
-    // stays for everything else; Phase 21 adds the other specs to these. The editor's layout runs
+    // stays for everything else. The editor's layout runs
     // on the tablet and the desktop: the editor is operable but cramped on a phone.
     {
       name: 'phone',
-      testMatch: /(account|admin)-layout\.spec/,
+      testMatch: /(account-layout|admin-layout|design-system)\.spec/,
       use: { ...devices['Pixel 5'], viewport: { width: 375, height: 812 } },
     },
     {
       name: 'tablet',
-      testMatch: /(account-layout|admin-layout|editor-layout)\.spec/,
+      testMatch: /(account-layout|admin-layout|editor-layout|design-system)\.spec/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 768, height: 1024 }, hasTouch: true },
     },
     {
       name: 'desktop',
-      testMatch: /(account-layout|admin-layout|editor-layout)\.spec/,
+      testMatch: /(account-layout|admin-layout|editor-layout|design-system)\.spec/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
     },
   ],

@@ -98,7 +98,7 @@ function ImportCard() {
               ref={input}
               type="file"
               accept="application/json,.json"
-              className="text-sm"
+              className="text-sm pointer-coarse:h-11"
               onChange={(event) => void choose(event)}
             />
           </div>

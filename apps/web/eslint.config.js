@@ -4,6 +4,9 @@ import globals from 'globals';
 
 import { base } from '../../eslint.config.js';
 
+// `public/` holds plain browser scripts (the pre-paint theme script), not app source.
+const browserScripts = { ignores: ['public/**'] };
+
 const documentRules = [
   {
     selector: "AssignmentExpression[left.type='MemberExpression'][left.property.name='doc']",
@@ -26,6 +29,7 @@ const colorRules = [
 ];
 
 export default [
+  browserScripts,
   ...base,
   {
     files: ['src/**/*.{ts,tsx}'],
@@ -46,16 +50,23 @@ export default [
     ignores: ['src/store/designStore.ts'],
     rules: { 'no-restricted-syntax': ['error', ...documentRules] },
   },
-  // Design system: components built on the tokens use semantic classes, never a raw color.
-  // Widens to all of `src` in Phase 21; `components/ui` is generated code.
+  // Design system: every screen uses semantic token classes, never a raw color class or a hex
+  // value. Not UI colors, and so excepted: `components/ui` (generated), tests, the canvas
+  // (a light drawing sheet in any theme, its colors from `editor/style.ts`), `logo.ts` (fills the
+  // white background of a logo drawn onto a canvas) and `FinishesTab` (writes the default swatch
+  // value, data, of a finish).
   {
-    files: [
-      'src/components/patterns/**/*.{ts,tsx}',
-      'src/components/theme-*.{ts,tsx}',
-      'src/admin/**/*.{ts,tsx}',
-    ],
+    files: ['src/**/*.{ts,tsx}'],
     ignores: [
-      'src/admin/**/*.test.{ts,tsx}',
+      'src/components/ui/**',
+      'src/**/*.test.{ts,tsx}',
+      'src/test/**',
+      'src/editor/style.ts',
+      'src/editor/draw.tsx',
+      'src/editor/CanvasHost.tsx',
+      'src/editor/capture.tsx',
+      'src/editor/plan/**',
+      'src/editor/elevation/**',
       'src/admin/logo.ts',
       'src/admin/catalog/FinishesTab.tsx',
     ],

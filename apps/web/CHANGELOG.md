@@ -6,6 +6,9 @@
 - badge: added variants `success`, `warning` and `info`.
 - Every other file in `components/ui` is as the shadcn CLI wrote it (Base UI, Nova), only reformatted by Prettier. `input.tsx` and `textarea.tsx` already have `text-base md:text-sm`. `hooks/use-mobile.ts` was added by the CLI for `sidebar.tsx` (see Spec deviations).
 
+- badge: no edit. Token `--info` changed from `oklch(0.55 0.13 235)` to `oklch(0.53 0.13 235)` (lightness 0.02 darker) so white text on `bg-info` passes 4.5:1 (Phase 21).
+- `avatar`, `popover` and `radio-group` were removed in Phase 21: nothing used them.
+
 ## Spec deviations
 
 - **Prettier.** The build spec's settings (no semicolons, double quotes) are not adopted; the repository's `.prettierrc` applies, so generated and written files use single quotes and semicolons.
@@ -15,7 +18,7 @@
 - **Test setup.** The `matchMedia` mock is in the existing `src/test-setup.ts`, not a new `src/test/setup.ts`. Tests import `describe`, `it` and `expect` from `vitest`, since `globals` is off.
 - **Base layer.** Phase 18 turns the shadcn base rules on in `globals.css` (`* { border-border outline-ring/50 }`, body background and text color, `font-sans` on `html` and `body`) and drops the `--default-font-family` pin, as Phase 16 planned. The spec's `pb-safe` utilities, coarse-pointer 44 px targets and reduced-motion rules were already in.
 - **Font.** Inter Variable (`@fontsource-variable/inter`) is OFL-1.1, which `licenses.allow.json` does not allow, and the owner has not approved an exception (see #39). Until then `--font-sans` is Roboto (`roboto-fontface`, Apache-2.0), which the quote PDF also embeds. Switching to Inter later is the font import and `--font-sans` in `globals.css`, plus the exception.
-- **Dark mode.** `ThemeProvider` is mounted, but the toggle is not shown, and `index.html` has no `color-scheme` meta or pre-paint script yet (Phase 21).
+- **Dark mode.** On since Phase 21: `index.html` has `<meta name="color-scheme" content="light dark">` and loads `public/theme-init.js`, a same-origin file instead of an inline script so the Content-Security-Policy build (`vite.csp.config.ts`) stays `script-src 'self'`. `ThemeToggle` is in the app shell, the Control Panel header and the editor header.
 - **Pattern files.** Their tests are in `src/test/patterns/`, so `components/patterns` holds only the nine pattern files. `lib/navigation.ts` has no `NAV_ITEMS`: `AppShell` takes its `items` (a `NavItem` may carry `permission` or `staffOnly`), and the bottom bar shows at most five. `AppShell` has an `appName` prop (default `EZDesign`) instead of `lib/app-config`, and renders the signed-in account (email, sign out) or the sign-in links in the sidebar footer; a phone gets them in the header.
 - **`useSignOut`.** Moved from `pages/ui.tsx` to `auth/useSignOut.ts` so `AppShell` can use it; the behavior is the same.
 - **`SidebarInset` is a `main`.** The generated `SidebarInset` renders `<main>`, so the shell's content wrapper is `<div id="main" tabIndex={-1}>` (the skip link's target), not a second `main`.
@@ -44,3 +47,6 @@
 - **Fields.** `Checkbox` is named by `aria-labelledby`, not a wrapping `<label>`: Base UI's checkbox is a button with a hidden input, and a wrapping label names both. `SelectField` is a `NativeSelect`, the platform's picker on a phone. In a `LengthField`, Escape with nothing typed goes on to close a sheet; with something typed it only undoes it, as before.
 - **Lint.** `src/editor`, `src/quotes` and `pages/DesignEditor.tsx` have the raw-color rule. Excepted, with a comment in `eslint.config.js`: `editor/style.ts`, `draw.tsx`, `CanvasHost.tsx`, `capture.tsx`, `plan/` and `elevation/`, which draw the light canvas sheet.
 - **e2e.** `editor-layout.spec.ts` runs on the `tablet` and `desktop` projects. In `account.spec.ts` the conflict dialog is an `alertdialog`, restoring a version confirms in its own dialog, and a test waits for a dialog to finish fading out before the next drag.
+- **44 px targets.** Besides the button, input, select-trigger and tabs rules, `globals.css` makes every button, `role=button|tab|combobox`, `select`, sidebar menu item and stand-alone link at least 44 px under `pointer: coarse`. A link inside a paragraph, table cell or list item text keeps its size. Custom file and color inputs use `pointer-coarse:h-11`.
+- **Quote screen in the three-size audit.** `design-system.spec.ts` covers the gallery, sign-in, projects, a project, the editor and every Control Panel section in both themes at 375, 768 and 1280 px. It does not open a quote page: making one needs a priced design, and the quote page is covered by `quote.spec.ts` and the 1440 px accessibility spec.
+- **Admin pages.** Phase 19 deleted `admin/controls.tsx`, `admin/catalog/fields.tsx`, `pages/Modal.tsx` and `pages/Table.tsx`; `pages/ui.tsx` keeps only `LINK` and `AccountLinks`, which the quick editor header uses.

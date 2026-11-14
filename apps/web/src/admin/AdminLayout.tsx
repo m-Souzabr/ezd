@@ -12,6 +12,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { ThemeToggle } from '@/components/patterns/theme-toggle';
 import { Button } from '@/components/ui/button';
 import {
   Sidebar,
@@ -139,6 +140,9 @@ export function AdminLayout() {
               )}
             </BreadcrumbList>
           </Breadcrumb>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
         </header>
         <div
           id="main"

@@ -91,7 +91,7 @@
   --success-foreground: oklch(0.985 0 0);
   --warning: oklch(0.84 0.16 84);
   --warning-foreground: oklch(0.28 0.07 46);
-  --info: oklch(0.55 0.13 235);
+  --info: oklch(0.53 0.13 235);
   --info-foreground: oklch(0.985 0 0);
 }
 
@@ -171,6 +171,28 @@
     [data-slot='input'],
     [data-slot='select-trigger'],
     [data-slot='tabs-trigger'] {
+      min-height: 2.75rem;
+    }
+
+    /* Every other control a finger can press: menu items, triggers, table sort headers, selects. */
+    :is(button, [role='button'], [role='tab'], [role='combobox'], select) {
+      min-height: 2.75rem;
+    }
+    :is(button, [role='button'], [role='tab'], [role='combobox']) {
+      min-width: 2.75rem;
+    }
+    /* The sidebar's items stay square and at least as big in its icon-only state. */
+    [data-sidebar='menu-button'],
+    [data-slot='sidebar-menu-button'],
+    [data-slot='sidebar-trigger'] {
+      min-width: 2.75rem !important;
+      min-height: 2.75rem !important;
+    }
+    /* A link on its own is a target; a link inside a line of text keeps its size. */
+    :where(a[href]:not(:is(p, td, li > span) *)) {
+      display: inline-flex;
+      align-items: center;
+      min-width: 2.75rem;
       min-height: 2.75rem;
     }
   }
