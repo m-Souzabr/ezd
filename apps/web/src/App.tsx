@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 
 import { useConfig } from './config/useConfig';
@@ -21,6 +22,15 @@ import { QuotePage } from './pages/QuotePage';
 import { AccountLinks } from './pages/ui';
 
 /**
+ * The design-system gallery is for development and test builds, like `window.__ezd`. In a
+ * production build the constant is false, so the import below is removed with its chunk.
+ */
+const GALLERY = import.meta.env.DEV || import.meta.env.MODE === 'test';
+const DesignSystemPage = GALLERY
+  ? lazy(() => import('./routes/design-system').then((m) => ({ default: m.DesignSystemPage })))
+  : undefined;
+
+/**
  * The routes. `/` is the editor on the design kept in this browser, which needs no
  * account. Projects and the designs in them belong to an account and need a session.
  */
@@ -40,6 +50,16 @@ export function App() {
             )
           }
         />
+        {DesignSystemPage && (
+          <Route
+            path="/design-system"
+            element={
+              <Suspense fallback={null}>
+                <DesignSystemPage />
+              </Suspense>
+            }
+          />
+        )}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
