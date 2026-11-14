@@ -26,6 +26,8 @@ type ResponsiveDialogProps = {
   description: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** The corner button of the desktop dialog. Off when the footer has its own Close button. */
+  showCloseButton?: boolean;
 };
 
 /** A dialog from 768 px and a bottom drawer below. Controlled; it has no trigger part. */
@@ -36,13 +38,17 @@ export function ResponsiveDialog({
   description,
   children,
   footer,
+  showCloseButton = true,
 }: ResponsiveDialogProps) {
   const isMdUp = useMediaQuery(MD_UP);
 
   if (isMdUp) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent
+          className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg"
+          showCloseButton={showCloseButton}
+        >
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
@@ -61,7 +67,7 @@ export function ResponsiveDialog({
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        <div className="px-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4">{children}</div>
         {footer ? <DrawerFooter className="pb-safe-3">{footer}</DrawerFooter> : null}
       </DrawerContent>
     </Drawer>

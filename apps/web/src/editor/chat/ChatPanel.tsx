@@ -1,17 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Loader2Icon, SendIcon } from 'lucide-react';
 import { type FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 
+import { ErrorState } from '@/components/patterns/state-views';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { api } from '../../api/client';
 import { chatKey, chatUsageKey } from '../../api/keys';
 import { useDesign, useDesignStore } from '../../store/context';
-import { BUTTON } from '../panels/fields';
 import { askAssistant, type ChatApi } from './assistant';
 import { type Entry, historyEntries, outcomeEntry, STATUS_TEXT } from './entries';
-
-const PRIMARY =
-  'inline-flex items-center justify-center rounded border border-sky-700 bg-sky-700 px-3 py-1 ' +
-  'text-sm font-medium text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-45 ' +
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500';
 
 function UsageMeter() {
   const usage = useQuery({ queryKey: chatUsageKey, queryFn: api.getChatUsage }).data;
@@ -19,7 +18,7 @@ function UsageMeter() {
   const used = usage.quota_tokens - usage.remaining_tokens;
   const percent = Math.min(100, Math.round((used / Math.max(1, usage.quota_tokens)) * 100));
   return (
-    <p className="text-xs text-slate-500" data-testid="chat-usage">
+    <p className="text-xs text-muted-foreground" data-testid="chat-usage">
       {percent}% of this month&apos;s assistant allowance used
     </p>
   );
@@ -133,12 +132,12 @@ export function ChatPanel({ designId, chatApi = api }: { designId: string; chatA
 
   return (
     <section aria-label="Assistant" className="flex min-h-0 flex-1 flex-col">
-      <h2 className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold tracking-wide text-slate-600 uppercase">
+      <h2 className="border-b bg-muted px-3 py-2 text-xs font-semibold tracking-wide uppercase">
         Assistant
       </h2>
       <ol ref={list} className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-2 text-sm">
         {entries.length === 0 && (
-          <li className="text-slate-500">
+          <li className="text-muted-foreground">
             Ask for a change, such as &ldquo;Add a 30 inch base cabinet on wall A&rdquo;. You will
             see it before anything changes.
           </li>
@@ -149,8 +148,8 @@ export function ChatPanel({ designId, chatApi = api }: { designId: string; chatA
             data-role={entry.role}
             className={
               entry.role === 'user'
-                ? 'ml-6 rounded-md bg-sky-50 px-2 py-1.5 text-slate-900'
-                : 'mr-6 rounded-md bg-slate-100 px-2 py-1.5 text-slate-800'
+                ? 'ml-6 rounded-lg bg-accent px-2 py-1.5 text-accent-foreground'
+                : 'mr-6 rounded-lg bg-muted px-2 py-1.5'
             }
           >
             <p className="whitespace-pre-line">{entry.text}</p>
@@ -162,12 +161,13 @@ export function ChatPanel({ designId, chatApi = api }: { designId: string; chatA
               </ul>
             )}
             {entry.status && entry.status !== 'pending' && (
-              <p className="mt-1 text-xs text-slate-500">{STATUS_TEXT[entry.status]}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{STATUS_TEXT[entry.status]}</p>
             )}
           </li>
         ))}
         {ask.isPending && (
-          <li className="mr-6 text-slate-500" role="status">
+          <li className="mr-6 flex items-center gap-2 text-muted-foreground" role="status">
+            <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />
             Thinking…
           </li>
         )}
@@ -177,60 +177,51 @@ export function ChatPanel({ designId, chatApi = api }: { designId: string; chatA
         <div
           role="group"
           aria-label="Proposed change"
-          className="border-t border-slate-200 bg-emerald-50 px-3 py-2 text-sm"
+          className="border-t bg-muted px-3 py-2 text-sm"
         >
-          <p className="font-medium text-slate-900">Proposed change</p>
-          <ul className="mt-1 list-disc pl-5 text-xs text-slate-800">
+          <p className="font-medium">Proposed change</p>
+          <ul className="mt-1 list-disc pl-5 text-xs">
             {proposal.changes.map((change, i) => (
               <li key={i}>{change}</li>
             ))}
           </ul>
           {proposal.warnings.length > 0 && (
-            <ul aria-label="Warnings" className="mt-1 list-disc pl-5 text-xs text-amber-800">
+            <ul aria-label="Warnings" className="mt-1 list-disc pl-5 text-xs font-medium">
               {proposal.warnings.map((warning, i) => (
                 <li key={i}>{warning.message}</li>
               ))}
             </ul>
           )}
           <div className="mt-2 flex gap-2">
-            <button type="button" className={PRIMARY} onClick={accept}>
-              Accept
-            </button>
-            <button type="button" className={BUTTON} onClick={reject}>
+            <Button onClick={accept}>Accept</Button>
+            <Button variant="outline" onClick={reject}>
               Reject
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {failure && (
-        <div
-          role="alert"
-          className="border-t border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
-        >
-          <p>{failure.message}</p>
-          <button
-            type="button"
-            className={`${BUTTON} mt-1`}
-            onClick={() => ask.mutate(failure.text)}
-            disabled={ask.isPending}
-          >
-            Try again
-          </button>
+        <div className="border-t">
+          <ErrorState
+            title="The assistant could not answer"
+            description={failure.message}
+            onRetry={() => ask.mutate(failure.text)}
+          />
         </div>
       )}
 
-      <form onSubmit={submit} className="space-y-1 border-t border-slate-200 px-3 py-2">
-        <label htmlFor={inputId} className="sr-only">
+      <form onSubmit={submit} className="space-y-1 border-t px-3 py-2">
+        <Label htmlFor={inputId} className="sr-only">
           Message to the assistant
-        </label>
-        <textarea
+        </Label>
+        <Textarea
           id={inputId}
           value={draft}
           rows={2}
           maxLength={2000}
           placeholder="Ask for a change…"
-          className="w-full resize-none rounded border border-slate-300 px-2 py-1 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500"
+          className="min-h-0 resize-none"
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey) submit(event);
@@ -238,9 +229,10 @@ export function ChatPanel({ designId, chatApi = api }: { designId: string; chatA
         />
         <div className="flex items-center justify-between gap-2">
           <UsageMeter />
-          <button type="submit" className={PRIMARY} disabled={ask.isPending || !draft.trim()}>
+          <Button type="submit" disabled={ask.isPending || !draft.trim()}>
+            <SendIcon aria-hidden="true" />
             Send
-          </button>
+          </Button>
         </div>
       </form>
     </section>

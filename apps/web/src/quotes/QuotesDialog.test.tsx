@@ -2,7 +2,7 @@ import { DEFAULT_QUOTE_DEFAULTS, validateQuoteDefaults } from '@ezd/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { api, ApiError, type Quote, type QuoteSummary } from '../api/client';
 import { QuoteDefaultsContext } from '../config/useConfig';
@@ -56,10 +56,13 @@ function setup({
   return { store, capture, beforeQuote };
 }
 
-const newQuote = () => {
-  fireEvent.click(screen.getByRole('button', { name: 'New quote' }));
+const newQuote = async () => {
+  fireEvent.click(await screen.findByRole('button', { name: 'New quote' }));
   return screen.getByRole('dialog', { name: 'New quote' });
 };
+
+// The dialog is loaded when first opened; load it now, so a test does not wait for the transform.
+beforeAll(() => import('./QuotesDialogBody'));
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -102,7 +105,7 @@ describe('QuotesDialog', () => {
         seedItem('item-000002', 'base.standard', A, 30),
       ],
     });
-    const form = newQuote();
+    const form = await newQuote();
     expect(within(form).getByLabelText('Markup %')).toHaveValue('20');
     expect(within(form).getByLabelText('Discount %')).toHaveValue('0');
     expect(within(form).getByLabelText('Tax %')).toHaveValue('8.25');
@@ -136,7 +139,9 @@ describe('QuotesDialog', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Delete quote 1' }));
     expect(remove).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm deleting quote 1' }));
+    // A locator changed with the Base UI alert dialog: the second step is its own dialog.
+    const confirm = await screen.findByRole('alertdialog', { name: 'Delete quote 1?' });
+    fireEvent.click(within(confirm).getByRole('button', { name: 'Delete for good' }));
 
     await waitFor(() => expect(remove).toHaveBeenCalledWith('q1', expect.anything()));
   });
@@ -148,7 +153,7 @@ describe('QuotesDialog', () => {
         seedItem('item-000002', 'base.standard', A, 30),
       ],
     });
-    const form = newQuote();
+    const form = await newQuote();
 
     // Two base cabinets at $325.00.
     expect(within(form).getByTestId('quote-form-total')).toHaveTextContent('$650.00');
@@ -172,7 +177,7 @@ describe('QuotesDialog', () => {
     const created = { id: 'q9' } as Quote;
     const create = vi.spyOn(api, 'createQuote').mockResolvedValue(created);
     const { capture, beforeQuote } = setup();
-    const form = newQuote();
+    const form = await newQuote();
 
     expect(within(form).getByRole('button', { name: 'Create quote' })).toBeDisabled();
     fireEvent.change(within(form).getByLabelText('Customer name'), {
@@ -209,7 +214,7 @@ describe('QuotesDialog', () => {
         seedItem('item-000002', 'base.standard', A, 0),
       ],
     });
-    const form = newQuote();
+    const form = await newQuote();
     fireEvent.change(within(form).getByLabelText('Customer name'), { target: { value: 'Grace' } });
 
     expect(within(form).getByText(/^The design has \d+ errors?\./)).toBeInTheDocument();
@@ -225,7 +230,7 @@ describe('QuotesDialog', () => {
   it('explains a design that changed while the quote was made', async () => {
     vi.spyOn(api, 'createQuote').mockRejectedValue(new ApiError(409, { draft_revision: 5 }));
     setup();
-    const form = newQuote();
+    const form = await newQuote();
     fireEvent.change(within(form).getByLabelText('Customer name'), { target: { value: 'Grace' } });
     fireEvent.click(within(form).getByRole('button', { name: 'Create quote' }));
 
@@ -243,7 +248,7 @@ describe('QuotesDialog', () => {
         throw new Error('The design has changes that could not be saved yet.');
       }),
     });
-    const form = newQuote();
+    const form = await newQuote();
     fireEvent.change(within(form).getByLabelText('Customer name'), { target: { value: 'Grace' } });
     fireEvent.click(within(form).getByRole('button', { name: 'Create quote' }));
 

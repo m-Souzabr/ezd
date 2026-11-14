@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 
+import { Button, buttonVariants } from '@/components/ui/button';
 import { api, ApiError, type DesignVersionSummary } from '../api/client';
 import { versionsKey } from '../api/keys';
 import { useCatalog } from '../catalog/useCatalog';
@@ -10,7 +11,6 @@ import { useRulesConfig } from '../config/useConfig';
 import { useConfig } from '../config/useConfig';
 import { ChatPanel } from '../editor/chat/ChatPanel';
 import { Editor } from '../editor/Editor';
-import { BUTTON } from '../editor/panels/fields';
 import { ConflictDialog, SaveStatus } from '../editor/panels/SaveStatus';
 import { VersionsDialog } from '../editor/panels/VersionsDialog';
 import { VersionPreview } from '../editor/VersionPreview';
@@ -27,7 +27,7 @@ import { exposeTestHook } from '../lib/testHook';
 import { DesignStoreProvider } from '../store/context';
 import { createDesignStore, type DesignStoreApi } from '../store/designStore';
 import { errorMessage } from './format';
-import { LINK, Page } from './ui';
+import { LINK } from './ui';
 
 // Only a design that came from a photo has the panel, and it uses the design system's button.
 const PhotoReference = lazy(() =>
@@ -164,19 +164,22 @@ function DesignEditor({ designId }: { designId: string }) {
   if (failure) {
     const missing = failure instanceof ApiError && failure.status === 404;
     return (
-      <Page title={missing ? 'Design not found' : 'The design could not be opened'}>
-        <p className="text-sm text-slate-600">
-          {missing ? 'This design does not exist or was deleted.' : errorMessage(failure)}{' '}
-          <Link to="/projects" className={LINK}>
-            Back to projects
-          </Link>
+      <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-3 p-6">
+        <h1 className="text-xl font-semibold">
+          {missing ? 'Design not found' : 'The design could not be opened'}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {missing ? 'This design does not exist or was deleted.' : errorMessage(failure)}
         </p>
-      </Page>
+        <Link to="/projects" className={`${buttonVariants({ variant: 'outline' })} w-fit`}>
+          Back to projects
+        </Link>
+      </main>
     );
   }
   if (!session) {
     return (
-      <main className="flex h-screen items-center justify-center bg-slate-100 text-sm text-slate-600">
+      <main className="flex h-dvh items-center justify-center bg-background text-sm text-muted-foreground">
         <h1 className="sr-only">EZDesign</h1>
         <p role="status">Loading the design…</p>
       </main>
@@ -245,7 +248,7 @@ function DesignEditor({ designId }: { designId: string }) {
 
   const header = (
     <>
-      <span className="text-sm text-slate-700" data-testid="design-name">
+      <span className="text-sm text-muted-foreground" data-testid="design-name">
         {design?.name}
       </span>
       <SaveStatus autosave={autosave} />
@@ -253,9 +256,9 @@ function DesignEditor({ designId }: { designId: string }) {
         <VersionsDialog
           designId={designId}
           trigger={
-            <button type="button" className={BUTTON}>
+            <Button variant="outline" size="sm">
               Versions
-            </button>
+            </Button>
           }
           beforeSave={async () => {
             await autosave.flush();
@@ -271,9 +274,9 @@ function DesignEditor({ designId }: { designId: string }) {
         <QuotesDialog
           designId={designId}
           trigger={
-            <button type="button" className={BUTTON}>
+            <Button variant="outline" size="sm">
               Quotes
-            </button>
+            </Button>
           }
           beforeQuote={async () => {
             await autosave.flush();
@@ -289,7 +292,7 @@ function DesignEditor({ designId }: { designId: string }) {
           <PhotoReference photoId={design.source_photo} />
         </Suspense>
       )}
-      <nav aria-label="Design" className="ml-auto flex items-center gap-3 pb-1 text-sm">
+      <nav aria-label="Design" className="ml-auto flex items-center gap-3 text-sm">
         {design && (
           <Link to={`/projects/${design.project}`} className={LINK}>
             Back to project

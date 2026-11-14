@@ -17,6 +17,7 @@ import {
 } from '@ezd/core';
 import { useState } from 'react';
 
+import { FieldError } from '@/components/ui/field';
 import { useDesign, useDesignStore } from '../../store/context';
 import { selectedId } from '../../store/selectors';
 import { resizeCommand } from '../edits';
@@ -92,10 +93,10 @@ function ItemProperties({ item }: { item: Item }) {
   return (
     <div className="flex flex-col gap-3 p-3">
       <div>
-        <p className="text-sm font-semibold text-slate-900">
+        <p className="text-sm font-semibold">
           {entry ? entry.name.replace(/\s*\(.*\)$/, '') : item.catalogId}
         </p>
-        <p className="font-mono text-xs text-slate-500">{itemCode(item)}</p>
+        <p className="font-mono text-xs text-muted-foreground">{itemCode(item)}</p>
       </div>
 
       <LengthField
@@ -176,11 +177,7 @@ function ItemProperties({ item }: { item: Item }) {
         }
       />
 
-      {refused && (
-        <p role="alert" className="text-xs text-red-700">
-          {refused}
-        </p>
-      )}
+      {refused && <FieldError className="text-xs">{refused}</FieldError>}
     </div>
   );
 }
@@ -199,7 +196,7 @@ function OpeningProperties({ opening }: { opening: Opening }) {
     run({ type: 'opening.update', id: opening.id, patch });
   return (
     <div className="flex flex-col gap-3 p-3">
-      <p className="text-sm font-semibold text-slate-900 capitalize">
+      <p className="text-sm font-semibold capitalize">
         {opening.kind} on wall {wallLabel(doc, opening.wallId)}
       </p>
       <LengthField
@@ -239,8 +236,8 @@ function WallProperties({ wall }: { wall: Wall }) {
   const run = useRun();
   return (
     <div className="flex flex-col gap-3 p-3">
-      <p className="text-sm font-semibold text-slate-900">Wall {wallLabel(doc, wall.id)}</p>
-      <p className="text-sm text-slate-700">Length {formatLength(wallLength(wall))}</p>
+      <p className="text-sm font-semibold">Wall {wallLabel(doc, wall.id)}</p>
+      <p className="text-sm text-muted-foreground">Length {formatLength(wallLength(wall))}</p>
       <LengthField
         label="Thickness"
         value={wall.thickness}
@@ -260,10 +257,10 @@ function CountertopProperties({ countertop }: { countertop: Countertop }) {
   );
   return (
     <div className="flex flex-col gap-3 p-3">
-      <p className="text-sm font-semibold text-slate-900">
+      <p className="text-sm font-semibold">
         Countertop on wall {wallLabel(doc, countertop.wallId)}
       </p>
-      <p className="text-sm text-slate-700">
+      <p className="text-sm text-muted-foreground">
         {formatLength(countertop.endOffset - countertop.startOffset)} long,{' '}
         {formatLength(countertop.depth)} deep, from {formatLength(countertop.startOffset)}
       </p>
@@ -291,7 +288,7 @@ function RoomProperties() {
   const run = useRun();
   return (
     <div className="flex flex-col gap-3 p-3">
-      <p className="text-sm text-slate-600">Select an item, opening or wall to edit it.</p>
+      <p className="text-sm text-muted-foreground">Select an item, opening or wall to edit it.</p>
       <LengthField
         label="Ceiling height"
         value={ceilingHeight}
@@ -314,7 +311,7 @@ export function PropertiesPanel() {
 
   let body;
   if (count > 1) {
-    body = <p className="p-3 text-sm text-slate-600">{count} things selected.</p>;
+    body = <p className="p-3 text-sm text-muted-foreground">{count} things selected.</p>;
   } else if (!target) {
     body = <RoomProperties />;
   } else if (target.kind === 'item') {

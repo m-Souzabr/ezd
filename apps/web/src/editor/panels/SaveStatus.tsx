@@ -1,8 +1,23 @@
-import { Dialog } from 'radix-ui';
+import {
+  CircleAlertIcon,
+  CircleCheckIcon,
+  Loader2Icon,
+  TriangleAlertIcon,
+  WifiOffIcon,
+  type LucideIcon,
+} from 'lucide-react';
 import { useSyncExternalStore } from 'react';
 
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import type { Autosave, SaveStatus as Status } from '../../lib/autosave';
-import { BUTTON } from './fields';
 
 const TEXT: Record<Status, string> = {
   saved: 'Saved',
@@ -13,11 +28,20 @@ const TEXT: Record<Status, string> = {
 };
 
 const TONE: Record<Status, string> = {
-  saved: 'text-slate-600',
-  saving: 'text-slate-600',
-  offline: 'text-amber-800',
-  conflict: 'text-red-800',
-  error: 'text-red-800',
+  saved: 'text-muted-foreground',
+  saving: 'text-muted-foreground',
+  offline: 'text-foreground',
+  conflict: 'text-destructive',
+  error: 'text-destructive',
+};
+
+/** The icon says it too, so the state is not carried by color alone. */
+const ICON: Record<Status, LucideIcon> = {
+  saved: CircleCheckIcon,
+  saving: Loader2Icon,
+  offline: WifiOffIcon,
+  conflict: TriangleAlertIcon,
+  error: CircleAlertIcon,
 };
 
 const useSaveStatus = (autosave: Autosave): Status =>
@@ -26,15 +50,24 @@ const useSaveStatus = (autosave: Autosave): Status =>
 /** Whether the server has what is on screen. Read out when it changes. */
 export function SaveStatus({ autosave }: { autosave: Autosave }) {
   const status = useSaveStatus(autosave);
+  const Icon = ICON[status];
   return (
     <span className="flex items-center gap-2 text-sm">
-      <span role="status" data-testid="save-status" className={TONE[status]}>
+      <span
+        role="status"
+        data-testid="save-status"
+        className={`flex items-center gap-1 ${TONE[status]}`}
+      >
+        <Icon
+          className={status === 'saving' ? 'size-4 animate-spin' : 'size-4'}
+          aria-hidden="true"
+        />
         {TEXT[status]}
       </span>
       {(status === 'offline' || status === 'error') && (
-        <button type="button" className={BUTTON} onClick={() => void autosave.flush()}>
+        <Button variant="outline" size="xs" onClick={() => void autosave.flush()}>
           Retry now
-        </button>
+        </Button>
       )}
     </span>
   );
@@ -42,7 +75,8 @@ export function SaveStatus({ autosave }: { autosave: Autosave }) {
 
 /**
  * Shown when the server refuses a save because the design was changed elsewhere, such as
- * in another tab. Autosave stays stopped until the user picks one of the two documents.
+ * in another tab. Autosave stays stopped until the user picks one of the two documents, so
+ * the dialog has no way to be dismissed.
  */
 export function ConflictDialog({
   autosave,
@@ -53,31 +87,22 @@ export function ConflictDialog({
 }) {
   const status = useSaveStatus(autosave);
   return (
-    <Dialog.Root open={status === 'conflict'}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-slate-900/40" />
-        <Dialog.Content
-          className="fixed top-1/2 left-1/2 z-50 w-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-5 shadow-xl"
-          onEscapeKeyDown={(event) => event.preventDefault()}
-          onInteractOutside={(event) => event.preventDefault()}
-        >
-          <Dialog.Title className="text-base font-semibold text-slate-900">
-            This design was changed elsewhere
-          </Dialog.Title>
-          <Dialog.Description className="mt-1 text-sm text-slate-600">
+    <AlertDialog open={status === 'conflict'}>
+      <AlertDialogContent className="data-[size=default]:sm:max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle>This design was changed elsewhere</AlertDialogTitle>
+          <AlertDialogDescription>
             It was saved from another tab or device after you opened it here, so your changes were
             not saved. Choose which one to keep.
-          </Dialog.Description>
-          <div className="mt-4 flex justify-end gap-2">
-            <button type="button" className={BUTTON} onClick={onReloadTheirs}>
-              Reload theirs
-            </button>
-            <button type="button" className={BUTTON} onClick={() => void autosave.overwrite()}>
-              Overwrite with mine
-            </button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <Button variant="outline" onClick={onReloadTheirs}>
+            Reload theirs
+          </Button>
+          <Button onClick={() => void autosave.overwrite()}>Overwrite with mine</Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

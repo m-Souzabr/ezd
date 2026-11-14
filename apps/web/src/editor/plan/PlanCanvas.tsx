@@ -13,6 +13,8 @@ import {
 import { type KeyboardEvent, useMemo, useRef, useState } from 'react';
 import { Layer, Stage } from 'react-konva';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useDesign, useDesignStore } from '../../store/context';
 import { selectedId, severityById, violationsFor } from '../../store/selectors';
 import { CanvasHost, type CanvasPointer } from '../CanvasHost';
@@ -217,11 +219,11 @@ export function PlanCanvas({ previewDoc }: { previewDoc?: DesignDocument | undef
   // The length box sits in its own strip above the canvas, so it never covers a spot the
   // user wants to click.
   const lengthStrip = tool === 'wall' && (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-slate-200 bg-white px-3 py-2 text-xs">
-      <label htmlFor="wall-length" className="font-medium text-slate-700">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-card px-3 py-2 text-xs">
+      <Label htmlFor="wall-length" className="text-xs">
         Wall length
-      </label>
-      <input
+      </Label>
+      <Input
         id="wall-length"
         ref={lengthInput}
         value={lengthText}
@@ -229,7 +231,7 @@ export function PlanCanvas({ previewDoc }: { previewDoc?: DesignDocument | undef
         autoComplete="off"
         aria-invalid={lengthError !== null}
         aria-describedby="wall-length-help"
-        className="w-40 rounded border border-slate-300 px-2 py-1 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500"
+        className="w-40"
         onChange={(event) => {
           setLengthText(event.target.value);
           setLengthError(null);
@@ -238,9 +240,9 @@ export function PlanCanvas({ previewDoc }: { previewDoc?: DesignDocument | undef
           if (event.key === 'Enter') submitLength();
         }}
       />
-      <p id="wall-length-help" className="text-slate-600">
+      <p id="wall-length-help" className="text-muted-foreground">
         {lengthError ? (
-          <span role="alert" className="text-red-700">
+          <span role="alert" className="text-destructive">
             {lengthError}
           </span>
         ) : (

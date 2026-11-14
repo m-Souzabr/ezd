@@ -1,11 +1,21 @@
 import { type DesignDocument, inches } from '@ezd/core';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { serializeDocument } from '../../lib/repository';
 import { room, seedItem, storeFor, WALLS } from '../../test/kitchen';
 import { renderWithStore } from '../../test/render';
 import { Toolbar } from './Toolbar';
+
+// The dialogs are loaded when first opened; load them now, so a test does not wait for the
+// transform.
+beforeAll(() =>
+  Promise.all([
+    import('./RoomTemplateDialogBody'),
+    import('./HelpDialogBody'),
+    import('./ImportErrorDialog'),
+  ]),
+);
 
 const [A, B] = WALLS;
 const kitchen = () => room(144, 120, seedItem('item-000001', 'base.standard', A, 12));
@@ -96,6 +106,35 @@ describe('Toolbar', () => {
     expect(store.getState().notice).toMatch(/already has a countertop/);
   });
 
+  it('is one tab stop, and the arrow keys move along its buttons', () => {
+    setup();
+    const toolbar = screen.getByRole('toolbar', { name: 'Editor' });
+    const stops = () =>
+      [...toolbar.querySelectorAll<HTMLElement>('button, [role="radio"]')].filter(
+        (control) => control.tabIndex === 0 && !control.hasAttribute('disabled'),
+      );
+    expect(
+      stops().map((control) => control.getAttribute('aria-label') ?? control.textContent),
+    ).toEqual(['Select']);
+
+    const select = screen.getByRole('radio', { name: 'Select' });
+    select.focus();
+    fireEvent.keyDown(select, { key: 'ArrowRight' });
+    expect(screen.getByRole('radio', { name: 'Wall' })).toHaveFocus();
+    // Moving focus does not choose; Space or Enter does.
+    expect(screen.getByRole('radio', { name: 'Select' })).toBeChecked();
+    expect(stops()).toEqual([screen.getByRole('radio', { name: 'Wall' })]);
+
+    fireEvent.keyDown(screen.getByRole('radio', { name: 'Wall' }), { key: 'ArrowLeft' });
+    expect(select).toHaveFocus();
+    // It wraps round, skipping what is disabled (Undo and Redo, with nothing to undo).
+    fireEvent.keyDown(select, { key: 'ArrowLeft' });
+    expect(toolbar.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).not.toBeDisabled();
+    fireEvent.keyDown(document.activeElement!, { key: 'Home' });
+    expect(select).toHaveFocus();
+  });
+
   it('switches between the plan and one elevation per wall', () => {
     const { store } = setup();
     const views = within(screen.getByRole('radiogroup', { name: 'View' })).getAllByRole('radio');
@@ -154,9 +193,9 @@ describe('Toolbar', () => {
 });
 
 describe('room template', () => {
-  const open = () => {
+  const open = async () => {
     fireEvent.click(screen.getByRole('button', { name: 'Room template' }));
-    return screen.getByRole('dialog', { name: 'Room template' });
+    return screen.findByRole('dialog', { name: 'Room template' });
   };
   const type = (dialog: HTMLElement, label: string, text: string) =>
     fireEvent.change(within(dialog).getByLabelText(label), { target: { value: text } });
@@ -164,7 +203,7 @@ describe('room template', () => {
   it('creates a rectangle room from typed dimensions as one batch', async () => {
     const { store } = setup(storeFor(room()).getState().doc);
     const before = store.getState().doc.room.walls.length;
-    const dialog = open();
+    const dialog = await open();
     type(dialog, 'Width', '120');
     type(dialog, 'Depth', '96 1/2');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create room' }));
@@ -180,9 +219,9 @@ describe('room template', () => {
     });
   });
 
-  it('asks for the cut-out of an L or a U, and creates six or eight walls', () => {
+  it('asks for the cut-out of an L or a U, and creates six or eight walls', async () => {
     const { store } = setup();
-    const dialog = open();
+    const dialog = await open();
     expect(within(dialog).queryByLabelText('Cut-out width')).not.toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText('Shape'), { target: { value: 'u' } });
     type(dialog, 'Cut-out width', '60');
@@ -191,9 +230,9 @@ describe('room template', () => {
     expect(store.getState().doc.room.walls).toHaveLength(4 + 8);
   });
 
-  it('shows what is wrong with the dimensions and creates nothing', () => {
+  it('shows what is wrong with the dimensions and creates nothing', async () => {
     const { store } = setup();
-    const dialog = open();
+    const dialog = await open();
     type(dialog, 'Width', '3 m');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create room' }));
     expect(within(dialog).getByRole('alert')).toHaveTextContent('Lengths are in inches only');

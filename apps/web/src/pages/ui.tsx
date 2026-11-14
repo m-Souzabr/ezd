@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import { ApiError } from '../api/client';
 import { useSession } from '../auth/session';
 import { useSignOut } from '../auth/useSignOut';
+import { Button } from '@/components/ui/button';
 import { BUTTON } from '../editor/panels/fields';
 import { errorMessage } from './format';
 
@@ -16,8 +17,8 @@ export const PRIMARY =
   'text-sm font-medium text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-45 ' +
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500';
 export const LINK =
-  'text-sky-700 underline underline-offset-2 hover:text-sky-900 ' +
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500';
+  'text-primary underline underline-offset-2 hover:text-primary/80 ' +
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
 const INPUT =
   'w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 ' +
   'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-500';
@@ -29,7 +30,10 @@ export function AccountLinks() {
   if (user === undefined) return null;
   if (user === null) {
     return (
-      <nav aria-label="Account" className="ml-auto flex items-center gap-3 text-sm">
+      <nav
+        aria-label="Account"
+        className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
+      >
         <Link to="/login" className={LINK}>
           Sign in
         </Link>
@@ -40,7 +44,10 @@ export function AccountLinks() {
     );
   }
   return (
-    <nav aria-label="Account" className="ml-auto flex items-center gap-3 text-sm">
+    <nav
+      aria-label="Account"
+      className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
+    >
       <Link to="/projects" className={LINK}>
         My projects
       </Link>
@@ -54,10 +61,10 @@ export function AccountLinks() {
           </Link>
         </>
       )}
-      <span className="text-slate-600">{user.email}</span>
-      <button type="button" className={BUTTON} onClick={signOut}>
+      <span className="text-muted-foreground">{user.email}</span>
+      <Button variant="outline" size="sm" onClick={signOut}>
         Sign out
-      </button>
+      </Button>
     </nav>
   );
 }

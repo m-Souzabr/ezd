@@ -58,7 +58,7 @@ export function LocalEditor({
 
   if (!store) {
     return (
-      <main className="flex h-screen items-center justify-center bg-slate-100 text-sm text-slate-600">
+      <main className="flex h-dvh items-center justify-center bg-background text-sm text-muted-foreground">
         <h1 className="sr-only">EZDesign</h1>
         <p role="status">Loading the design…</p>
       </main>
