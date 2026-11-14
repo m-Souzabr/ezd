@@ -8,7 +8,7 @@ import {
 } from '@ezd/core';
 
 import { CheckboxField, LengthField, SelectField } from '../../editor/panels/fields';
-import { CommitField, LengthListField, MoneyField } from './fields';
+import { CommitField, LengthListField, MoneyField } from './CommitFields';
 import { withRetired } from './helpers';
 
 type Props = {
@@ -34,8 +34,8 @@ function WidthEditor({ entry, onChange }: Pick<Props, 'entry' | 'onChange'>) {
   const rule = entry.width;
   const set = (width: WidthRule) => onChange({ ...entry, width });
   return (
-    <fieldset className="flex flex-col gap-2 rounded border border-slate-200 p-3">
-      <legend className="px-1 text-xs font-medium text-slate-600">Widths</legend>
+    <fieldset className="flex flex-col gap-2 rounded border border-border p-3">
+      <legend className="px-1 text-xs font-medium text-muted-foreground">Widths</legend>
       <SelectField
         label="Comes in"
         value={widthKind(rule)}
@@ -113,7 +113,7 @@ function OptionEditor({
       .filter((part) => part !== '');
   const defaults = allowedOptionValues(def).map(String);
   return (
-    <li className="flex flex-col gap-2 rounded border border-slate-200 p-3">
+    <li className="flex flex-col gap-2 rounded border border-border p-3">
       <div className="grid grid-cols-2 gap-2">
         <CommitField
           label="Option key"
@@ -163,7 +163,7 @@ function OptionEditor({
             }}
           />
         )}
-        {def.type === 'bool' && <p className="self-end text-sm text-slate-600">On or off</p>}
+        {def.type === 'bool' && <p className="self-end text-sm text-muted-foreground">On or off</p>}
       </div>
       <div className="flex items-end gap-3">
         {def.type === 'bool' ? (
@@ -188,7 +188,7 @@ function OptionEditor({
         )}
         <button
           type="button"
-          className="ml-auto text-sm text-red-700 underline"
+          className="ml-auto text-sm text-destructive underline"
           aria-label={`Remove option ${def.key}`}
           onClick={onRemove}
         >
@@ -210,8 +210,8 @@ function PriceEditor({ entry, onChange }: Pick<Props, 'entry' | 'onChange'>) {
       .map((value) => `${def.key}=${String(value)}`),
   );
   return (
-    <fieldset className="flex flex-col gap-2 rounded border border-slate-200 p-3">
-      <legend className="px-1 text-xs font-medium text-slate-600">Price</legend>
+    <fieldset className="flex flex-col gap-2 rounded border border-border p-3">
+      <legend className="px-1 text-xs font-medium text-muted-foreground">Price</legend>
       <div className="grid grid-cols-2 gap-2">
         <MoneyField
           label="Base price ($)"
@@ -257,18 +257,18 @@ export function EntryForm({ entry, problems, onChange }: Props) {
     <div className="flex flex-col gap-4" aria-label={`Entry ${entry.id}`} role="group">
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-base font-semibold">{entry.id}</h2>
-        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-700">
-          {entry.kind}
-        </span>
+        <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-foreground">{entry.kind}</span>
         {entry.retired && (
-          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-900">Retired</span>
+          <span className="rounded bg-warning px-1.5 py-0.5 text-xs text-warning-foreground">
+            Retired
+          </span>
         )}
       </div>
 
       {problems.length > 0 && (
         <ul
           aria-label="Problems with this entry"
-          className="list-disc rounded border border-red-200 bg-red-50 py-2 pr-3 pl-7 text-sm text-red-800"
+          className="list-disc rounded border border-destructive/30 bg-destructive/10 py-2 pr-3 pl-7 text-sm text-destructive"
         >
           {problems.map((problem) => (
             <li key={`${problem.path}:${problem.message}`}>{problem.message}</li>
@@ -301,8 +301,8 @@ export function EntryForm({ entry, problems, onChange }: Props) {
         />
       </div>
 
-      <fieldset className="flex flex-col gap-2 rounded border border-slate-200 p-3">
-        <legend className="px-1 text-xs font-medium text-slate-600">Default size</legend>
+      <fieldset className="flex flex-col gap-2 rounded border border-border p-3">
+        <legend className="px-1 text-xs font-medium text-muted-foreground">Default size</legend>
         <div className="grid grid-cols-4 gap-2">
           <LengthField
             label="Default width"
@@ -327,8 +327,8 @@ export function EntryForm({ entry, problems, onChange }: Props) {
         </div>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-2 rounded border border-slate-200 p-3">
-        <legend className="px-1 text-xs font-medium text-slate-600">Placement</legend>
+      <fieldset className="flex flex-col gap-2 rounded border border-border p-3">
+        <legend className="px-1 text-xs font-medium text-muted-foreground">Placement</legend>
         <div className="flex gap-4">
           {PLACEMENTS.map((placement) => (
             <CheckboxField
@@ -362,9 +362,9 @@ export function EntryForm({ entry, problems, onChange }: Props) {
         )}
       </fieldset>
 
-      <fieldset className="flex flex-col gap-2 rounded border border-slate-200 p-3">
-        <legend className="px-1 text-xs font-medium text-slate-600">Options</legend>
-        {entry.options.length === 0 && <p className="text-sm text-slate-600">No options.</p>}
+      <fieldset className="flex flex-col gap-2 rounded border border-border p-3">
+        <legend className="px-1 text-xs font-medium text-muted-foreground">Options</legend>
+        {entry.options.length === 0 && <p className="text-sm text-muted-foreground">No options.</p>}
         <ul className="flex flex-col gap-2">
           {entry.options.map((def, index) => (
             <OptionEditor
@@ -393,7 +393,7 @@ export function EntryForm({ entry, problems, onChange }: Props) {
             <button
               key={label}
               type="button"
-              className="rounded border border-slate-300 px-2 py-1 text-sm hover:bg-slate-100"
+              className="rounded border border-input px-2 py-1 text-sm hover:bg-muted"
               onClick={() =>
                 onChange({
                   ...entry,

@@ -45,12 +45,16 @@ const ADMIN = makeUser({ permissions: ['users.view', 'users.manage', 'users.role
 
 afterEach(() => vi.restoreAllMocks());
 
+/** The button that opens a user, in the table (the cards below 768 px hold the same). */
+const userRow = async (name: string) =>
+  within(await screen.findByRole('table', { name: 'Users' })).findByRole('button', { name });
+
 describe('the user list', () => {
   it('shows the loading state, then a row for each user', async () => {
     setup(SUPPORT, [makeAdminUser(), makeAdminUser({ id: 3, email: 'cy@example.com', name: '' })]);
-    expect(screen.getByRole('status')).toHaveTextContent('Loading…');
+    expect(screen.getByRole('status', { name: 'Loading users' })).toBeInTheDocument();
 
-    const table = screen.getByRole('table', { name: 'Users' });
+    const table = await screen.findByRole('table', { name: 'Users' });
     expect(
       await within(table).findByRole('button', { name: 'bob@example.com' }),
     ).toBeInTheDocument();
@@ -60,7 +64,7 @@ describe('the user list', () => {
 
   it('says when no user matches', async () => {
     setup(SUPPORT, []);
-    expect(await screen.findByText('No users match.')).toBeInTheDocument();
+    expect(await screen.findByText('No users match')).toBeInTheDocument();
   });
 
   it('shows the failure of the request', async () => {
@@ -84,7 +88,11 @@ describe('the user list', () => {
     fireEvent.change(screen.getByLabelText('Active'), { target: { value: 'no' } });
     fireEvent.change(screen.getByLabelText('Staff'), { target: { value: 'yes' } });
     fireEvent.change(screen.getByLabelText('Role'), { target: { value: 'Support' } });
-    fireEvent.click(screen.getByRole('button', { name: /Projects/ }));
+    fireEvent.click(
+      within(await screen.findByRole('table', { name: 'Users' })).getByRole('button', {
+        name: /Projects/,
+      }),
+    );
 
     await waitFor(() =>
       expect(listUsers).toHaveBeenLastCalledWith({
@@ -112,7 +120,7 @@ describe('the user list', () => {
 describe('the role select', () => {
   it('is hidden without users.roles.assign', async () => {
     setup(SUPPORT);
-    fireEvent.click(await screen.findByRole('button', { name: 'bob@example.com' }));
+    fireEvent.click(await userRow('bob@example.com'));
     const dialog = await screen.findByRole('dialog');
 
     expect(within(dialog).getByLabelText('Name')).toBeInTheDocument();
@@ -122,7 +130,7 @@ describe('the role select', () => {
 
   it('is shown with it, and its choice is saved', async () => {
     const { updateUser } = setup(ADMIN);
-    fireEvent.click(await screen.findByRole('button', { name: 'bob@example.com' }));
+    fireEvent.click(await userRow('bob@example.com'));
     const dialog = await screen.findByRole('dialog');
 
     fireEvent.click(await within(dialog).findByRole('checkbox', { name: 'Support' }));
@@ -141,7 +149,7 @@ describe('the role select', () => {
 
   it('is left out of the save of someone without the permission', async () => {
     const { updateUser } = setup(SUPPORT);
-    fireEvent.click(await screen.findByRole('button', { name: 'bob@example.com' }));
+    fireEvent.click(await userRow('bob@example.com'));
     fireEvent.click(
       within(await screen.findByRole('dialog')).getByRole('button', { name: 'Save' }),
     );
@@ -154,12 +162,14 @@ describe('the role select', () => {
 describe('the detail', () => {
   it('deactivates after a confirmation, and closes', async () => {
     const { updateUser } = setup(SUPPORT);
-    fireEvent.click(await screen.findByRole('button', { name: 'bob@example.com' }));
+    fireEvent.click(await userRow('bob@example.com'));
     const dialog = await screen.findByRole('dialog');
 
     fireEvent.click(within(dialog).getByRole('button', { name: /^Deactivate/ }));
     expect(updateUser).not.toHaveBeenCalled();
-    fireEvent.click(within(dialog).getByRole('button', { name: /Confirm deactivate/ }));
+    // The confirmation is its own alert dialog, on top of the user's.
+    const confirm = await screen.findByRole('alertdialog');
+    fireEvent.click(within(confirm).getByRole('button', { name: /Confirm deactivate/ }));
 
     await waitFor(() => expect(updateUser).toHaveBeenCalledWith(2, { is_active: false }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -167,7 +177,7 @@ describe('the detail', () => {
 
   it('offers to activate an inactive account, and no password reset', async () => {
     setup(SUPPORT, [makeAdminUser({ is_active: false })]);
-    fireEvent.click(await screen.findByRole('button', { name: 'bob@example.com' }));
+    fireEvent.click(await userRow('bob@example.com'));
     const dialog = await screen.findByRole('dialog');
 
     expect(within(dialog).getByRole('button', { name: /^Activate/ })).toBeInTheDocument();
@@ -176,7 +186,7 @@ describe('the detail', () => {
 
   it('does not offer to deactivate yourself', async () => {
     setup(SUPPORT, [makeAdminUser({ id: SUPPORT.id, email: SUPPORT.email })]);
-    fireEvent.click(await screen.findByRole('button', { name: SUPPORT.email }));
+    fireEvent.click(await userRow(SUPPORT.email));
     const dialog = await screen.findByRole('dialog');
 
     expect(within(dialog).queryByRole('button', { name: /Deactivate/ })).not.toBeInTheDocument();
@@ -184,7 +194,7 @@ describe('the detail', () => {
 
   it('sends a password reset', async () => {
     const { resetUserPassword } = setup(SUPPORT);
-    fireEvent.click(await screen.findByRole('button', { name: 'bob@example.com' }));
+    fireEvent.click(await userRow('bob@example.com'));
     fireEvent.click(await screen.findByRole('button', { name: 'Send password reset' }));
 
     await waitFor(() => expect(resetUserPassword).toHaveBeenCalledWith(2));
@@ -196,7 +206,7 @@ describe('the detail', () => {
     updateUser.mockRejectedValue(
       new ApiError(400, { detail: 'This is the last active superuser.' }),
     );
-    fireEvent.click(await screen.findByRole('button', { name: 'bob@example.com' }));
+    fireEvent.click(await userRow('bob@example.com'));
     fireEvent.click(
       within(await screen.findByRole('dialog')).getByRole('button', { name: 'Save' }),
     );

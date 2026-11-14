@@ -57,7 +57,10 @@ test('an administrator invites a user and deactivates them, who can then no long
     await page.getByRole('button', { name: email }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByRole('button', { name: /^Deactivate/ }).click();
-    await dialog.getByRole('button', { name: /Confirm deactivate/ }).click();
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: /Confirm deactivate/ })
+      .click();
     await expect(dialog).toBeHidden();
     await page.getByRole('link', { name: 'Audit' }).click();
     await expect(page.getByRole('cell', { name: 'user.update' }).first()).toBeVisible();
@@ -74,8 +77,7 @@ test('an administrator invites a user and deactivates them, who can then no long
 
 test('a support user manages users but cannot change roles', async ({ page }) => {
   await signIn(page, SUPPORT);
-  await page.goto('/admin');
-  await expect(page).toHaveURL(/\/admin\/users$/);
+  await page.goto('/admin/users');
 
   const nav = page.getByRole('navigation', { name: 'Control Panel' });
   await expect(nav.getByRole('link', { name: 'Users' })).toBeVisible();

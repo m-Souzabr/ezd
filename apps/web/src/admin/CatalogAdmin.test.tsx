@@ -112,7 +112,8 @@ describe('the catalog page', () => {
     const list = await screen.findByRole('region', { name: 'Cabinets' });
     expect(within(list).queryByText('Drawer base cabinet')).not.toBeInTheDocument();
     fireEvent.click(screen.getByLabelText('Show retired'));
-    expect(within(list).getByText(/base\.drawers · retired/)).toBeInTheDocument();
+    expect(within(list).getByText('base.drawers')).toBeInTheDocument();
+    expect(within(list).getByText('Retired')).toBeInTheDocument();
   });
 
   it('edits a price in dollars and saves the draft in cents', async () => {
@@ -171,7 +172,7 @@ describe('the catalog page', () => {
     expect(await screen.findByRole('group', { name: 'Entry base.deep' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Publish…' })).toBeEnabled();
     fireEvent.click(screen.getByLabelText(/^Retired/));
-    expect(screen.getByText('Retired', { selector: 'span' })).toBeInTheDocument();
+    expect(screen.getAllByText('Retired', { selector: 'span' }).length).toBeGreaterThan(0);
   });
 
   it('edits widths, options and placement', async () => {
@@ -287,7 +288,7 @@ describe('the catalog page', () => {
     expect(await within(history).findByText('catalog-2')).toBeInTheDocument();
     expect(within(history).getAllByText('Published')).toHaveLength(1);
     fireEvent.click(within(history).getByRole('button', { name: 'Roll back to seed-1' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Roll back to seed-1?' });
+    const dialog = await screen.findByRole('alertdialog', { name: 'Roll back to seed-1?' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Roll back' }));
     await waitFor(() => expect(spies.rollbackCatalog).toHaveBeenCalledWith('seed-1'));
   });

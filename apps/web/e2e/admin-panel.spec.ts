@@ -147,7 +147,7 @@ test('importing an invalid file changes nothing; a valid one replaces the draft 
     );
     await page.getByRole('button', { name: 'Replace the draft…' }).click();
     await page
-      .getByRole('dialog', { name: 'Replace the draft?' })
+      .getByRole('alertdialog', { name: 'Replace the draft?' })
       .getByRole('button', { name: 'Replace the draft' })
       .click();
     await expect(page.getByText(/Saved .* as drafts/)).toBeVisible();
@@ -163,7 +163,7 @@ test('reset to defaults asks first, then saves a draft equal to the defaults', a
   const page = await asUser(browser, ADMINISTRATOR);
   await page.goto('/admin/backup');
   await page.getByRole('button', { name: 'Reset app settings…' }).click();
-  const dialog = page.getByRole('dialog', { name: /Reset the app settings draft/ });
+  const dialog = page.getByRole('alertdialog', { name: /Reset the app settings draft/ });
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await expect(dialog).toBeHidden();
 
@@ -188,11 +188,12 @@ test('the audit viewer filters, shows a readable diff and exports CSV without se
   await test.step('a draft save opens into its changes', async () => {
     await page.getByLabel('Object type').selectOption('config_version');
     await page.getByLabel('Action').fill('config.draft.save');
-    await page
+    const table = page.getByRole('table', { name: 'Audit log' });
+    await table
       .getByText(/\d+ changes?/)
       .first()
       .click();
-    await expect(page.getByRole('list', { name: /Changes in entry/ }).first()).toBeVisible();
+    await expect(table.getByRole('list', { name: /Changes in entry/ }).first()).toBeVisible();
   });
 
   await test.step('the CSV holds the matching rows', async () => {
@@ -259,7 +260,10 @@ test('a rules publish shows its dry run, can be compared with the version before
 
   await test.step('one click and a confirm undo the publish', async () => {
     await page.getByRole('button', { name: `Roll back to version ${baseline.number}` }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Roll back', exact: true }).click();
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: 'Roll back', exact: true })
+      .click();
     await expect(page.getByText(`Rolled back to version ${baseline.number}`)).toBeVisible();
     const config = await api<{ rules_config: { thresholds?: { minAisle?: number } } }>(
       page,
@@ -309,7 +313,10 @@ test('a catalog publish is rolled back, and the diff names the entry by id', asy
 
   await test.step('the rollback publishes the old catalog again', async () => {
     await page.getByRole('button', { name: `Roll back to ${before.version}` }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Roll back', exact: true }).click();
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: 'Roll back', exact: true })
+      .click();
     await expect(history).toContainText(`Rolled back to ${before.version}`);
     const now = await api<{ catalog: { entries: { id: string }[] } }>(page, 'GET', '/api/catalog/');
     expect(now.catalog.entries.map((e) => e.id)).not.toContain(entryId);

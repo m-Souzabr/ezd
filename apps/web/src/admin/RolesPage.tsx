@@ -8,8 +8,11 @@ import { RequirePermission } from '../auth/permissions';
 import { useSession } from '../auth/session';
 import { userCan } from '../auth/can';
 import { FormError } from '../components/form-error';
-import { CloseButton, Modal } from '../pages/Modal';
-import { Table, type Column } from '../pages/Table';
+import { ConfirmDialog } from '@/components/patterns/confirm-dialog';
+import { DataList, type DataListColumn } from '@/components/patterns/data-list';
+import { PageHeader } from '@/components/patterns/page-header';
+import { ResponsiveDialog } from '@/components/patterns/responsive-dialog';
+import { EmptyState, ErrorState, LoadingState } from '@/components/patterns/state-views';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +24,7 @@ function RoleDialog({ role, onClose }: { role: Role | null; onClose(): void }) {
   const queryClient = useQueryClient();
   const me = useSession();
   const nameId = useId();
+  const formId = useId();
   const [name, setName] = useState(role?.name ?? '');
   const [held, setHeld] = useState<PermissionCode[]>((role?.permissions ?? []) as PermissionCode[]);
   const save = useMutation({
@@ -36,13 +40,25 @@ function RoleDialog({ role, onClose }: { role: Role | null; onClose(): void }) {
   const toggle = (code: PermissionCode, on: boolean) =>
     setHeld((current) => (on ? [...current, code] : current.filter((item) => item !== code)));
   return (
-    <Modal
+    <ResponsiveDialog
       open
       onOpenChange={(open) => !open && onClose()}
       title={role ? `Edit ${role.name}` : 'New role'}
       description="A role gives its members these permissions from their next request. You can only give a permission you hold yourself."
+      showCloseButton={false}
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" form={formId} disabled={save.isPending || name.trim() === ''}>
+            {role ? 'Save role' : 'Create role'}
+          </Button>
+        </>
+      }
     >
       <form
+        id={formId}
         className="flex flex-col gap-4"
         onSubmit={(event: FormEvent) => {
           event.preventDefault();
@@ -84,14 +100,8 @@ function RoleDialog({ role, onClose }: { role: Role | null; onClose(): void }) {
           })}
         </fieldset>
         <FormError error={save.error} />
-        <div className="flex justify-end gap-2">
-          <CloseButton label="Cancel" />
-          <Button type="submit" disabled={save.isPending || name.trim() === ''}>
-            {role ? 'Save role' : 'Create role'}
-          </Button>
-        </div>
       </form>
-    </Modal>
+    </ResponsiveDialog>
   );
 }
 
@@ -101,33 +111,24 @@ function DeleteDialog({ role, onClose }: { role: Role; onClose(): void }) {
     mutationFn: () => api.deleteRole(role.id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: adminRolesKey });
-      onClose();
     },
   });
   return (
-    <Modal
-      open
-      onOpenChange={(open) => !open && onClose()}
-      title={`Delete ${role.name}?`}
-      description={
-        role.members > 0
-          ? `${role.members} ${role.members === 1 ? 'person holds' : 'people hold'} this role and will lose what it gives them on their next request.`
-          : 'Nobody holds this role.'
-      }
-    >
+    <>
+      <ConfirmDialog
+        open
+        onOpenChange={(open) => !open && onClose()}
+        title={`Delete ${role.name}?`}
+        description={
+          role.members > 0
+            ? `${role.members} ${role.members === 1 ? 'person holds' : 'people hold'} this role and will lose what it gives them on their next request.`
+            : 'Nobody holds this role.'
+        }
+        confirmLabel="Delete role"
+        onConfirm={() => remove.mutate()}
+      />
       <FormError error={remove.error} />
-      <div className="flex justify-end gap-2">
-        <CloseButton label="Cancel" />
-        <Button
-          type="button"
-          variant="destructive"
-          disabled={remove.isPending}
-          onClick={() => remove.mutate()}
-        >
-          Delete role
-        </Button>
-      </div>
-    </Modal>
+    </>
   );
 }
 
@@ -136,9 +137,10 @@ function Roles() {
   const roles = useQuery({ queryKey: adminRolesKey, queryFn: api.listRoles });
   const [editing, setEditing] = useState<Role | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Role | null>(null);
-  const columns: Column<Role>[] = [
+  const columns: DataListColumn<Role>[] = [
     {
-      key: 'name',
+      id: 'name',
+      primary: true,
       header: 'Role',
       cell: (role) => (
         <span className="flex flex-wrap items-center gap-2">
@@ -148,16 +150,19 @@ function Roles() {
       ),
     },
     {
-      key: 'permissions',
+      id: 'permissions',
       header: 'Permissions',
-      cell: (role) =>
-        role.permissions.length > 0 ? role.permissions.map(permissionLabel).join(', ') : 'None',
+      cell: (role) => (
+        <span className="block max-w-prose whitespace-normal">
+          {role.permissions.length > 0 ? role.permissions.map(permissionLabel).join(', ') : 'None'}
+        </span>
+      ),
     },
-    { key: 'members', header: 'Members', cell: (role) => role.members },
+    { id: 'members', header: 'Members', cell: (role) => role.members },
     ...(canManage
       ? [
           {
-            key: 'actions',
+            id: 'actions',
             header: 'Actions',
             cell: (role: Role) =>
               role.protected ? (
@@ -189,28 +194,41 @@ function Roles() {
       : []),
   ];
   return (
-    <>
-      <div className="mb-4 flex items-center gap-3">
-        <h1 className="text-xl font-semibold">Roles</h1>
-        {canManage && (
-          <Button type="button" className="ml-auto" onClick={() => setEditing('new')}>
-            New role
-          </Button>
-        )}
-      </div>
-      <Table
-        label="Roles"
-        columns={columns}
-        rows={roles.data}
-        rowKey={(role) => role.id}
-        loading={roles.isPending}
-        error={roles.error?.message ?? null}
+    <div className="flex flex-col gap-4">
+      <PageHeader
+        title="Roles"
+        description="What each role may do. The seeded roles are protected."
+        actions={
+          canManage && (
+            <Button type="button" onClick={() => setEditing('new')}>
+              New role
+            </Button>
+          )
+        }
       />
+      {roles.isPending ? (
+        <LoadingState label="Loading roles" />
+      ) : roles.error ? (
+        <ErrorState
+          title="The roles could not be loaded"
+          description={roles.error.message}
+          onRetry={() => void roles.refetch()}
+        />
+      ) : roles.data.length === 0 ? (
+        <EmptyState title="No roles" description="There are no roles yet." />
+      ) : (
+        <DataList
+          caption="Roles"
+          rows={roles.data}
+          columns={columns}
+          getRowId={(role) => String(role.id)}
+        />
+      )}
       {editing && (
         <RoleDialog role={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />
       )}
       {deleting && <DeleteDialog role={deleting} onClose={() => setDeleting(null)} />}
-    </>
+    </div>
   );
 }
 

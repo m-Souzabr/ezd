@@ -4,10 +4,12 @@ import { type FormEvent, useState } from 'react';
 import { api, type LLMSettings, type LLMSettingsUpdate } from '../api/client';
 import { llmSettingsKey } from '../api/keys';
 import { RequirePermission } from '../auth/permissions';
-import { BUTTON } from '../editor/panels/fields';
 import { fieldErrors, formatDate } from '../pages/format';
 import { NoAccess } from './AdminLayout';
-import { FormError, PRIMARY, TextField } from '../pages/ui';
+import { TextField } from './AdminFields';
+import { FormError } from '@/components/form-error';
+import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/patterns/page-header';
 
 const SOURCE_TEXT: Record<LLMSettings['key_source'], string> = {
   settings: 'A key entered here is in use',
@@ -58,8 +60,11 @@ function SettingsForm({ settings }: { settings: LLMSettings }) {
   );
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4 rounded-lg bg-white p-4 shadow-sm">
-      <p className="text-sm text-slate-700" data-testid="key-status">
+    <form
+      onSubmit={submit}
+      className="flex flex-col gap-4 rounded-lg border bg-card p-4 text-card-foreground"
+    >
+      <p className="text-sm text-foreground" data-testid="key-status">
         {SOURCE_TEXT[settings.key_source]}
         {settings.api_key_last4 && <> (ending in {settings.api_key_last4})</>}. Vendor:{' '}
         {settings.vendor}.
@@ -73,29 +78,30 @@ function SettingsForm({ settings }: { settings: LLMSettings }) {
         errors={fieldErrors(save.error, 'api_key')}
         required={false}
       />
-      <p className="-mt-2 text-xs text-slate-600">
+      <p className="-mt-2 text-xs text-muted-foreground">
         It is stored encrypted on the server and never shown again, here or anywhere else.
       </p>
       <fieldset className="flex flex-col gap-3">
-        <legend className="mb-2 text-sm font-medium text-slate-700">Models</legend>
+        <legend className="mb-2 text-sm font-medium text-foreground">Models</legend>
         {model('router', 'Routing and simple edits')}
         {model('default', 'Other edits')}
         {model('escalation', 'Last retry')}
       </fieldset>
       <FormError error={save.error} fields={['api_key', 'router_model', 'default_model']} />
       {saved && (
-        <p role="status" className="text-sm text-emerald-700">
+        <p role="status" className="text-sm text-foreground">
           {saved}
         </p>
       )}
       <div className="flex gap-2">
-        <button type="submit" className={PRIMARY} disabled={save.isPending}>
+        <Button type="submit" disabled={save.isPending}>
           Save
-        </button>
+        </Button>
         {settings.key_source === 'settings' && (
-          <button
+          <Button
+            variant="outline"
             type="button"
-            className={BUTTON}
+
             disabled={save.isPending}
             onClick={() => {
               setSaved(null);
@@ -103,11 +109,13 @@ function SettingsForm({ settings }: { settings: LLMSettings }) {
             }}
           >
             Remove key
-          </button>
+          </Button>
         )}
       </div>
       {settings.updated_at && (
-        <p className="text-xs text-slate-600">Last changed {formatDate(settings.updated_at)}.</p>
+        <p className="text-xs text-muted-foreground">
+          Last changed {formatDate(settings.updated_at)}.
+        </p>
       )}
     </form>
   );
@@ -117,7 +125,10 @@ export function AISettingsPage() {
   const settings = useQuery({ queryKey: llmSettingsKey, queryFn: api.getLLMSettings });
   return (
     <RequirePermission permission="llm.settings.edit" fallback={<NoAccess />}>
-      <h1 className="mb-4 text-xl font-semibold">AI settings</h1>
+      <PageHeader
+        title="AI settings"
+        description="The assistant: provider key, models and monthly limits."
+      />
       {settings.data ? (
         <SettingsForm settings={settings.data} />
       ) : (

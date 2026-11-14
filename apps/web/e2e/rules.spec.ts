@@ -159,7 +159,10 @@ test('staff change the aisle and the branding; a fresh session sees the aisle ch
       .getByRole('button', { name: /^Roll back to version/ })
       .last()
       .click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Roll back', exact: true }).click();
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: 'Roll back', exact: true })
+      .click();
     await expect(page.getByText(/Rolled back to version/)).toBeVisible();
     const context = await browser.newContext();
     const fresh = await context.newPage();

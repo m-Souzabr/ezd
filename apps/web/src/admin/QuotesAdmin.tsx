@@ -15,15 +15,17 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { configDraftKey } from '../api/keys';
 import { RequirePermission } from '../auth/permissions';
-import { BUTTON } from '../editor/panels/fields';
 import { errorMessage } from '../pages/format';
 import { formatPercent, parsePercent } from '../quotes/format';
 import { renderQuotePdf } from '../quotes/pdf';
 import { NoAccess } from './AdminLayout';
-import { FIELD } from './controls';
 import { DraftSection, type LoadedSection } from './DraftSection';
 import { fileToLogo, samplePlanImage } from './logo';
 import { sampleQuote } from './sampleQuote';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { PageHeader } from '@/components/patterns/page-header';
 
 /** What is on screen: the rates as typed, so a half-typed number is not lost. */
 type Form = {
@@ -92,7 +94,6 @@ function TextField({
   const id = useId();
   const props = {
     id,
-    className: `${FIELD} w-full`,
     value,
     'aria-invalid': Boolean(error),
     'aria-describedby': error ? `${id}-error` : undefined,
@@ -100,13 +101,13 @@ function TextField({
   };
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium text-slate-600">
+      <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
         {label}
       </label>
-      {multiline ? <textarea rows={3} {...props} /> : <input type="text" {...props} />}
-      {hint && <p className="text-xs text-slate-600">{hint}</p>}
+      {multiline ? <Textarea rows={3} {...props} /> : <Input type="text" {...props} />}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       {error && (
-        <p id={`${id}-error`} role="alert" className="text-xs text-red-700">
+        <p id={`${id}-error`} role="alert" className="text-xs text-destructive">
           {error}
         </p>
       )}
@@ -128,7 +129,7 @@ function LogoField({
   const [busy, setBusy] = useState(false);
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="text-xs font-medium text-slate-600">
+      <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
         Logo
       </label>
       <div className="flex flex-wrap items-center gap-3">
@@ -136,7 +137,7 @@ function LogoField({
           <img
             src={logo}
             alt="Current logo"
-            className="max-h-16 max-w-48 rounded border border-slate-200 bg-white"
+            className="max-h-16 max-w-48 rounded border border-border bg-card"
           />
         )}
         <input
@@ -164,16 +165,16 @@ function LogoField({
           }}
         />
         {logo !== '' && (
-          <button type="button" className={BUTTON} onClick={() => onChange('')}>
+          <Button variant="outline" type="button" onClick={() => onChange('')}>
             Remove logo
-          </button>
+          </Button>
         )}
       </div>
-      <p className="text-xs text-slate-600">
+      <p className="text-xs text-muted-foreground">
         A PNG or JPEG. It is scaled to fit and saved as a plain PNG, under 150 KB.
       </p>
       {(failure ?? error) && (
-        <p role="alert" className="text-xs text-red-700">
+        <p role="alert" className="text-xs text-destructive">
           {failure ?? error}
         </p>
       )}
@@ -205,15 +206,18 @@ function PdfPreview({ defaults }: { defaults: QuoteDefaults }) {
     }
   };
   return (
-    <section aria-label="PDF preview" className="rounded-lg bg-white p-4 shadow-sm">
+    <section
+      aria-label="PDF preview"
+      className="rounded-lg border bg-card p-4 text-card-foreground"
+    >
       <div className="mb-3 flex items-center gap-3">
         <h2 className="text-base font-semibold">PDF preview</h2>
-        <button type="button" className={BUTTON} disabled={state === 'busy'} onClick={render}>
+        <Button variant="outline" type="button" disabled={state === 'busy'} onClick={render}>
           {state === 'busy' ? 'Drawing…' : url ? 'Refresh preview' : 'Preview PDF'}
-        </button>
+        </Button>
       </div>
       {state === 'failed' && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-destructive">
           The preview could not be drawn.
         </p>
       )}
@@ -221,7 +225,7 @@ function PdfPreview({ defaults }: { defaults: QuoteDefaults }) {
         <iframe title="Quote PDF preview" src={url} className="h-[36rem] w-full rounded border" />
       )}
       {!url && state !== 'failed' && (
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           Draws a sample quote with this branding, as a customer would get it.
         </p>
       )}
@@ -237,9 +241,12 @@ function QuotesForm({ form, onChange }: { form: Form; onChange(next: Form): void
   const b = form.branding;
   return (
     <>
-      <section aria-label="Default rates" className="rounded-lg bg-white p-4 shadow-sm">
+      <section
+        aria-label="Default rates"
+        className="rounded-lg border bg-card p-4 text-card-foreground"
+      >
         <h2 className="mb-1 text-base font-semibold">Default rates</h2>
-        <p className="mb-3 text-sm text-slate-600">
+        <p className="mb-3 text-sm text-muted-foreground">
           What a new quote starts with. Whoever makes the quote can still change them. Currency is
           US dollars.
         </p>
@@ -264,9 +271,12 @@ function QuotesForm({ form, onChange }: { form: Form; onChange(next: Form): void
           />
         </div>
       </section>
-      <section aria-label="Company branding" className="rounded-lg bg-white p-4 shadow-sm">
+      <section
+        aria-label="Company branding"
+        className="rounded-lg border bg-card p-4 text-card-foreground"
+      >
         <h2 className="mb-1 text-base font-semibold">Company branding</h2>
-        <p className="mb-3 text-sm text-slate-600">
+        <p className="mb-3 text-sm text-muted-foreground">
           Printed at the top of each quote&rsquo;s PDF. A quote keeps what was published when it was
           made, so changing this never changes a quote that exists.
         </p>
@@ -340,7 +350,10 @@ export function QuotesAdminPage() {
   }, [draft.data]);
   return (
     <RequirePermission permission="config.quote.edit" fallback={<NoAccess />}>
-      <h1 className="mb-4 text-xl font-semibold">Quotes</h1>
+      <PageHeader
+        title="Quotes"
+        description="The rates a new quote starts from, and the company branding on its PDF."
+      />
       {loaded ? (
         <DraftSection<Form>
           key={`${loaded.revision}-${loaded.basedOn}`}
@@ -358,11 +371,11 @@ export function QuotesAdminPage() {
           {({ value, set }) => <QuotesForm form={value} onChange={set} />}
         </DraftSection>
       ) : draft.error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-destructive">
           {errorMessage(draft.error)}
         </p>
       ) : (
-        <p role="status" className="text-sm text-slate-600">
+        <p role="status" className="text-sm text-muted-foreground">
           Loading…
         </p>
       )}

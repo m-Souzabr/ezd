@@ -1,19 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useId, useState } from 'react';
 
-import { api, type AdminUser, type AdminUserCreate, type AdminUserUpdate } from '../api/client';
-import { adminRolesKey, adminUsersKey } from '../api/keys';
-import { useCan } from '../auth/can';
-import { RequirePermission } from '../auth/permissions';
-import { useSession } from '../auth/session';
-import { BUTTON } from '../editor/panels/fields';
-import { fieldErrors, formatDate } from '../pages/format';
-import { CloseButton, Modal } from '../pages/Modal';
-import { formatSort, parseSort, type Sort } from '../pages/sort';
-import { Table, type Column } from '../pages/Table';
-import { ConfirmButton, FormError, LINK, PRIMARY, TextField } from '../pages/ui';
+import { api, type AdminUser, type AdminUserCreate, type AdminUserUpdate } from '@/api/client';
+import { adminRolesKey, adminUsersKey } from '@/api/keys';
+import { useCan } from '@/auth/can';
+import { RequirePermission } from '@/auth/permissions';
+import { useSession } from '@/auth/session';
+import { FormError } from '@/components/form-error';
+import { ConfirmDialog } from '@/components/patterns/confirm-dialog';
+import { DataList, type DataListColumn, type DataListSort } from '@/components/patterns/data-list';
+import { PageHeader } from '@/components/patterns/page-header';
+import { ResponsiveDialog } from '@/components/patterns/responsive-dialog';
+import { EmptyState, ErrorState, LoadingState } from '@/components/patterns/state-views';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
+import { fieldErrors, formatDate } from '@/pages/format';
+import { formatSort, parseSort } from '@/pages/sort';
+import { CheckField, TextField } from './AdminFields';
 import { NoAccess } from './AdminLayout';
-import { FIELD, Pager } from './controls';
+import { Pager } from './Pager';
 
 const PAGE_SIZE = 25;
 
@@ -28,23 +35,19 @@ function RoleSelect({
   const roles = useQuery({ queryKey: adminRolesKey, queryFn: api.listRoles });
   return (
     <RequirePermission permission="users.roles.assign">
-      <fieldset className="flex flex-col gap-1">
-        <legend className="mb-1 text-sm font-medium text-slate-700">Roles</legend>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-sm font-medium">Roles</legend>
         {roles.data?.map((role) => (
-          <label key={role.name} className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={selected.includes(role.name)}
-              onChange={(event) =>
-                onChange(
-                  event.target.checked
-                    ? [...selected, role.name]
-                    : selected.filter((name) => name !== role.name),
-                )
-              }
-            />
-            {role.name}
-          </label>
+          <CheckField
+            key={role.name}
+            label={role.name}
+            checked={selected.includes(role.name)}
+            onChange={(on) =>
+              onChange(
+                on ? [...selected, role.name] : selected.filter((name) => name !== role.name),
+              )
+            }
+          />
         ))}
       </fieldset>
     </RequirePermission>
@@ -69,12 +72,13 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose(): void }) {
       onClose();
     },
   });
+  const formId = useId();
   const submit = (event: FormEvent) => {
     event.preventDefault();
     invite.mutate({ email: email.trim(), name: name.trim(), is_staff: staff, roles });
   };
   return (
-    <Modal
+    <ResponsiveDialog
       open={open}
       onOpenChange={(next) => {
         if (!next) {
@@ -84,8 +88,19 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose(): void }) {
       }}
       title="Invite a user"
       description="They get an email with a link to choose a password."
+      showCloseButton={false}
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" form={formId} disabled={invite.isPending}>
+            Send invite
+          </Button>
+        </>
+      }
     >
-      <form onSubmit={submit} className="flex flex-col gap-3">
+      <form id={formId} onSubmit={submit} className="flex flex-col gap-4">
         <TextField
           label="Email"
           type="email"
@@ -94,20 +109,11 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose(): void }) {
           errors={fieldErrors(invite.error, 'email')}
         />
         <TextField label="Name" value={name} onChange={setName} required={false} />
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={staff} onChange={(e) => setStaff(e.target.checked)} />
-          Staff: can open the Control Panel
-        </label>
+        <CheckField label="Staff: can open the Control Panel" checked={staff} onChange={setStaff} />
         {canAssign && <RoleSelect selected={roles} onChange={setRoles} />}
         <FormError error={invite.error} fields={['email']} />
-        <div className="flex justify-end gap-2">
-          <CloseButton label="Cancel" />
-          <button type="submit" className={PRIMARY} disabled={invite.isPending}>
-            Send invite
-          </button>
-        </div>
       </form>
-    </Modal>
+    </ResponsiveDialog>
   );
 }
 
@@ -119,6 +125,7 @@ function Detail({ user, onClose }: { user: AdminUser; onClose(): void }) {
   const [staff, setStaff] = useState(user.is_staff);
   const [roles, setRoles] = useState(user.roles);
   const [notice, setNotice] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const isMe = me?.id === user.id;
 
   const update = useMutation({
@@ -148,22 +155,20 @@ function Detail({ user, onClose }: { user: AdminUser; onClose(): void }) {
     });
   };
   const error = update.error ?? reset.error;
+  const verb = user.is_active ? 'Deactivate' : 'Activate';
 
   return (
-    <form onSubmit={save} className="flex flex-col gap-3">
+    <form onSubmit={save} className="flex flex-col gap-4 pb-4">
       <TextField label="Name" value={name} onChange={setName} required={false} />
       <TextField label="Email" type="email" value={email} onChange={setEmail} />
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={staff}
-          disabled={isMe}
-          onChange={(event) => setStaff(event.target.checked)}
-        />
-        Staff: can open the Control Panel
-      </label>
+      <CheckField
+        label="Staff: can open the Control Panel"
+        checked={staff}
+        disabled={isMe}
+        onChange={setStaff}
+      />
       <RoleSelect selected={roles} onChange={setRoles} />
-      <dl className="grid grid-cols-2 gap-1 text-xs text-slate-600">
+      <dl className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
         <dt>Last sign-in</dt>
         <dd>{user.last_login ? formatDate(user.last_login) : 'Never'}</dd>
         <dt>Joined</dt>
@@ -175,18 +180,18 @@ function Detail({ user, onClose }: { user: AdminUser; onClose(): void }) {
       </dl>
       <FormError error={error} />
       {notice && (
-        <p role="status" className="text-sm text-emerald-700">
+        <p role="status" className="text-sm">
           {notice}
         </p>
       )}
       <div className="flex flex-wrap items-center gap-2">
-        <button type="submit" className={PRIMARY} disabled={update.isPending}>
+        <Button type="submit" disabled={update.isPending}>
           Save
-        </button>
+        </Button>
         {user.is_active && (
-          <button
+          <Button
+            variant="outline"
             type="button"
-            className={BUTTON}
             disabled={reset.isPending}
             onClick={() => {
               setNotice(null);
@@ -194,27 +199,27 @@ function Detail({ user, onClose }: { user: AdminUser; onClose(): void }) {
             }}
           >
             Send password reset
-          </button>
+          </Button>
         )}
-        {user.is_active ? (
-          !isMe && (
-            <ConfirmButton
-              label="Deactivate"
-              what={user.email}
-              onConfirm={() => update.mutate({ is_active: false })}
-            />
-          )
-        ) : (
-          <ConfirmButton
-            label="Activate"
-            what={user.email}
-            onConfirm={() => update.mutate({ is_active: true })}
-          />
+        {(!user.is_active || !isMe) && (
+          <Button type="button" variant="outline" onClick={() => setConfirming(true)}>
+            {verb}
+            <span className="sr-only"> {user.email}</span>
+          </Button>
         )}
-        <span className="ml-auto">
-          <CloseButton />
-        </span>
       </div>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title={`${verb} ${user.email}?`}
+        description={
+          user.is_active
+            ? 'They are signed out everywhere and cannot sign in until they are activated again.'
+            : 'They can sign in again.'
+        }
+        confirmLabel={`Confirm ${verb.toLowerCase()}`}
+        onConfirm={() => update.mutate({ is_active: !user.is_active })}
+      />
     </form>
   );
 }
@@ -225,10 +230,11 @@ function Users() {
   const [role, setRole] = useState('');
   const [active, setActive] = useState('');
   const [staff, setStaff] = useState('');
-  const [sort, setSort] = useState<Sort>(parseSort('email'));
+  const [sort, setSort] = useState(parseSort('email'));
   const [offset, setOffset] = useState(0);
   const [selected, setSelected] = useState<AdminUser | null>(null);
   const [inviting, setInviting] = useState(false);
+  const ids = useId();
 
   const params = {
     search: search.trim(),
@@ -248,73 +254,98 @@ function Users() {
       setOffset(0);
     };
 
-  const columns: Column<AdminUser>[] = [
+  const columns: DataListColumn<AdminUser>[] = [
     {
-      key: 'email',
+      id: 'email',
       header: 'Email',
       sortable: true,
+      primary: true,
       cell: (user) => (
-        <button type="button" className={LINK} onClick={() => setSelected(user)}>
+        <Button
+          type="button"
+          variant="link"
+          className="h-auto p-0"
+          onClick={() => setSelected(user)}
+        >
           {user.email}
-        </button>
+        </Button>
       ),
     },
-    { key: 'name', header: 'Name', sortable: true, cell: (user) => user.name || '—' },
+    { id: 'name', header: 'Name', sortable: true, cell: (user) => user.name || '—' },
     {
-      key: 'roles',
+      id: 'roles',
       header: 'Roles',
       cell: (user) =>
         user.is_superuser ? 'Superuser' : user.roles.length > 0 ? user.roles.join(', ') : '—',
     },
     {
-      key: 'status',
+      id: 'status',
       header: 'Status',
-      cell: (user) => `${user.is_active ? 'Active' : 'Inactive'}${user.is_staff ? ', staff' : ''}`,
+      cell: (user) => (
+        <span className="flex flex-wrap gap-1">
+          <Badge variant={user.is_active ? 'success' : 'secondary'}>
+            {user.is_active ? 'Active' : 'Inactive'}
+          </Badge>
+          {user.is_staff && <Badge variant="outline">Staff</Badge>}
+        </span>
+      ),
     },
     {
-      key: 'last_login',
+      id: 'last_login',
       header: 'Last sign-in',
       sortable: true,
+      desktopOnly: true,
       cell: (user) => (user.last_login ? formatDate(user.last_login) : 'Never'),
     },
     {
-      key: 'active_projects',
+      id: 'active_projects',
       header: 'Projects',
       sortable: true,
+      desktopOnly: true,
       cell: (user) => user.active_projects,
     },
     {
-      key: 'chat_tokens',
+      id: 'chat_tokens',
       header: 'Tokens this month',
       sortable: true,
+      desktopOnly: true,
       cell: (user) => user.chat_tokens_this_month.toLocaleString(),
     },
   ];
+  const dataSort: DataListSort = { id: sort.key, descending: sort.descending };
+  const label = 'flex flex-col gap-1.5 text-sm text-muted-foreground';
 
   return (
-    <>
-      <div className="mb-4 flex items-center">
-        <h1 className="text-xl font-semibold">Users</h1>
-        {canManage && (
-          <button type="button" className={`${PRIMARY} ml-auto`} onClick={() => setInviting(true)}>
-            Invite user
-          </button>
-        )}
-      </div>
-      <div className="mb-3 flex flex-wrap gap-3">
-        <label className="flex flex-col gap-1 text-sm text-slate-700">
+    <div className="flex flex-col gap-4">
+      <PageHeader
+        title="Users"
+        description="Every account, with its roles and this month's use."
+        actions={
+          canManage && (
+            <Button type="button" onClick={() => setInviting(true)}>
+              Invite user
+            </Button>
+          )
+        }
+      />
+      <form
+        aria-label="Filter the users"
+        className="flex flex-wrap gap-3"
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <label className={label} htmlFor={`${ids}-search`}>
           Search
-          <input
-            className={FIELD}
+          <Input
+            id={`${ids}-search`}
             value={search}
             placeholder="Email or name"
             onChange={(event) => filter(setSearch)(event.target.value)}
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm text-slate-700">
+        <label className={label} htmlFor={`${ids}-role`}>
           Role
-          <select
-            className={FIELD}
+          <NativeSelect
+            id={`${ids}-role`}
             value={role}
             onChange={(event) => filter(setRole)(event.target.value)}
           >
@@ -322,47 +353,56 @@ function Users() {
             {roles.data?.map((item) => (
               <option key={item.name}>{item.name}</option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
-        <label className="flex flex-col gap-1 text-sm text-slate-700">
+        <label className={label} htmlFor={`${ids}-active`}>
           Active
-          <select
-            className={FIELD}
+          <NativeSelect
+            id={`${ids}-active`}
             value={active}
             onChange={(event) => filter(setActive)(event.target.value)}
           >
             <option value="">Any</option>
             <option value="yes">Active</option>
             <option value="no">Inactive</option>
-          </select>
+          </NativeSelect>
         </label>
-        <label className="flex flex-col gap-1 text-sm text-slate-700">
+        <label className={label} htmlFor={`${ids}-staff`}>
           Staff
-          <select
-            className={FIELD}
+          <NativeSelect
+            id={`${ids}-staff`}
             value={staff}
             onChange={(event) => filter(setStaff)(event.target.value)}
           >
             <option value="">Any</option>
             <option value="yes">Staff</option>
             <option value="no">Not staff</option>
-          </select>
+          </NativeSelect>
         </label>
-      </div>
-      <Table
-        label="Users"
-        columns={columns}
-        rows={users.data?.rows}
-        rowKey={(user) => user.id}
-        sort={sort}
-        onSort={(next) => {
-          setSort(next);
-          setOffset(0);
-        }}
-        loading={users.isPending}
-        error={users.error?.message ?? null}
-        empty="No users match."
-      />
+      </form>
+      {users.isPending ? (
+        <LoadingState label="Loading users" />
+      ) : users.error ? (
+        <ErrorState
+          title="The users could not be loaded"
+          description={users.error.message}
+          onRetry={() => void users.refetch()}
+        />
+      ) : users.data.rows.length === 0 ? (
+        <EmptyState title="No users match" description="Change the search or the filters." />
+      ) : (
+        <DataList
+          caption="Users"
+          rows={users.data.rows}
+          columns={columns}
+          getRowId={(user) => String(user.id)}
+          sort={dataSort}
+          onSortChange={(next) => {
+            setSort({ key: next.id, descending: next.descending });
+            setOffset(0);
+          }}
+        />
+      )}
       <Pager
         offset={offset}
         limit={PAGE_SIZE}
@@ -370,11 +410,13 @@ function Users() {
         onOffset={setOffset}
       />
       <InviteDialog open={inviting} onClose={() => setInviting(false)} />
-      <Modal
+      <ResponsiveDialog
         open={selected !== null}
         onOpenChange={(next) => !next && setSelected(null)}
         title={selected?.email ?? 'User'}
-        {...(selected && !selected.is_active && { description: 'This account is deactivated.' })}
+        description={
+          selected && !selected.is_active ? 'This account is deactivated.' : 'Change this account.'
+        }
       >
         {selected && (
           <Detail
@@ -384,8 +426,8 @@ function Users() {
             onClose={() => setSelected(null)}
           />
         )}
-      </Modal>
-    </>
+      </ResponsiveDialog>
+    </div>
   );
 }
 

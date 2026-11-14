@@ -2,10 +2,10 @@ import { type Catalog, type CatalogProblem, type Finish } from '@ezd/core';
 import { useId, useState } from 'react';
 
 import { CheckboxField, SelectField } from '../../editor/panels/fields';
-import { PRIMARY } from '../../pages/ui';
-import { FIELD } from '../controls';
-import { CommitField, MoneyField } from './fields';
+import { CommitField, MoneyField } from './CommitFields';
 import { bpsToPercent, changeFinish, percentToBps, withRetired } from './helpers';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const TARGETS = ['cabinet', 'countertop', 'wall', 'floor'] as const;
 
@@ -22,24 +22,26 @@ function FinishRow({
   return (
     <li
       aria-label={`Finish ${finish.id}`}
-      className="flex flex-col gap-2 rounded border border-slate-200 p-3"
+      className="flex flex-col gap-2 rounded border border-border p-3"
     >
       <div className="flex flex-wrap items-center gap-3">
         <span
           aria-hidden
-          className="size-5 rounded border border-slate-300"
+          className="size-5 rounded border border-input"
           style={{ background: finish.color }}
         />
         <span className="font-medium">{finish.id}</span>
-        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-700">
+        <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-foreground">
           {finish.target}
         </span>
         {finish.retired && (
-          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-900">Retired</span>
+          <span className="rounded bg-warning px-1.5 py-0.5 text-xs text-warning-foreground">
+            Retired
+          </span>
         )}
       </div>
       {problems.length > 0 && (
-        <ul className="list-disc rounded border border-red-200 bg-red-50 py-2 pr-3 pl-7 text-sm text-red-800">
+        <ul className="list-disc rounded border border-destructive/30 bg-destructive/10 py-2 pr-3 pl-7 text-sm text-destructive">
           {problems.map((problem) => (
             <li key={`${problem.path}:${problem.message}`}>{problem.message}</li>
           ))}
@@ -52,7 +54,7 @@ function FinishRow({
           onCommit={(name) => (onChange({ ...finish, name: name.trim() }), null)}
         />
         <div className="flex flex-col gap-1">
-          <label htmlFor={colorId} className="text-xs font-medium text-slate-600">
+          <label htmlFor={colorId} className="text-xs font-medium text-muted-foreground">
             Color
           </label>
           <div className="flex gap-2">
@@ -60,7 +62,7 @@ function FinishRow({
               id={colorId}
               type="color"
               aria-label={`Color picker for ${finish.id}`}
-              className="h-8 w-10 cursor-pointer rounded border border-slate-300"
+              className="h-8 w-10 cursor-pointer rounded border border-input"
               value={/^#[0-9a-f]{6}$/i.test(finish.color) ? finish.color : '#000000'}
               onChange={(event) => onChange({ ...finish, color: event.target.value })}
             />
@@ -140,22 +142,22 @@ export function FinishesTab({
         }}
       >
         <div className="flex flex-col gap-1">
-          <label htmlFor={idField} className="text-xs font-medium text-slate-600">
+          <label htmlFor={idField} className="text-xs font-medium text-muted-foreground">
             New finish id
           </label>
-          <input
+          <Input
             id={idField}
-            className={FIELD}
+
             placeholder="cabinet.teal"
             value={id}
             onChange={(event) => setId(event.target.value)}
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-600">
+          <label className="text-xs font-medium text-muted-foreground">
             New finish name
-            <input
-              className={`${FIELD} mt-1 block`}
+            <Input
+              className="mt-1 block"
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
@@ -167,10 +169,10 @@ export function FinishesTab({
           options={TARGETS.map((value) => ({ value, label: value }))}
           onChange={(value) => setTarget(value as Finish['target'])}
         />
-        <button type="submit" className={PRIMARY} disabled={!id.trim() || taken}>
+        <Button type="submit" disabled={!id.trim() || taken}>
           Add finish
-        </button>
-        {taken && <p className="text-xs text-red-700">That id is already used.</p>}
+        </Button>
+        {taken && <p className="text-xs text-destructive">That id is already used.</p>}
       </form>
       <ul className="flex flex-col gap-2">
         {catalog.finishes.map((finish, index) => (

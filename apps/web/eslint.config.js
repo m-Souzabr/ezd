@@ -49,7 +49,16 @@ export default [
   // Design system: components built on the tokens use semantic classes, never a raw color.
   // Widens to all of `src` in Phase 21; `components/ui` is generated code.
   {
-    files: ['src/components/patterns/**/*.{ts,tsx}', 'src/components/theme-*.{ts,tsx}'],
+    files: [
+      'src/components/patterns/**/*.{ts,tsx}',
+      'src/components/theme-*.{ts,tsx}',
+      'src/admin/**/*.{ts,tsx}',
+    ],
+    ignores: [
+      'src/admin/**/*.test.{ts,tsx}',
+      'src/admin/logo.ts',
+      'src/admin/catalog/FinishesTab.tsx',
+    ],
     rules: { 'no-restricted-syntax': ['error', ...colorRules] },
   },
   // The editor's chrome (header, toolbar, panels, dialogs, chat) is on the tokens too, so it

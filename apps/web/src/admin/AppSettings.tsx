@@ -11,15 +11,22 @@ import { type ReactNode, useId, useMemo, useState } from 'react';
 import { api, ApiError, isConflict } from '../api/client';
 import { configDraftKey, configDryRunKey, configVersionsKey } from '../api/keys';
 import { RequirePermission } from '../auth/permissions';
-import { BUTTON, CheckboxField, LengthField } from '../editor/panels/fields';
-import { CloseButton, Modal } from '../pages/Modal';
+import { CheckboxField, LengthField } from '../editor/panels/fields';
 import { errorMessage, formatDate } from '../pages/format';
-import { FormError, PRIMARY } from '../pages/ui';
 import { NoAccess } from './AdminLayout';
 import { ConflictNotice } from './ConflictNotice';
-import { FIELD } from './controls';
+import { DraftStatus } from './DraftSection';
 import { DryRunSummary } from './DryRunSummary';
 import { VersionCompare } from './VersionCompare';
+import { ConfirmDialog } from '@/components/patterns/confirm-dialog';
+import { ResponsiveDialog } from '@/components/patterns/responsive-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { FormError } from '@/components/form-error';
+import { PageHeader } from '@/components/patterns/page-header';
 
 type Path = readonly string[];
 type Errors = ReadonlyMap<string, string>;
@@ -59,7 +66,7 @@ function Toggle({ ctx, path, label }: { ctx: Ctx; path: Path; label: string }) {
 function Problem({ errors, path }: { errors: Errors; path: Path }) {
   const message = errors.get(key(path));
   return message ? (
-    <p role="alert" className="mt-1 text-xs text-red-700">
+    <p role="alert" className="mt-1 text-xs text-destructive">
       {message}
     </p>
   ) : null;
@@ -80,16 +87,15 @@ function TextInput({
   const value = getAt(ctx.config, path) as string;
   const props = {
     id,
-    className: `${FIELD} w-full`,
     value,
     onChange: (event: { target: { value: string } }) => ctx.edit(path, event.target.value),
   };
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium text-slate-600">
+      <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
         {label}
       </label>
-      {multiline ? <textarea rows={3} {...props} /> : <input type="text" {...props} />}
+      {multiline ? <Textarea rows={3} {...props} /> : <Input type="text" {...props} />}
       <Problem errors={ctx.errors} path={path} />
     </div>
   );
@@ -102,14 +108,14 @@ function ColorInput({ ctx, path, label }: { ctx: Ctx; path: Path; label: string 
   const picker = /^#[0-9a-f]{6}/i.test(value) ? value.slice(0, 7) : '#000000';
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium text-slate-600">
+      <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
         {label}
       </label>
       <div className="flex items-center gap-2">
         <input
           type="color"
           aria-label={`${label} picker`}
-          className="h-8 w-10 rounded border border-slate-300"
+          className="h-8 w-10 rounded border border-input"
           value={picker}
           onChange={(event) =>
             ctx.edit(
@@ -118,11 +124,11 @@ function ColorInput({ ctx, path, label }: { ctx: Ctx; path: Path; label: string 
             )
           }
         />
-        <input
+        <Input
           id={id}
           type="text"
           spellCheck={false}
-          className={`${FIELD} w-32 font-mono`}
+          className="w-32 font-mono"
           value={value}
           onChange={(event) => ctx.edit(path, event.target.value)}
         />
@@ -139,14 +145,14 @@ function NumberInput({ ctx, path, label }: { ctx: Ctx; path: Path; label: string
   const value = getAt(ctx.config, path) as number;
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium text-slate-600">
+      <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
         {label}
       </label>
-      <input
+      <Input
         id={id}
         type="text"
         inputMode="decimal"
-        className={`${FIELD} w-28`}
+        className="w-28"
         value={text ?? String(value)}
         onChange={(event) => {
           setText(event.target.value);
@@ -177,20 +183,22 @@ function Group({
 }) {
   const sectionError = ctx.errors.get(section);
   return (
-    <section aria-label={title} className="rounded-lg bg-white p-4 shadow-sm">
+    <section aria-label={title} className="rounded-lg border bg-card p-4 text-card-foreground">
       <div className="mb-3 flex items-center">
         <h2 className="text-base font-semibold">{title}</h2>
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           type="button"
-          className={`${BUTTON} ml-auto px-2 py-0.5 text-xs`}
+          className="ml-auto "
           aria-label={`Reset ${title} to defaults`}
           onClick={() => onReset(section)}
         >
           Reset to defaults
-        </button>
+        </Button>
       </div>
       {sectionError && (
-        <p role="alert" className="mb-2 text-xs text-red-700">
+        <p role="alert" className="mb-2 text-xs text-destructive">
           {sectionError}
         </p>
       )}
@@ -280,7 +288,7 @@ function Form({
         <Toggle ctx={ctx} path={['panels', 'materials', 'visible']} label="Materials panel" />
         <Toggle ctx={ctx} path={['panels', 'catalog', 'visible']} label="Catalog panel" />
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-medium text-slate-700">Catalog groups</legend>
+          <legend className="mb-1 text-sm font-medium text-foreground">Catalog groups</legend>
           <Problem errors={errors} path={['panels', 'catalog', 'order']} />
           {order.map((kind, index) => (
             <div key={kind} className="flex flex-wrap items-end gap-3">
@@ -294,24 +302,26 @@ function Form({
                 path={['panels', 'catalog', 'groups', kind, 'visible']}
                 label={`Show ${kind}`}
               />
-              <button
+              <Button
+                variant="outline"
                 type="button"
-                className={BUTTON}
+
                 disabled={index === 0}
                 aria-label={`Move ${kind} up`}
                 onClick={() => move(index, -1)}
               >
                 Up
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 type="button"
-                className={BUTTON}
+
                 disabled={index === order.length - 1}
                 aria-label={`Move ${kind} down`}
                 onClick={() => move(index, 1)}
               >
                 Down
-              </button>
+              </Button>
             </div>
           ))}
         </fieldset>
@@ -325,13 +335,13 @@ function Form({
 
       <Group title="Toolbar" section="toolbar" ctx={ctx} onReset={reset}>
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-medium text-slate-700">Tools</legend>
+          <legend className="mb-1 text-sm font-medium text-foreground">Tools</legend>
           {TOOLS.map(([name, label]) => (
             <Toggle key={name} ctx={ctx} path={['toolbar', 'tools', name]} label={label} />
           ))}
         </fieldset>
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-medium text-slate-700">Buttons</legend>
+          <legend className="mb-1 text-sm font-medium text-foreground">Buttons</legend>
           {BUTTONS.map(([name, label]) => (
             <Toggle key={name} ctx={ctx} path={['toolbar', 'buttons', name]} label={label} />
           ))}
@@ -362,7 +372,7 @@ function Form({
       </Group>
 
       <Group title="Theme" section="theme" ctx={ctx} onReset={reset}>
-        <h3 className="text-sm font-medium text-slate-700">Plan</h3>
+        <h3 className="text-sm font-medium text-foreground">Plan</h3>
         <Grid>
           {Object.keys(config.theme.plan).map((name) => (
             <ColorInput
@@ -373,7 +383,7 @@ function Form({
             />
           ))}
         </Grid>
-        <h3 className="text-sm font-medium text-slate-700">Item fills</h3>
+        <h3 className="text-sm font-medium text-foreground">Item fills</h3>
         <Grid>
           {ITEM_KINDS.map((kind) => (
             <ColorInput
@@ -389,7 +399,7 @@ function Form({
       <Group title="Help" section="help" ctx={ctx} onReset={reset}>
         <Problem errors={errors} path={['help', 'steps']} />
         {steps.map((_, index) => (
-          <div key={index} className="flex flex-col gap-2 rounded border border-slate-200 p-3">
+          <div key={index} className="flex flex-col gap-2 rounded border border-border p-3">
             <TextInput
               ctx={ctx}
               path={['help', 'steps', String(index), 'title']}
@@ -401,9 +411,10 @@ function Form({
               label={`Step ${index + 1} text`}
               multiline
             />
-            <button
+            <Button
+              variant="outline"
               type="button"
-              className={`${BUTTON} self-start`}
+              className="self-start"
               disabled={steps.length <= 1}
               onClick={() =>
                 edit(
@@ -413,19 +424,20 @@ function Form({
               }
             >
               Remove step {index + 1}
-            </button>
+            </Button>
           </div>
         ))}
-        <button
+        <Button
+          variant="outline"
           type="button"
-          className={`${BUTTON} self-start`}
+          className="self-start"
           disabled={steps.length >= 10}
           onClick={() =>
             edit(['help', 'steps'], [...steps, { title: 'New step', text: 'What to do.' }])
           }
         >
           Add a step
-        </button>
+        </Button>
       </Group>
     </div>
   );
@@ -464,33 +476,34 @@ export function PublishDialog({
   const [note, setNote] = useState('');
   const id = useId();
   return (
-    <Modal
+    <ResponsiveDialog
       open={open}
       onOpenChange={(next) => !next && onClose()}
       title="Publish these settings?"
       description="Everyone gets them the next time they open the app. A published version never changes, but you can roll back to it later."
+      showCloseButton={false}
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="button" disabled={busy} onClick={() => onPublish(note)}>
+            Publish
+          </Button>
+        </>
+      }
     >
-      <DryRunSummary queryKey={configDryRunKey} run={api.dryRunConfig} unsaved={unsaved} />
-      <div className="flex flex-col gap-1">
-        <label htmlFor={id} className="text-xs font-medium text-slate-600">
-          Note (what changed and why)
-        </label>
-        <input
-          id={id}
-          className={FIELD}
-          maxLength={200}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
+      <div className="flex flex-col gap-4">
+        <DryRunSummary queryKey={configDryRunKey} run={api.dryRunConfig} unsaved={unsaved} />
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={id} className="text-sm font-medium">
+            Note (what changed and why)
+          </label>
+          <Input id={id} maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} />
+        </div>
+        <FormError error={error} />
       </div>
-      <FormError error={error} />
-      <div className="flex justify-end gap-2">
-        <CloseButton label="Cancel" />
-        <button type="button" className={PRIMARY} disabled={busy} onClick={() => onPublish(note)}>
-          Publish
-        </button>
-      </div>
-    </Modal>
+    </ResponsiveDialog>
   );
 }
 
@@ -501,81 +514,71 @@ export function VersionHistory() {
   const rollback = useMutation({
     mutationFn: (number: number) => api.rollbackConfig(number),
     onSuccess: async () => {
-      setTarget(null);
       await queryClient.invalidateQueries({ queryKey: configVersionsKey });
       await queryClient.invalidateQueries({ queryKey: configDraftKey });
     },
   });
   const rows = versions.data ?? [];
   return (
-    <section aria-label="Version history" className="rounded-lg bg-white p-4 shadow-sm">
-      <h2 className="mb-3 text-base font-semibold">Version history</h2>
-      {rows.length === 0 ? (
-        <p className="text-sm text-slate-600">
-          Nothing has been published yet: the app uses its defaults.
-        </p>
-      ) : (
-        <ul className="divide-y divide-slate-100">
-          {rows.map((row) => (
-            <li key={row.number} className="flex flex-wrap items-center gap-3 py-2 text-sm">
-              <span className="font-medium">Version {row.number}</span>
-              {row.status === 'published' && (
-                <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-xs text-emerald-900">
-                  Published
+    <Card role="region" aria-label="Version history">
+      <CardHeader>
+        <CardTitle>Version history</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {rows.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nothing has been published yet: the app uses its defaults.
+          </p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {rows.map((row) => (
+              <li key={row.number} className="flex flex-wrap items-center gap-3 py-2 text-sm">
+                <span className="font-medium">Version {row.number}</span>
+                {row.status === 'published' && <Badge variant="success">Published</Badge>}
+                <span className="text-muted-foreground">{row.note || 'No note'}</span>
+                <span className="text-xs text-muted-foreground">
+                  {row.created_by} · {formatDate(row.created_at)}
                 </span>
-              )}
-              <span className="text-slate-600">{row.note || 'No note'}</span>
-              <span className="text-xs text-slate-600">
-                {row.created_by} · {formatDate(row.created_at)}
-              </span>
-              <a
-                className="ml-auto text-xs text-primary underline underline-offset-2"
-                href={api.configExportUrl(row.number)}
-                download
-                aria-label={`Export version ${row.number}`}
-              >
-                Export
-              </a>
-              {row.status !== 'published' && (
-                <button
-                  type="button"
-                  className={`${BUTTON} px-2 py-0.5 text-xs`}
-                  aria-label={`Roll back to version ${row.number}`}
-                  onClick={() => setTarget(row.number)}
+                <a
+                  className={buttonVariants({ variant: 'link', size: 'sm', className: 'ml-auto' })}
+                  href={api.configExportUrl(row.number)}
+                  download
+                  aria-label={`Export version ${row.number}`}
                 >
-                  Roll back
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-      <VersionCompare
-        kind="config"
-        numbers={rows.map((row) => row.number)}
-        label={(number) => `Version ${number}`}
-        load={api.diffConfigVersions}
-      />
-      <Modal
+                  Export
+                </a>
+                {row.status !== 'published' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    aria-label={`Roll back to version ${row.number}`}
+                    onClick={() => setTarget(row.number)}
+                  >
+                    Roll back
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <VersionCompare
+          kind="config"
+          numbers={rows.map((row) => row.number)}
+          label={(number) => `Version ${number}`}
+          load={api.diffConfigVersions}
+        />
+        <FormError error={rollback.error} />
+      </CardContent>
+      <ConfirmDialog
         open={target !== null}
         onOpenChange={(next) => !next && setTarget(null)}
         title={`Roll back to version ${target}?`}
         description="This publishes a copy of that version as a new one, for everyone. Nothing is deleted."
-      >
-        <FormError error={rollback.error} />
-        <div className="flex justify-end gap-2">
-          <CloseButton label="Cancel" />
-          <button
-            type="button"
-            className={PRIMARY}
-            disabled={rollback.isPending}
-            onClick={() => target !== null && rollback.mutate(target)}
-          >
-            Roll back
-          </button>
-        </div>
-      </Modal>
-    </section>
+        confirmLabel="Roll back"
+        onConfirm={() => target !== null && rollback.mutate(target)}
+      />
+    </Card>
   );
 }
 
@@ -643,10 +646,12 @@ function Editor({
   const conflict = isConflict(save.error) || isConflict(publish.error);
   return (
     <div className="flex flex-col gap-4">
-      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg bg-white p-3 shadow-sm">
-        <button
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3 text-card-foreground">
+        <DraftStatus dirty={dirty} revision={revision} basedOn={loaded.basedOn} />
+        <Button
+          variant="outline"
           type="button"
-          className={BUTTON}
+
           disabled={!dirty || invalid || save.isPending}
           onClick={() => {
             setMessage(null);
@@ -654,16 +659,26 @@ function Editor({
           }}
         >
           Save draft
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={PRIMARY}
+          variant="ghost"
+          disabled={!dirty}
+          onClick={() => {
+            setMessage(null);
+            setConfig(saved);
+          }}
+        >
+          Discard changes
+        </Button>
+        <Button
+          type="button"
           disabled={invalid || (!dirty && revision === 0 && loaded.basedOn !== null)}
           onClick={() => setPublishing(true)}
         >
           Publish…
-        </button>
-        <span role="status" className="text-sm text-slate-600">
+        </Button>
+        <span role="status" className="text-sm text-muted-foreground">
           {invalid
             ? `${errors.size} ${errors.size === 1 ? 'problem' : 'problems'} to fix first.`
             : (message ?? (dirty ? 'Unsaved changes.' : revision > 0 ? 'Draft saved.' : ''))}
@@ -705,7 +720,10 @@ export function AppSettingsPage() {
   }, [draft.data]);
   return (
     <RequirePermission permission="config.app.edit" fallback={<NoAccess />}>
-      <h1 className="mb-4 text-xl font-semibold">App settings</h1>
+      <PageHeader
+        title="App settings"
+        description="What the editor shows and how it looks, edited as a draft and published."
+      />
       {loaded ? (
         <Editor
           key={`${loaded.revision}-${loaded.basedOn}`}
@@ -714,11 +732,11 @@ export function AppSettingsPage() {
           onPublished={setNotice}
         />
       ) : draft.error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-destructive">
           {errorMessage(draft.error)}
         </p>
       ) : (
-        <p role="status" className="text-sm text-slate-600">
+        <p role="status" className="text-sm text-muted-foreground">
           Loading…
         </p>
       )}
