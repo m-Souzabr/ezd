@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useId, useMemo, useState } from 'react';
 
 import { api, ApiError, isConflict } from '../api/client';
-import { catalogDraftKey, catalogVersionsKey } from '../api/keys';
+import { catalogDraftKey, catalogDryRunKey, catalogVersionsKey } from '../api/keys';
 import { RequirePermission } from '../auth/permissions';
 import { BUTTON, CheckboxField, SelectField } from '../editor/panels/fields';
 import { CloseButton, Modal } from '../pages/Modal';
@@ -21,7 +21,10 @@ import { NoAccess } from './AdminLayout';
 import { EntryForm } from './catalog/EntryForm';
 import { FinishesTab } from './catalog/FinishesTab';
 import { changeEntry, diffCatalogs, newEntry, problemsOfEntry } from './catalog/helpers';
+import { ConflictNotice } from './ConflictNotice';
 import { FIELD } from './controls';
+import { DryRunSummary } from './DryRunSummary';
+import { VersionCompare } from './VersionCompare';
 
 type Loaded = { revision: number; catalog: Catalog; basedOn: string | null };
 
@@ -40,6 +43,7 @@ function PublishDialog({
   busy,
   error,
   onPublish,
+  unsaved,
 }: {
   open: boolean;
   onClose(): void;
@@ -48,6 +52,7 @@ function PublishDialog({
   busy: boolean;
   error: unknown;
   onPublish(note: string): void;
+  unsaved: boolean;
 }) {
   const [note, setNote] = useState('');
   const id = useId();
@@ -77,6 +82,7 @@ function PublishDialog({
           </ul>
         )}
       </section>
+      <DryRunSummary queryKey={catalogDryRunKey} run={api.dryRunCatalog} unsaved={unsaved} />
       <div className="flex flex-col gap-1">
         <label htmlFor={id} className="text-xs font-medium text-slate-600">
           Note (what changed and why)
@@ -142,13 +148,21 @@ function VersionHistory() {
               </span>
             )}
             <span className="text-slate-600">{row.note || 'No note'}</span>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-600">
               {row.created_by || 'built in'} · {formatDate(row.created_at)}
             </span>
+            <a
+              className="ml-auto text-xs text-primary underline underline-offset-2"
+              href={api.configExportUrl(undefined, row.version)}
+              download
+              aria-label={`Export ${row.version}`}
+            >
+              Export
+            </a>
             {!row.current && (
               <button
                 type="button"
-                className={`${BUTTON} ml-auto px-2 py-0.5 text-xs`}
+                className={`${BUTTON} px-2 py-0.5 text-xs`}
                 aria-label={`Roll back to ${row.version}`}
                 onClick={() => setTarget(row.version)}
               >
@@ -158,6 +172,12 @@ function VersionHistory() {
           </li>
         ))}
       </ul>
+      <VersionCompare
+        kind="catalog"
+        numbers={rows.map((row) => row.number)}
+        label={(number) => rows.find((row) => row.number === number)?.version ?? `${number}`}
+        load={api.diffCatalogVersions}
+      />
       <Modal
         open={target !== null}
         onOpenChange={(next) => !next && setTarget(null)}
@@ -346,18 +366,9 @@ function Editor({ loaded }: { loaded: Loaded }) {
             ? `${problems.length} ${problems.length === 1 ? 'problem' : 'problems'} to fix first.`
             : (message ?? '')}
         </span>
-        {conflict && (
-          <button type="button" className={BUTTON} onClick={() => window.location.reload()}>
-            Reload the latest draft
-          </button>
-        )}
       </div>
       {!conflict && <FormError error={save.error} />}
-      {conflict && (
-        <p role="alert" className="text-sm text-red-700">
-          Someone else changed the draft. Reload to see their changes; yours are not saved.
-        </p>
-      )}
+      <ConflictNotice error={save.error ?? publish.error} />
 
       <div role="tablist" aria-label="Catalog" className="flex gap-2">
         {(['entries', 'finishes'] as const).map((name) => (
@@ -415,7 +426,7 @@ function Editor({ loaded }: { loaded: Loaded }) {
                       onClick={() => setSelected(entry.id)}
                     >
                       <span className="font-medium">{entry.name}</span>
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-slate-600">
                         {entry.id}
                         {entry.retired ? ' · retired' : ''}
                         {count > 0 ? ` · ${count} ${count === 1 ? 'problem' : 'problems'}` : ''}
@@ -477,6 +488,7 @@ function Editor({ loaded }: { loaded: Loaded }) {
         catalog={catalog}
         busy={publish.isPending}
         error={publish.error}
+        unsaved={dirty}
         onPublish={(note) => publish.mutate(note)}
       />
       <VersionHistory />

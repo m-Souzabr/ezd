@@ -128,6 +128,8 @@ export async function openDesignWithRoom(page: Page, designId: string) {
 /** The staff accounts the test API starts with (`apps/api/tests/fixtures/staff.json`). */
 export const ADMINISTRATOR = 'admin-e2e@example.com';
 export const SUPPORT = 'support-e2e@example.com';
+export const CATALOG_EDITOR = 'catalog-e2e@example.com';
+export const SECOND_ADMINISTRATOR = 'admin2-e2e@example.com';
 
 /** Fills in the login page and submits it, whatever the answer. */
 export async function submitLogin(page: Page, email: string, password = PASSWORD) {

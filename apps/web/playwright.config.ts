@@ -32,7 +32,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: /(config|catalog|rules|account-layout|editor-layout)\.spec/,
+      testIgnore: /(config|catalog|rules|admin-panel|account-layout|editor-layout)\.spec/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     {
@@ -49,6 +49,14 @@ export default defineConfig({
       name: 'rules',
       testMatch: /rules\.spec/,
       dependencies: ['config'],
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      // The hardening specs edit the shared draft, publish and roll back, and change a role of
+      // the seeded support user, so they run last and put everything back.
+      name: 'panel',
+      testMatch: /admin-panel\.spec/,
+      dependencies: ['rules'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     // The layout specs run on a phone, a tablet and a desktop. The `chromium` project at 1440 px
@@ -83,8 +91,11 @@ export default defineConfig({
         LLM_FAKE_SCRIPT: resolve('e2e/llm-script.json'),
         // Every test signs in from 127.0.0.1, in parallel.
         API_THROTTLE_LOGIN_IP: '1000/min',
+        // The Control Panel specs sign in as the same staff account many times a minute.
+        API_THROTTLE_LOGIN_EMAIL: '1000/min',
         API_THROTTLE_AUTH_IP: '1000/min',
         API_THROTTLE_LLM: '1000/min',
+        API_THROTTLE_ADMIN: '1000/min',
         // Password reset emails, which the reset test reads.
         EMAIL_FILE_PATH: resolve('test-results/emails'),
       },

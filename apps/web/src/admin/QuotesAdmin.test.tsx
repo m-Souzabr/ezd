@@ -24,6 +24,7 @@ const draft = (overrides: Partial<ConfigDraft> = {}): ConfigDraft => ({
   quote_defaults: {},
   based_on: null,
   updated_at: null,
+  updated_by: '',
   ...overrides,
 });
 

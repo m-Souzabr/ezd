@@ -141,6 +141,8 @@ Run from the root with a filter, or `cd` into the package and drop the filter.
 | Apply migrations   | `uv run python manage.py migrate`                          |
 | Dev server         | `uv run python manage.py runserver`                        |
 
+| Prune audit log | `uv run python manage.py prune_audit [--days N] [--dry-run]` |
+| Recover an admin | `uv run python manage.py grant_administrator <email> [--superuser]` |
 | Eval suite (fake) | `uv run python manage.py run_evals --client fake` |
 | Eval suite (live) | `uv run python manage.py run_evals --client live --record` |
 | Photo evals (fake) | `uv run python manage.py run_photo_evals --client fake` |
@@ -361,7 +363,37 @@ normalize-draft`) snaps cabinets to the catalog and marks every model length as 
   that is off removes its UI and its keyboard shortcut, never a document's content. The colors
   and viewport limits are applied to `editor/style.ts` and `editor/viewport.ts` before an
   editor opens. The e2e `config` project runs after the others, because publishing changes
-  every editor.
+  every editor, and the `panel` project (`admin-panel.spec.ts`) after those.
+- **Roles and permissions.** A role is a Django `Group` holding Control Panel codes
+  (`controlpanel/codes.py`); `PROTECTED_ROLES` (Administrator, Catalog editor, Support) cannot
+  be renamed, deleted or given other permissions. Custom roles are managed with
+  `users.roles.manage`: a role may not grant a permission its editor does not hold, and an
+  editor may not change a role that holds one they lack. Permissions are read from the
+  database on each request, so a change applies to the next one. A new code needs a migration
+  that creates its `Permission` row (never import `codes.py` in a migration), an entry in
+  `admin/permissions.ts` and rows in the permission matrix test.
+- **Audit log.** Every admin mutation calls `controlpanel.audit.record(actor, action,
+object_type, object_id, before=, after=)`; it masks secret-looking keys when writing, and
+  the list, the diff (`controlpanel/diff.py`) and the CSV export mask them again when reading.
+  Put a summary in `before` and `after`, never a whole document or a logo. `AUDIT_RETENTION_DAYS`
+  (default 0, keep all) is applied only by `manage.py prune_audit`.
+- **Admin routes.** A route name begins `admin-`; that is what puts it under the `admin`
+  throttle (`API_THROTTLE_ADMIN`) and, with `llm-settings`, into
+  `tests/test_permission_matrix.py`, whose one `TABLE` lists every route and method with the
+  permission it needs. CI fails for a route or method without a row, for a view that declares
+  another permission, and for a role that gets through a row it does not hold. A new route also
+  goes in `tests/test_isolation.py` (the isolation registry), and takes `max_body_bytes` if it
+  reads more than a small body.
+- **Draft, publish, import, reset.** Drafts carry a `revision`; a stale save is a 409 whose
+  body has `conflict: { updated_by, updated_at, revision }`, which `ConflictNotice` shows.
+  Import (`config/import/`) validates every section with core and saves drafts only, and
+  refuses to overwrite an existing draft unless `replace`; reset (`config/reset/`) saves the
+  compiled-in defaults of one section as the draft. The dry run (`config/dry-run/`,
+  `catalog/dry-run/`) runs `ezd-core compare-designs` on the 50 most recently changed designs;
+  a violation is its rule, severity and items, not its wording. `GET /api/ready/` reports
+  `config` and `catalog` as `ok`, `defaults`, `invalid` or `unknown` and never fails for them.
+- **Logos** are decoded, shrunk to `LOGO_MAX_EDGE` and re-encoded by `controlpanel/logo.py`, as
+  photos are; what is stored is the re-encoded image, so tests compare against `process_logo`.
 - **Rules and quote defaults** are two more sections of the same `ConfigVersion`
   (`rules_config`, `quote_defaults`), published together with `app_config`, so one version
   number names a whole configuration and a rollback restores all three. Each is edited with its

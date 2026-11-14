@@ -1,3 +1,4 @@
+import { reportAdminFailure } from '../lib/reportAdminError';
 import type { components } from './schema';
 
 // The one place that talks to the API. Types come from the OpenAPI file that the server
@@ -37,6 +38,24 @@ export type CatalogDraft = Schemas['CatalogDraft'];
 export type CatalogVersion = Schemas['CatalogVersion'];
 export type CatalogValidation = Schemas['CatalogValidation'];
 export type LLMSettingsUpdate = Schemas['PatchedLLMSettingsUpdateRequest'];
+export type RoleWrite = Schemas['RoleWriteRequest'];
+/** One of the Control Panel's permission codes. */
+export type PermissionCode = NonNullable<RoleWrite['permissions']>[number];
+export type ConfigExport = Schemas['Export'];
+export type ImportResult = Schemas['ImportResult'];
+export type DryRun = Schemas['DryRun'];
+export type DryRunResult = Schemas['DryRunResult'];
+export type VersionChange = Schemas['Change'];
+export type VersionDiff = Schemas['VersionDiff'];
+/** The configuration sections a reset can put back to the compiled-in defaults. */
+export type ResetSection = Schemas['ResetRequest']['section'];
+/** One field that differs between two versions or the two sides of an audit row. */
+export type AuditChange = {
+  path: string;
+  kind: 'added' | 'removed' | 'changed';
+  before?: unknown;
+  after?: unknown;
+};
 
 /** The server answered, but not with success. */
 export class ApiError extends Error {
@@ -115,10 +134,13 @@ function csrfToken(): string | null {
   return match ? decodeURIComponent(match[1]!) : null;
 }
 
+const isAdminPath = (path: string) => path.startsWith('/api/admin/');
+
 async function send(path: string, init: RequestInit): Promise<Response> {
   try {
     return await fetch(path, { credentials: 'same-origin', ...init });
   } catch {
+    if (isAdminPath(path)) reportAdminFailure(init.method ?? 'GET', path, null);
     throw new NetworkError();
   }
 }
@@ -152,6 +174,7 @@ async function call(
   const body: unknown = await response.json().catch(() => null);
   if (response.ok) return { response, body };
   if (response.status === 401 && !options.allowUnauthorized) onUnauthorized();
+  if (isAdminPath(path)) reportAdminFailure(method, path, response.status);
   throw new ApiError(response.status, body);
 }
 
@@ -229,7 +252,38 @@ export type UserListParams = {
   limit?: number;
   offset?: number;
 };
-export type AuditListParams = { actor?: string; action?: string; limit?: number; offset?: number };
+export type AuditFilters = {
+  actor?: string;
+  action?: string;
+  object_type?: string;
+  date_from?: string;
+  date_to?: string;
+};
+export type AuditListParams = AuditFilters & { limit?: number; offset?: number };
+
+/** Who saved a draft last, from the body of a 409. Absent when the draft is gone. */
+export type DraftEditor = { updated_by: string; updated_at: string; revision: number };
+
+/** What a stale-draft or draft-exists 409 says about the draft that won, or null. */
+export function conflictEditor(error: unknown): DraftEditor | null {
+  if (!(error instanceof ApiError) || !isRecord(error.body)) return null;
+  const conflict = error.body.conflict;
+  if (!isRecord(conflict) || typeof conflict.updated_at !== 'string') return null;
+  return {
+    updated_by: String(conflict.updated_by ?? ''),
+    updated_at: conflict.updated_at,
+    revision: Number(conflict.revision ?? 0),
+  };
+}
+
+/** The problems a 422 lists, as `{ path, message }`, or an empty list. */
+export function issuesOf(error: unknown): { path: string; message: string }[] {
+  if (!(error instanceof ApiError) || !isRecord(error.body) || !Array.isArray(error.body.errors))
+    return [];
+  return error.body.errors
+    .filter(isRecord)
+    .map((issue) => ({ path: String(issue.path ?? ''), message: String(issue.message ?? '') }));
+}
 
 const credentials = { allowUnauthorized: true };
 
@@ -337,6 +391,14 @@ export const api = {
   listRoles: () => request<Role[]>('GET', '/api/admin/roles/'),
   listAudit: (params: AuditListParams) =>
     requestPage<AuditEntry>(`/api/admin/audit/${queryString(params)}`),
+  listAuditTypes: () => request<string[]>('GET', '/api/admin/audit/types/'),
+  /** The CSV of the entries that match, for a link the browser downloads. */
+  auditExportUrl: (filters: AuditFilters) => `/api/admin/audit/export/${queryString(filters)}`,
+  /** Needs `users.roles.manage`. A role cannot grant a permission its creator does not hold. */
+  createRole: (body: RoleWrite) => request<Role>('POST', '/api/admin/roles/', { body }),
+  updateRole: (id: number, body: RoleWrite) =>
+    request<Role>('PATCH', `/api/admin/roles/${id}/`, { body }),
+  deleteRole: (id: number) => request<void>('DELETE', `/api/admin/roles/${id}/`),
 
   /** The published app configuration. Needs no session. */
   getConfig: () => request<PublicConfig>('GET', '/api/config/', { allowUnauthorized: true }),
@@ -384,6 +446,24 @@ export const api = {
       `/api/admin/catalog/versions/${encodeURIComponent(version)}/rollback/`,
       { body: {} },
     ),
+  /** What changed between two published versions, section by section. */
+  diffConfigVersions: (from: number, to: number) =>
+    request<VersionDiff>('GET', `/api/admin/config/versions/diff/${queryString({ from, to })}`),
+  diffCatalogVersions: (from: number, to: number) =>
+    request<VersionDiff>('GET', `/api/admin/catalog/versions/diff/${queryString({ from, to })}`),
+  /** The file a published version is exported as, for a link the browser downloads. */
+  configExportUrl: (number?: number, catalog?: string) =>
+    `/api/admin/config/export/${queryString({ number, catalog })}`,
+  /** Saves what the export holds as drafts. A draft that exists is a 409 unless `replace`. */
+  importConfig: (data: unknown, replace: boolean) =>
+    request<ImportResult>('POST', '/api/admin/config/import/', { body: { data, replace } }),
+  /** Saves the compiled-in defaults of one section as the draft. Nothing is published. */
+  resetSection: (section: ResetSection, revision: number) =>
+    request<ImportResult>('POST', '/api/admin/config/reset/', { body: { section, revision } }),
+  /** Which existing designs would be checked differently under the draft's rules. */
+  dryRunConfig: () => request<DryRunResult>('POST', '/api/admin/config/dry-run/'),
+  /** Which designs and quotes the draft catalog would change. */
+  dryRunCatalog: () => request<DryRunResult>('POST', '/api/admin/catalog/dry-run/'),
   rollbackConfig: (number: number) =>
     request<ConfigVersion>('POST', `/api/admin/config/versions/${number}/rollback/`, { body: {} }),
 

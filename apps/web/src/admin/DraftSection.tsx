@@ -7,6 +7,7 @@ import { configDraftKey, configVersionsKey } from '../api/keys';
 import { BUTTON } from '../editor/panels/fields';
 import { FormError, PRIMARY } from '../pages/ui';
 import { PublishDialog, VersionHistory } from './AppSettings';
+import { ConflictNotice } from './ConflictNotice';
 
 export type LoadedSection<T> = { revision: number; value: T; basedOn: number | null };
 
@@ -111,22 +112,14 @@ export function DraftSection<T>({
             ? `${found} ${found === 1 ? 'problem' : 'problems'} to fix first.`
             : (message ?? (dirty ? 'Unsaved changes.' : revision > 0 ? 'Draft saved.' : ''))}
         </span>
-        {conflict && (
-          <button type="button" className={BUTTON} onClick={() => window.location.reload()}>
-            Reload the latest draft
-          </button>
-        )}
       </div>
       {!conflict && <FormError error={saveDraft.error} />}
-      {conflict && (
-        <p role="alert" className="text-sm text-red-700">
-          Someone else changed the draft. Reload to see their changes; yours are not saved.
-        </p>
-      )}
+      <ConflictNotice error={saveDraft.error ?? publish.error} />
       {children({ value, set })}
       <PublishDialog
         open={publishing}
         onClose={() => setPublishing(false)}
+        unsaved={dirty}
         busy={publish.isPending}
         error={
           publish.error instanceof ApiError && publish.error.status === 409 ? null : publish.error

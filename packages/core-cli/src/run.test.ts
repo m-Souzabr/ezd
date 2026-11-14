@@ -686,7 +686,12 @@ describe('compare-designs', () => {
   it('prints the violations of each design under both configurations', () => {
     const result = run(
       ['compare-designs'],
-      JSON.stringify({ designs: [{ id: 'a', document }, { id: 'b', document: {} }] }),
+      JSON.stringify({
+        designs: [
+          { id: 'a', document },
+          { id: 'b', document: {} },
+        ],
+      }),
     );
     const output = JSON.parse(result.stdout);
     expect(result.exitCode).toBe(0);

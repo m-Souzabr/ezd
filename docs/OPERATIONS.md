@@ -27,6 +27,19 @@ reads them through `config.settings.prod`, which has no defaults for the require
 `/api/ready/` answers 503 `{"status": "database unavailable"}` when the database cannot be
 reached. Point the API service's health check at it.
 
+A healthy answer also says whether the published configuration is usable:
+
+```json
+{ "status": "ok", "config": "ok", "catalog": "ok" }
+```
+
+`config` and `catalog` are `ok` (a published version exists, parses and satisfies every
+rule), `defaults` (nothing is published yet, so the compiled-in defaults apply), `invalid`
+or `unknown` (`ezd-core` could not be run). A published row never changes, so the check
+runs once per version and process. `invalid` never fails the probe: the app falls back to
+its defaults field by field, and the Control Panel must stay reachable to roll the bad
+version back. Alert on it instead of restarting.
+
 ## Logs
 
 The API writes one JSON line per request (`config/logging.py`): request id, method, path
@@ -107,6 +120,81 @@ then enters it again. Changing `DJANGO_SECRET_KEY` also signs everyone out.
    current schema. Check `/api/ready/`, sign in, and open a design and a quote PDF.
 
 Practise this on a copy at least once per release; an untested backup is not a backup.
+
+## The Control Panel
+
+### A bad publish
+
+Every publish of the catalog, the rules, the app settings or the quote defaults can be
+undone in the Control Panel. Open the section, find the last good version in **Version
+history** and choose **Roll back**, then confirm. That publishes a copy of the old version as
+a new one; nothing is deleted, and quotes already made keep the catalog version they were
+priced with. Use **Compare versions** first to see what a version changed, and the audit
+log (`Audit`, filter by object type `config_version` or `catalog_version`) to see who
+published it.
+
+If the Control Panel cannot be opened, roll back through the API as a user who holds the
+permission (the session cookie and the CSRF token are the browser's, so this is easiest from
+the browser console on the site):
+
+```sh
+POST /api/admin/config/versions/<number>/rollback/      # rules, app settings, quote defaults
+POST /api/admin/catalog/versions/<catalog-n>/rollback/  # the catalog
+```
+
+### A lost superuser
+
+If nobody can sign in as an administrator, run these on the API service (on Railway, from
+the service's shell). Neither needs the web app.
+
+```sh
+uv run python manage.py createsuperuser                     # a new account, or
+uv run python manage.py grant_administrator me@example.com  # an existing one
+uv run python manage.py grant_administrator me@example.com --superuser
+```
+
+`grant_administrator` makes the account active and staff and puts it in the Administrator
+role (with `--superuser`, a superuser too). It writes an audit entry with no actor, so the
+log shows it was done from the command line.
+
+### What is backed up with the database
+
+Every configuration version (the app settings, rules and quote defaults in `ConfigVersion`,
+the catalog in `CatalogVersion`), the audit log and the roles are rows in PostgreSQL, so
+the database backup under **Backups** holds all of them, history included. A published row is
+never updated or deleted, so any backup contains every version that existed when it was
+taken. To keep a copy outside the database, use **Backup and reset → Export** (and Export
+in a version history for an older one): one JSON file that **Import** reads back as a draft.
+An import never publishes, and a file with any invalid section changes nothing.
+
+### The audit log
+
+`AUDIT_RETENTION_DAYS` (default `0`, keep everything) says how long entries are kept. The
+log is pruned only when you run it, for example from a daily scheduled job:
+
+```sh
+uv run python manage.py prune_audit             # uses AUDIT_RETENTION_DAYS
+uv run python manage.py prune_audit --days 365  # an explicit number
+uv run python manage.py prune_audit --days 365 --dry-run
+```
+
+It records an `audit.prune` entry with the number deleted. The audit page exports the rows
+that match its filters as CSV (`audit.view`); secrets are masked in the log itself, not only
+in the export.
+
+### Limits
+
+Control Panel routes (`admin-*`) have their own throttle, `API_THROTTLE_ADMIN` (default
+`120/min` per user), and the catalog draft, config draft and import accept bodies of at
+most 1 MB, 512 KB and 2 MB. A quote logo is decoded, shrunk to `LOGO_MAX_EDGE` (800 px)
+and re-encoded on the server, and refused above `LOGO_MAX_PIXELS`.
+
+### Admin errors
+
+A failed Control Panel request that is not an expected outcome (a server fault, a throttle, a
+request with no answer) is passed to `reportError` with the method, the status and the
+section of the path (`admin/catalog/entries`). The message and body are not sent, so a
+report never holds configuration contents or an email address.
 
 ## Releases
 

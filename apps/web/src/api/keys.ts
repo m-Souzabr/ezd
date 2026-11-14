@@ -45,3 +45,14 @@ export const configDraftKey = ['admin', 'config', 'draft'] as const;
 
 /** The published versions of the app configuration (staff only). */
 export const configVersionsKey = ['admin', 'config', 'versions'] as const;
+
+/** The kinds of object the audit log has entries for. */
+export const adminAuditTypesKey = ['admin', 'audit', 'types'] as const;
+
+/** The dry run of the draft configuration, and of the draft catalog. */
+export const configDryRunKey = ['admin', 'config', 'dry-run'] as const;
+export const catalogDryRunKey = ['admin', 'catalog', 'dry-run'] as const;
+
+/** The difference between two published versions. */
+export const versionDiffKey = (kind: 'config' | 'catalog', from: number, to: number) =>
+  ['admin', kind, 'diff', from, to] as const;

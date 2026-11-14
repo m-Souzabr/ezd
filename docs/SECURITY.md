@@ -35,9 +35,35 @@ Every route under `/api/` was checked for the five controls #12 lists.
   email; registration and reset 20 a minute per address; model calls (chat, retry, photo
   analysis) 20 a minute per user, plus a monthly token quota; photo uploads 30 a minute per
   user. All are environment variables (`API_THROTTLE_*`).
-- **Body size.** 2 MB unless a view sets more: a quote with its drawings 12 MB, a photo
+- **Body size.** 2 MB unless a view sets less or more: a quote with its drawings 12 MB, a photo
   upload 10 MB plus the multipart envelope. A declared length over the limit is refused
   before the body is read.
+
+## The Control Panel
+
+- **Permissions** are enforced by the server on every `admin-*` route. One table in
+  `tests/test_permission_matrix.py` lists each route and method with the permission it needs;
+  CI fails when a route has no row, when a view declares a different permission, or when a
+  role gets through a row it does not hold. Hiding a button in the UI is cosmetic.
+- **Roles** can be created, renamed, changed and deleted with `users.roles.manage`. The seeded
+  roles (Administrator, Catalog editor, Support) are protected. A role cannot grant a
+  permission its editor does not hold, and an editor cannot change or delete a role that
+  holds permissions they do not. A change takes effect on the member's next request, because
+  permissions are read from the database on each request.
+- **Audit.** Every mutation writes an entry; secret-looking keys are masked when the entry is
+  written and again when it is read, and a CSV export neutralises cells a spreadsheet would
+  run as a formula.
+- **Drafts** carry a revision, so two staff editing the same draft cannot overwrite each
+  other: the second save is a 409 that names who saved first.
+- **Import** is validated against core's schemas, needs the permission of each section it
+  holds, and only ever saves drafts.
+- **Re-entering the password before a publish, a role change or a user deletion was not
+  built.** The decision: every one of these is audited, reversible (a rollback, an edited role,
+  a restored account) and limited to staff who already hold the permission, and a session
+  cookie is the only credential, as everywhere else in the app. A second prompt would
+  protect against someone using a signed-in browser left unattended, which the session
+  lifetime and sign-out address better. Revisit it together with two-factor authentication,
+  which is out of scope for the epic.
 
 ## Uploads
 

@@ -89,17 +89,51 @@ flowchart LR
   generated from core and then core itself (`ezd-core validate-document`), and a confirmed
   photo draft is checked again with `ezd-core draft-problems`.
 
+## How configuration flows
+
+The Control Panel edits configuration, never a design. A configuration is versioned data:
+drafts are editable, published rows never change, and every setting has a compiled-in
+default, so the editor at `/` works with no API.
+
+```mermaid
+flowchart LR
+  panel["Control Panel<br/>(staff, by permission)"] -- "PUT draft + revision" --> draft[("Draft<br/>ConfigVersion / CatalogVersion")]
+  import["Import a file"] --> draft
+  reset["Reset to defaults"] --> draft
+  draft -- "dry run: ezd-core<br/>compare-designs" --> report["Designs and quotes<br/>that would change"]
+  draft -- "publish<br/>(checked by ezd-core)" --> pub[("Published version<br/>never changed")]
+  pub -- "rollback = a copy as a new version" --> pub
+  pub -- "GET /api/config/, /api/catalog/" --> app["Web app:<br/>ConfigProvider, CatalogProvider"]
+  pub -- "rules, catalog" --> server["API checks:<br/>quotes, assistant, validate"]
+  panel -- "every mutation" --> audit[("Audit log")]
+```
+
+- **One version number names a configuration.** The app settings, rules and quote defaults
+  are sections of one `ConfigVersion`, each edited with its own permission and published
+  together. The catalog is its own series (`CatalogVersion`), because a quote names the
+  catalog version it was priced with.
+- **Schemas live in core**, validation runs through `ezd-core`, storage and HTTP live in
+  `apps/api/controlpanel/`, and the screens in `apps/web/src/admin/`.
+- **Concurrency** is a revision on each draft: a stale save is a 409 that names who saved
+  last (`conflict` in the body), and `ConflictNotice` shows it.
+- **History** compares any two published versions section by section (`controlpanel/diff.py`,
+  lists of objects with an `id` are matched by id), and every version records who published it
+  and a note. The audit log holds the before and after of every mutation.
+- **Roles** are Django groups holding the Control Panel's permission codes
+  (`controlpanel/codes.py`); the seeded three cannot be changed.
+
 ## What is where
 
-| Concern                                                              | Code                                                                                             |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Document, commands, history, rules, snapping, BOM and pricing, scene | `packages/core/src/`                                                                             |
-| Chat: summary for the model, tools, proposal to commands             | `packages/core/src/llm/`, `apps/api/chat/`, `apps/api/llm/`                                      |
-| Photo: draft schemas, normalising, problems, draft to commands       | `packages/core/src/photo/`, `apps/api/photos/`                                                   |
-| Editor: store, views, tools, panels                                  | `apps/web/src/store/`, `apps/web/src/editor/`                                                    |
-| Accounts, projects, designs, versions, autosave                      | `apps/api/accounts/`, `apps/api/projects/`, `apps/web/src/lib/`                                  |
-| Quotes and their PDF                                                 | `apps/api/quotes/`, `apps/web/src/quotes/`                                                       |
-| Errors: boundary, reporting hooks, readiness                         | `apps/web/src/ErrorBoundary.tsx`, `apps/web/src/lib/reportError.ts`, `apps/api/config/errors.py` |
+| Concern                                                                     | Code                                                                                             |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Document, commands, history, rules, snapping, BOM and pricing, scene        | `packages/core/src/`                                                                             |
+| Chat: summary for the model, tools, proposal to commands                    | `packages/core/src/llm/`, `apps/api/chat/`, `apps/api/llm/`                                      |
+| Photo: draft schemas, normalising, problems, draft to commands              | `packages/core/src/photo/`, `apps/api/photos/`                                                   |
+| Editor: store, views, tools, panels                                         | `apps/web/src/store/`, `apps/web/src/editor/`                                                    |
+| Accounts, projects, designs, versions, autosave                             | `apps/api/accounts/`, `apps/api/projects/`, `apps/web/src/lib/`                                  |
+| Quotes and their PDF                                                        | `apps/api/quotes/`, `apps/web/src/quotes/`                                                       |
+| Control Panel: config and catalog versions, audit, roles, import and export | `apps/api/controlpanel/`, `apps/web/src/admin/`, `packages/core/src/config/`                     |
+| Errors: boundary, reporting hooks, readiness                                | `apps/web/src/ErrorBoundary.tsx`, `apps/web/src/lib/reportError.ts`, `apps/api/config/errors.py` |
 
 See also `docs/EXTENDING.md` (what v1 left out and how to add it), `docs/OPERATIONS.md`,
 `docs/SECURITY.md`, `docs/PERFORMANCE.md`, `docs/BROWSERS.md` and `docs/RULES.md`.
